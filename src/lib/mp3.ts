@@ -77,19 +77,47 @@ const KIND_LABEL: Record<Exclude<FileKind, 'mp3' | 'unknown'>, string> = {
   ogg: 'OGG',
 };
 
+export function tooLargeMessage(size: number): string {
+  const mb = Math.round(size / (1024 * 1024));
+  return `This file is ${mb} MB. The limit is 100 MB, so it was not imported.`;
+}
+
 export function rejectionMessage(name: string, bytes: Uint8Array): string | null {
-  if (bytes.length === 0) return 'This file is empty.';
-  if (bytes.length > MAX_BYTES) {
-    const mb = Math.round(bytes.length / (1024 * 1024));
-    return `This file is ${mb} MB. TrackTidy processes one MP3 up to 100 MB in the browser.`;
-  }
+  if (bytes.length === 0) return 'This file is empty, so it was not imported.';
+  if (bytes.length > MAX_BYTES) return tooLargeMessage(bytes.length);
   if (isMp3(bytes)) return null;
   const kind = sniffKind(name, bytes);
   if (kind !== 'mp3' && kind !== 'unknown') {
-    return `${KIND_LABEL[kind]} isn’t supported in this version. TrackTidy reads and writes MP3 only, so this file was not imported.`;
+    return `This file is ${KIND_LABEL[kind]}, not an MP3. TrackTidy only reads and writes MP3, so it was not imported.`;
   }
   if (name.toLowerCase().endsWith('.mp3')) {
-    return 'This file is named like an MP3, but the audio data is not an MP3 stream. It was not imported.';
+    return 'This file is named like an MP3, but its audio is not an MP3 stream. It was not imported.';
   }
-  return 'This file is not an MP3. TrackTidy reads and writes MP3 only in this version.';
+  return 'This file is not an MP3. TrackTidy only reads and writes MP3, so it was not imported.';
+}
+
+/** Why a local file read failed. TrackTidy does not upload the file. */
+export function readErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.includes('was stopped')) return error.message;
+  const name = error instanceof Error ? error.name : '';
+  const text = error instanceof Error ? error.message : '';
+  const detail = `${name} ${text}`.toLowerCase();
+  if (name === 'NotFoundError') {
+    return 'This file could not be found. It may have been moved or deleted before it could be read.';
+  }
+  if (name === 'NotAllowedError' || name === 'SecurityError') {
+    return 'The browser blocked access to this file, so it was not imported.';
+  }
+  if (name === 'AbortError') return 'Reading this file was interrupted, so it was not imported.';
+  if (
+    name === 'NotReadableError' ||
+    name === 'NetworkError' ||
+    detail.includes('network') ||
+    detail.includes('connection') ||
+    detail.includes('offline') ||
+    detail.includes('not readable')
+  ) {
+    return 'This file could not be read because the connection to it failed. If it is in iCloud or another cloud folder, download it to this computer and try again.';
+  }
+  return 'This file could not be read from this computer, so it was not imported.';
 }

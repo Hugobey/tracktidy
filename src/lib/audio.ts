@@ -13,7 +13,10 @@ export type KeyDetection = {
   detail: string;
 };
 
-function withTimeout<T>(work: Promise<T>, ms: number, message: string): Promise<T> {
+/** One analysis step. Long enough for a large file, short enough to leave the screen. */
+export const ANALYSIS_STEP_MS = 30_000;
+
+export function withTimeout<T>(work: Promise<T>, ms: number, message: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(message)), ms);
     work.then(
@@ -33,9 +36,17 @@ export async function decodeAudio(buffer: ArrayBuffer): Promise<AudioBuffer> {
   const copy = buffer.slice(0);
   const context = new AudioContext();
   try {
-    return await context.decodeAudioData(copy);
+    // decodeAudioData can stay pending forever on some files, and on a suspended context.
+    return await withTimeout(
+      (async () => {
+        if (context.state === 'suspended') await context.resume();
+        return context.decodeAudioData(copy);
+      })(),
+      ANALYSIS_STEP_MS,
+      'Decoding this MP3 took too long and was stopped. The browser did not return audio, so tempo and key were not measured. The tags can still be edited.',
+    );
   } finally {
-    await context.close();
+    if (context.state !== 'closed') void context.close().catch(() => undefined);
   }
 }
 
@@ -69,7 +80,7 @@ export async function detectBpm(buffer: AudioBuffer): Promise<BpmDetection> {
   const { offset, seconds, full } = analysisWindow(buffer.duration);
   const result = await withTimeout(
     guess(buffer, offset, seconds, { minTempo: 90, maxTempo: 180 }),
-    20000,
+    ANALYSIS_STEP_MS,
     'Tempo detection took too long and was stopped.',
   );
   const where = full ? 'the full track' : 'a 60-second section';
@@ -99,7 +110,7 @@ export async function detectKey(buffer: AudioBuffer): Promise<KeyDetection> {
   const samples = mixRange(buffer, offset, seconds);
   const estimate: KeyEstimate | null = await withTimeout(
     estimateKeyFromSamples(samples, buffer.sampleRate),
-    20000,
+    ANALYSIS_STEP_MS,
     'Key estimation took too long and was stopped.',
   );
   if (!estimate) {

@@ -26,8 +26,9 @@ export default function PrivacyPage() {
       <p>
         Choosing an MP3 reads that file on your device. The page uses the Web Audio API, a local metadata parser, and
         a local tempo detector. Tag edits are written into a new download on your device. The audio is not
-        re-encoded. TrackTidy does not upload the file, its filename, or its tags to a TrackTidy server, and it does
-        not put them in analytics events.
+        re-encoded. TrackTidy does not upload the file or its filename to a TrackTidy server, and it does not put
+        them in analytics events. The artwork search below is the only time an artist, title, or album is sent off
+        this device. That lookup runs when you open an MP3 that has no artwork, and again if you click Find artwork.
       </p>
       <p>
         WAV, AIFF, FLAC, M4A, and other unsupported files are refused in the browser and are not sent anywhere. There
@@ -43,6 +44,17 @@ export default function PrivacyPage() {
         (GDPR Article 6(1)(b), the service you requested). It happens in your browser. TrackTidy does not keep a copy
         after you leave the page. Closing the track drops it from memory.
       </p>
+      <h3>Artwork search</h3>
+      <p>
+        If the MP3 has no artwork, and the artist and title are filled in, the browser looks up a cover without another
+        click. Find artwork does the same lookup when you click it. The request sends the artist and title, and the
+        album and remix name when those fields have text, to the MusicBrainz web service. A chosen or matched cover is
+        downloaded from the Cover Art Archive (Internet Archive). The audio file is not sent. TrackTidy does not keep
+        the query or the image. You can remove the cover or replace it before you download. The legal basis is that
+        you asked for the lookup by opening a file without artwork, or by clicking Find artwork (GDPR Article 6(1)(b)).
+        MusicBrainz and the Internet Archive are separate services with their own policies. If nothing reliable
+        matches, you can upload a JPEG or PNG from this computer instead. That upload stays in the browser.
+      </p>
       <h3>Filename template</h3>
       <p>
         The filename pattern is saved in local storage under <code>tracktidy.template</code> so the same pattern is
@@ -52,7 +64,8 @@ export default function PrivacyPage() {
       <h3>Consent choice</h3>
       <p>
         Your analytics choice is saved in local storage under <code>tracktidy.consent</code>. Remembering that choice
-        is necessary so the site does not ask on every page and does not load analytics after a refusal. It is kept
+        is necessary so the site does not ask on every page and does not load the optional Analytics 4 script after a
+        refusal. It is kept
         until you change it in Cookie settings or clear site data.
       </p>
       <h3>Optional analytics</h3>
@@ -77,7 +90,13 @@ export default function PrivacyPage() {
         Google may also receive technical data such as browser type and a coarse location derived from the IP
         address. Google Analytics 4 is provided by Google. Data may be processed in the European Economic Area and
         the United States. Google describes its own transfer tools in its privacy terms. TrackTidy does not use
-        advertising cookies or other analytics vendors.
+        advertising cookies from the optional Analytics 4 script.
+      </p>
+      <p>
+        Each page also loads the Google Tag Manager container GTM-TWVDH6V3 from googletagmanager.com. That request
+        happens when the page loads, before an analytics choice. Tags inside the container are configured in Google
+        Tag Manager. The optional Google Analytics 4 script above is separate: it still loads only after Accept, and
+        only when a measurement ID is configured.
       </p>
       <h3>Hosting logs</h3>
       <p>

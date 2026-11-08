@@ -156,6 +156,29 @@ export function inspectTag(buffer: ArrayBuffer): TagPlan {
   };
 }
 
+/** Adjusts the static export note once the user has chosen different artwork. */
+export function noticeWithArtwork(notice: string | null, artworkChanged: boolean, removed = false): string | null {
+  if (removed) {
+    if (notice?.includes('may be dropped')) {
+      return 'The download removes the artwork and writes a new ID3v2.3 tag. Cue points and uncommon frames may be dropped. The audio is not re-encoded.';
+    }
+    return 'The download removes the artwork. Other frames stay in the file. The audio is not re-encoded.';
+  }
+  if (!artworkChanged) return notice;
+  const embedded = 'The artwork shown here is embedded in the download. The audio is not re-encoded.';
+  if (!notice) return embedded;
+  if (notice.includes('may be dropped')) {
+    return 'The artwork shown here is written into a new ID3v2.3 tag. Cue points and uncommon frames may be dropped. The audio is not re-encoded.';
+  }
+  if (notice.includes('Artwork, cue data')) {
+    return 'Export updates the fields you change and embeds the artwork shown here. Cue data and the other frames stay in the file. The audio is not re-encoded.';
+  }
+  if (notice.includes('including artwork')) {
+    return 'Export updates the fields you change and embeds the artwork shown here. Cue data stays in place. An old ID3v1 trailer is removed when a field changes, so it can’t contradict the edit.';
+  }
+  return `${notice} ${embedded}`;
+}
+
 function encodeText(value: string, version: 3 | 4): Uint8Array {
   const clean = value.split('\0').join('').trim();
   if (version === 4) {
@@ -265,7 +288,46 @@ function writerBuffer(buffer: ArrayBuffer): ArrayBuffer {
   return stripped.buffer.slice(stripped.byteOffset, stripped.byteOffset + stripped.byteLength) as ArrayBuffer;
 }
 
-function writeFresh(audio: ArrayBuffer, fields: TrackFields, fallback: FallbackPayload | null): Uint8Array {
+export type ArtworkWrite = { data: Uint8Array; mime: string };
+
+function artworkMime(mime: string): 'image/jpeg' | 'image/png' {
+  const named = mime.toLowerCase();
+  if (named === 'image/jpg' || named === 'image/jpeg') return 'image/jpeg';
+  if (named === 'image/png') return 'image/png';
+  throw new Error('Artwork must be a JPEG or PNG image.');
+}
+
+function buildApicFrame(mime: string, image: Uint8Array, version: 3 | 4): Uint8Array {
+  const mimeBytes = new TextEncoder().encode(mime);
+  const payload = new Uint8Array(1 + mimeBytes.length + 1 + 1 + 1 + image.length);
+  let offset = 0;
+  payload[offset] = 0;
+  offset += 1;
+  payload.set(mimeBytes, offset);
+  offset += mimeBytes.length;
+  payload[offset] = 0;
+  offset += 1;
+  payload[offset] = 3;
+  offset += 1;
+  payload[offset] = 0;
+  offset += 1;
+  payload.set(image, offset);
+  const frame = new Uint8Array(10 + payload.length);
+  frame[0] = 0x41;
+  frame[1] = 0x50;
+  frame[2] = 0x49;
+  frame[3] = 0x43;
+  frame.set(version === 4 ? writeSynchsafe(payload.length) : writeU32(payload.length), 4);
+  frame.set(payload, 10);
+  return frame;
+}
+
+function writeFresh(
+  audio: ArrayBuffer,
+  fields: TrackFields,
+  fallback: FallbackPayload | null,
+  artwork: 'keep' | 'remove' | ArtworkWrite,
+): Uint8Array {
   const writer = new ID3Writer(writerBuffer(audio));
   if (fields.title.trim()) writer.setFrame('TIT2', fields.title.trim());
   if (fields.artist.trim()) writer.setFrame('TPE1', [fields.artist.trim()]);
@@ -282,7 +344,13 @@ function writeFresh(audio: ArrayBuffer, fields: TrackFields, fallback: FallbackP
   if (fallback?.comment) {
     writer.setFrame('COMM', { description: '', text: fallback.comment, language: 'eng' });
   }
-  for (const picture of fallback?.pictures ?? []) {
+  const pictures =
+    artwork === 'keep'
+      ? (fallback?.pictures ?? [])
+      : artwork === 'remove'
+        ? []
+        : [{ data: artwork.data, type: 3, description: '' }];
+  for (const picture of pictures) {
     const data = picture.data.buffer.slice(
       picture.data.byteOffset,
       picture.data.byteOffset + picture.data.byteLength,
@@ -308,10 +376,13 @@ export function writeTrack(
     original: TrackFields;
     remixFrame: 'TIT3' | 'TPE4';
     fallback: FallbackPayload | null;
+    /** `keep` leaves every APIC frame untouched. A picture replaces the cover. `remove` drops it. */
+    artwork?: 'keep' | 'remove' | ArtworkWrite;
   },
 ): WriteResult {
+  const artwork = edit.artwork ?? 'keep';
   const changed = changedFields(edit.fields, edit.original);
-  if (changed.length === 0) {
+  if (changed.length === 0 && artwork === 'keep') {
     return { bytes: new Uint8Array(buffer), notice: null };
   }
 
@@ -321,7 +392,7 @@ export function writeTrack(
 
   if (parsed === 'fallback' || !parsed) {
     return {
-      bytes: writeFresh(buffer, edit.fields, edit.fallback),
+      bytes: writeFresh(buffer, edit.fields, edit.fallback, artwork),
       notice: invalidBpm ? 'BPM was not written because it is not a positive number.' : null,
     };
   }
@@ -332,6 +403,14 @@ export function writeTrack(
     const frameId = key === 'remix' ? edit.remixFrame : TEXT_FRAMES[key];
     const value = normalizedField(key, edit.fields[key]);
     updates.set(frameId, value ? buildTextFrame(frameId, value, parsed.version) : null);
+  }
+  if (artwork === 'remove') {
+    updates.set('APIC', null);
+  } else if (artwork !== 'keep') {
+    const mime = artworkMime(artwork.mime);
+    if (artwork.data.byteLength === 0) throw new Error('Artwork is empty.');
+    if (artwork.data.byteLength > 1_500_000) throw new Error('This image is too large to embed.');
+    updates.set('APIC', buildApicFrame(mime, artwork.data, parsed.version));
   }
 
   if (updates.size === 0) {

@@ -16,6 +16,7 @@ type Props = {
   scanning: boolean;
   stages: Stage[];
   onEdit?: () => void;
+  onStop?: () => void;
 };
 
 const FALLBACK = decorativePeaks(64);
@@ -30,12 +31,15 @@ function lanePeaks(source: number[], offset: number) {
   return peaks;
 }
 
-export function AnalysisScreen({ name, peaks, scanning, stages, onEdit }: Props) {
+export function AnalysisScreen({ name, peaks, scanning, stages, onEdit, onStop }: Props) {
   const reduced = useReducedMotion();
   const source = peaks && peaks.length > 0 ? peaks : FALLBACK;
   const finished = stages.filter((stage) => stage.state === 'done' || stage.state === 'warn').length;
-  const running = stages.some((stage) => stage.state === 'run');
+  const active = stages.find((stage) => stage.state === 'run');
+  const failed = stages.find((stage) => stage.state === 'warn');
+  const running = Boolean(active);
   const progress = Math.min(100, ((finished + (running ? 0.4 : 0)) / stages.length) * 100);
+  const note = active?.detail ?? failed?.detail ?? 'This usually takes a few seconds.';
 
   return (
     <section className="analyze" aria-live="polite">
@@ -71,14 +75,21 @@ export function AnalysisScreen({ name, peaks, scanning, stages, onEdit }: Props)
           ))}
         </ol>
         <h1 className="analyze-status">
-          <span className={reduced ? 'live-dot live-dot-still' : 'live-dot'} />
-          {running || finished < stages.length ? 'Analyzing audio' : 'Analysis ready'}
+          <span className={reduced || !running ? 'live-dot live-dot-still' : 'live-dot'} />
+          {running ? 'Analyzing audio' : failed ? 'Analysis stopped' : 'Analysis ready'}
         </h1>
         <p className="analyze-file">{name}</p>
-        <p className="analyze-note">This usually takes a few seconds.</p>
+        <p className={failed && !running ? 'analyze-note analyze-note-warn' : 'analyze-note'} role={failed && !running ? 'alert' : undefined}>
+          {note}
+        </p>
         {onEdit ? (
           <button type="button" className="btn btn-secondary" onClick={onEdit}>
             Edit now
+          </button>
+        ) : null}
+        {onStop ? (
+          <button type="button" className="btn btn-secondary" data-testid="analysis-stop" onClick={onStop}>
+            Stop
           </button>
         ) : null}
       </div>

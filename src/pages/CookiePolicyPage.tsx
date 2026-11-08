@@ -24,15 +24,19 @@ export default function CookiePolicyPage() {
       <ul>
         <li>
           <code>tracktidy.consent</code> in local storage. Values: accepted or rejected. Purpose: remember your
-          analytics choice so the Google script is not loaded after a refusal. Duration: until you change it or clear
-          site data.
+          analytics choice so the optional Google Analytics 4 script is not loaded after a refusal. Duration: until you
+          change it or clear site data.
         </li>
         <li>
           <code>tracktidy.template</code> in local storage. Purpose: remember your filename pattern. Duration: until
           you replace it or clear site data. It is not sent to analytics.
         </li>
       </ul>
-      <p>The site does not set a cookie before you accept analytics.</p>
+      <p>
+        TrackTidy does not set its own cookie before you accept analytics. The page head loads Google Tag Manager
+        container GTM-TWVDH6V3 when the page opens, so that request reaches Google before a choice. Cookies set by
+        tags inside that container depend on the container configuration.
+      </p>
 
       <h2>Analytics cookies</h2>
       <p>
@@ -50,7 +54,8 @@ export default function CookiePolicyPage() {
         </li>
       </ul>
       <p>
-        No other analytics, advertising, or social cookies are used. Rejecting, or changing your mind in Cookie
+        No other analytics vendor is named in this application. The tag manager container can load the tags configured
+        for it. Rejecting, or changing your mind in Cookie
         settings, stops collection and clears the analytics cookies this site can remove. You can also block or
         delete cookies in your browser.
       </p>

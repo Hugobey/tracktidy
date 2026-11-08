@@ -1,4 +1,5 @@
 import { parseBlob } from 'music-metadata';
+import { sniffImage, type ImageMime } from './artwork.ts';
 import { formatBpm } from './format.ts';
 import { inspectTag, pictureTypeFromLabel } from './id3.ts';
 import type { FallbackPayload, TagPlan, TechnicalInfo, TrackFields } from './types.ts';
@@ -9,6 +10,8 @@ export type ReadTrack = {
   technical: TechnicalInfo;
   kept: string[];
   coverUrl: string | null;
+  /** JPEG or PNG cover bytes. Other image types stay in the file until the user replaces them. */
+  cover: { data: Uint8Array; mime: ImageMime } | null;
   plan: TagPlan;
   fallback: FallbackPayload | null;
 };
@@ -51,11 +54,20 @@ export async function readTrack(buffer: ArrayBuffer): Promise<ReadTrack> {
 
   const pictures = common.picture ?? [];
   let coverUrl: string | null = null;
-  const cover = pictures.find((picture) => picture.type === 'Cover (front)') ?? pictures[0];
-  if (cover) {
+  let cover: { data: Uint8Array; mime: ImageMime } | null = null;
+  const coverPicture = pictures.find((picture) => picture.type === 'Cover (front)') ?? pictures[0];
+  if (coverPicture) {
+    const named = coverPicture.format?.toLowerCase() ?? '';
+    const mime =
+      named === 'image/jpeg' || named === 'image/jpg'
+        ? 'image/jpeg'
+        : named === 'image/png'
+          ? 'image/png'
+          : sniffImage(coverPicture.data);
     coverUrl = URL.createObjectURL(
-      new Blob([arrayBufferOf(cover.data)], { type: cover.format || 'image/jpeg' }),
+      new Blob([arrayBufferOf(coverPicture.data)], { type: mime || coverPicture.format || 'image/jpeg' }),
     );
+    if (mime) cover = { data: copyBytes(coverPicture.data), mime };
   }
 
   const year = common.year ?? null;
@@ -103,6 +115,7 @@ export async function readTrack(buffer: ArrayBuffer): Promise<ReadTrack> {
     },
     kept,
     coverUrl,
+    cover,
     plan,
     fallback,
   };

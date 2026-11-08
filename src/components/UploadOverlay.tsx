@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Atmosphere } from './Atmosphere.tsx';
+import { ErrorBanner } from './ErrorBanner.tsx';
 import { Logo } from './Logo.tsx';
 import { useConsent } from './consent-context.ts';
 
@@ -78,7 +79,9 @@ export function UploadOverlay({ error, onClose, onFile, heading = 'h1' }: Props)
           </span>
         </button>
         <div
-          className={dragOver ? 'drop-well drop-hot sheet-enter d3' : 'drop-well sheet-enter d3'}
+          className={
+            dragOver ? 'drop-well drop-hot sheet-enter d3' : error ? 'drop-well drop-error sheet-enter d3' : 'drop-well sheet-enter d3'
+          }
           onClick={browse}
           onDragEnter={(event) => {
             event.preventDefault();
@@ -116,12 +119,12 @@ export function UploadOverlay({ error, onClose, onFile, heading = 'h1' }: Props)
           >
             Browse files
           </button>
-          {error ? (
-            <p className="hint hint-warn" role="alert" data-testid="drop-error">
-              {error}
-            </p>
-          ) : null}
         </div>
+        {error ? (
+          <ErrorBanner title="Could not import" testId="drop-error">
+            {error}
+          </ErrorBanner>
+        ) : null}
         <aside className="privacy-card sheet-enter d4">
           <p className="privacy-title">
             <span className="lock" aria-hidden="true" />
@@ -143,7 +146,7 @@ export function UploadOverlay({ error, onClose, onFile, heading = 'h1' }: Props)
         ref={inputRef}
         className="file-input"
         type="file"
-        accept=".mp3,audio/mpeg,audio/mp3"
+        accept=".mp3,.wav,.aif,.aiff,.flac,.m4a,.mp4,.aac,.ogg,.opus,audio/*"
         onChange={(event) => {
           take(event.target.files);
           event.target.value = '';

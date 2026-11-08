@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnalysisScreen, type Stage } from '../components/AnalysisScreen.tsx';
+import { ArtworkPanel } from '../components/ArtworkPanel.tsx';
 import { Atmosphere } from '../components/Atmosphere.tsx';
 import { Button } from '../components/Button.tsx';
+import { ErrorBanner } from '../components/ErrorBanner.tsx';
 import { Logo } from '../components/Logo.tsx';
 import { MetadataEditor } from '../components/MetadataEditor.tsx';
 import { SiteFooter } from '../components/SiteFooter.tsx';
@@ -10,14 +12,15 @@ import { SiteHead } from '../components/SiteHead.tsx';
 import { UploadOverlay } from '../components/UploadOverlay.tsx';
 import { Waveform } from '../components/Waveform.tsx';
 import { trackEvent } from '../lib/analytics.ts';
+import { bytesEqual, fitArtwork, loadArtwork, searchArtwork, type ImageMime } from '../lib/artwork.ts';
 import { clearPending, peekPending } from '../lib/pendingFile.ts';
 import { TOOL_DESCRIPTION, TOOL_TITLE } from '../lib/site.ts';
-import { decodeAudio, detectBpm, detectKey, waveformPeaks } from '../lib/audio.ts';
+import { ANALYSIS_STEP_MS, decodeAudio, detectBpm, detectKey, waveformPeaks, withTimeout } from '../lib/audio.ts';
 import { DEFAULT_TEMPLATE, bpmToken, renderFilename, type FilenamePreview } from '../lib/filename.ts';
 import { formatBitrate, formatBytes, formatChannels, formatDuration, formatSampleRate } from '../lib/format.ts';
-import { writeTrack } from '../lib/id3.ts';
+import { noticeWithArtwork, writeTrack } from '../lib/id3.ts';
 import { readTrack } from '../lib/metadata.ts';
-import { maxFileBytes, rejectionMessage } from '../lib/mp3.ts';
+import { maxFileBytes, readErrorMessage, rejectionMessage, tooLargeMessage } from '../lib/mp3.ts';
 import type { FallbackPayload, TagPlan, TechnicalInfo, TrackFields } from '../lib/types.ts';
 
 const TEMPLATE_KEY = 'tracktidy.template';
@@ -73,6 +76,12 @@ type TrackState = {
   technical: TechnicalInfo;
   kept: string[];
   coverUrl: string | null;
+  coverBytes: Uint8Array | null;
+  coverMime: ImageMime | null;
+  embeddedCover: Uint8Array | null;
+  hadCover: boolean;
+  coverFrom: 'file' | 'search' | 'upload' | null;
+  coverChanged: boolean;
   plan: TagPlan;
   fallback: FallbackPayload | null;
   peaks: number[] | null;
@@ -98,10 +107,12 @@ function emptyAnalysis(): Analysis {
     bpmError: null,
     key: null,
     keyError: null,
-    bpmPending: true,
-    keyPending: true,
+    bpmPending: false,
+    keyPending: false,
   };
 }
+
+
 
 function stagesFor(current: TrackState | null): Stage[] {
   if (!current) {
@@ -112,21 +123,26 @@ function stagesFor(current: TrackState | null): Stage[] {
       { label: 'Key', detail: 'Waiting', state: 'wait' },
     ];
   }
+  const decoding = !current.peaks && !current.waveformError;
   const wave: Stage = current.waveformError
-    ? { label: 'Wave', detail: 'Unavailable', state: 'warn' }
+    ? { label: 'Wave', detail: 'Could not decode the audio', state: 'warn' }
     : current.peaks
       ? { label: 'Wave', detail: 'Drawn', state: 'done' }
-      : { label: 'Wave', detail: 'Reading audio', state: 'run' };
+      : { label: 'Wave', detail: 'Decoding audio', state: 'run' };
   const tempo: Stage = current.analysis.bpm
     ? { label: 'Tempo', detail: 'Measured', state: 'done' }
     : current.analysis.bpmError
       ? { label: 'Tempo', detail: 'Not measured', state: 'warn' }
-      : { label: 'Tempo', detail: 'Detecting', state: 'run' };
+      : current.analysis.bpmPending
+        ? { label: 'Tempo', detail: 'Detecting tempo', state: 'run' }
+        : { label: 'Tempo', detail: decoding ? 'Waiting for audio' : 'Waiting', state: 'wait' };
   const key: Stage = current.analysis.key
     ? { label: 'Key', detail: current.analysis.key.low ? 'Low confidence' : 'Estimated', state: 'done' }
     : current.analysis.keyError
       ? { label: 'Key', detail: 'Not estimated', state: 'warn' }
-      : { label: 'Key', detail: 'Estimating', state: 'run' };
+      : current.analysis.keyPending
+        ? { label: 'Key', detail: 'Estimating key', state: 'run' }
+        : { label: 'Key', detail: decoding ? 'Waiting for audio' : 'Waiting', state: 'wait' };
   return [{ label: 'Read', detail: 'Tags read', state: 'done' }, wave, tempo, key];
 }
 
@@ -135,6 +151,8 @@ export default function ToolPage() {
   const [phase, setPhase] = useState<'idle' | 'processing' | 'edit'>('idle');
   const [track, setTrack] = useState<TrackState | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [artworkBusy, setArtworkBusy] = useState(false);
+  const [artworkNote, setArtworkNote] = useState<string | null>(null);
   const [extraNote, setExtraNote] = useState<string | null>(null);
   const [template, setTemplate] = useState(storedTemplate);
   const [prompt, setPrompt] = useState<Prompt>(null);
@@ -143,8 +161,10 @@ export default function ToolPage() {
   const [exportNote, setExportNote] = useState<string | null>(null);
   const [exportError, setExportError] = useState(false);
   const loadId = useRef(0);
+  const trackRef = useRef<TrackState | null>(null);
   const audioRef = useRef<AudioBuffer | null>(null);
   const coverRef = useRef<string | null>(null);
+  const artworkLock = useRef(false);
   const dragDepth = useRef(0);
   const acceptRef = useRef<(list: FileList | File[]) => void>(() => {});
   const ingestRef = useRef<(file: File, extra: boolean) => void>(() => {});
@@ -154,6 +174,53 @@ export default function ToolPage() {
   useEffect(() => {
     trackEvent('tool_opened');
   }, []);
+
+  useEffect(() => {
+    trackRef.current = track;
+  }, [track]);
+
+  useEffect(() => {
+    if (phase !== 'processing') return undefined;
+    const id = loadId.current;
+    const timer = window.setTimeout(() => {
+      if (loadId.current !== id) return;
+      loadId.current += 1;
+      const current = trackRef.current;
+      if (!current) {
+        setImportError('Reading this file took too long and was stopped. It may be damaged, or the browser could not finish opening it.');
+        setPhase('idle');
+        trackEvent('processing_failed', { stage: 'read' });
+        return;
+      }
+      setTrack((trackState) =>
+        trackState
+          ? {
+              ...trackState,
+              waveformError:
+                trackState.peaks || trackState.waveformError
+                  ? trackState.waveformError
+                  : 'The waveform was not drawn because analysis was stopped.',
+              analysis: {
+                ...trackState.analysis,
+                bpmPending: false,
+                keyPending: false,
+                bpmError:
+                  trackState.analysis.bpm || trackState.analysis.bpmError
+                    ? trackState.analysis.bpmError
+                    : 'Tempo detection did not finish and was stopped.',
+                keyError:
+                  trackState.analysis.key || trackState.analysis.keyError
+                    ? trackState.analysis.keyError
+                    : 'Key estimation did not finish and was stopped.',
+              },
+            }
+          : trackState,
+      );
+      setPhase('edit');
+      trackEvent('processing_failed', { stage: 'decode' });
+    }, ANALYSIS_STEP_MS * 4);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
 
   useEffect(() => {
     return () => {
@@ -221,16 +288,19 @@ export default function ToolPage() {
     audioRef.current = null;
     setPrompt(null);
     setImportError(null);
+    setArtworkBusy(false);
+    setArtworkNote(null);
+    artworkLock.current = false;
     setExportNote(null);
     setExportError(false);
     setExtraNote(extra ? 'Only the first file was used. TrackTidy handles one track at a time.' : null);
     setPhase('processing');
     setTrack(null);
+    trackRef.current = null;
     trackEvent('file_upload_started');
 
     if (file.size > maxFileBytes()) {
-      const mb = Math.round(file.size / (1024 * 1024));
-      setImportError(`This file is ${mb} MB. TrackTidy processes one MP3 up to 100 MB in the browser.`);
+      setImportError(tooLargeMessage(file.size));
       setPhase('idle');
       trackEvent('processing_failed', { stage: 'size' });
       return;
@@ -238,10 +308,14 @@ export default function ToolPage() {
 
     let buffer: ArrayBuffer;
     try {
-      buffer = await file.arrayBuffer();
-    } catch {
+      buffer = await withTimeout(
+        file.arrayBuffer(),
+        ANALYSIS_STEP_MS,
+        'Opening this file took too long and was stopped.',
+      );
+    } catch (error) {
       if (id !== loadId.current) return;
-      setImportError('This file could not be read from disk.');
+      setImportError(readErrorMessage(error));
       setPhase('idle');
       trackEvent('processing_failed', { stage: 'read' });
       return;
@@ -258,10 +332,18 @@ export default function ToolPage() {
 
     let parsed;
     try {
-      parsed = await readTrack(buffer);
-    } catch {
+      parsed = await withTimeout(
+        readTrack(buffer),
+        ANALYSIS_STEP_MS,
+        'Reading the tags took too long and was stopped. The file may be damaged or too unusual to parse.',
+      );
+    } catch (error) {
       if (id !== loadId.current) return;
-      setImportError('This MP3 could not be read. The file may be damaged.');
+      setImportError(
+        error instanceof Error && error.message.includes('was stopped')
+          ? error.message
+          : 'This MP3 could not be read. The file may be damaged.',
+      );
       setPhase('idle');
       trackEvent('processing_failed', { stage: 'tags' });
       return;
@@ -287,14 +369,71 @@ export default function ToolPage() {
       technical: parsed.technical,
       kept: parsed.kept,
       coverUrl: parsed.coverUrl,
+      coverBytes: parsed.cover?.data ?? null,
+      coverMime: parsed.cover?.mime ?? null,
+      embeddedCover: parsed.cover?.data ?? null,
+      hadCover: Boolean(parsed.coverUrl),
+      coverFrom: parsed.coverUrl ? 'file' : null,
+      coverChanged: false,
       plan: parsed.plan,
       fallback: parsed.fallback,
       peaks: null,
       waveformError: null,
       analysis: emptyAnalysis(),
     };
+    trackRef.current = next;
     setTrack(next);
     void analyse(id, buffer);
+    if (!parsed.coverUrl && parsed.fields.artist.trim() && parsed.fields.title.trim()) {
+      void lookupCover(id, parsed.fields);
+    }
+  }
+
+  async function lookupCover(id: number, fields: TrackFields) {
+    setArtworkBusy(true);
+    setArtworkNote(null);
+    try {
+      const hits = await searchArtwork({
+        artist: fields.artist,
+        title: fields.title,
+        album: fields.album,
+        remix: fields.remix,
+      });
+      if (id !== loadId.current || artworkLock.current) return;
+      const hit = hits[0];
+      if (!hit) {
+        setArtworkNote('No reliable artwork match was found for this artist and title. You can upload an image instead.');
+        return;
+      }
+      const loaded = await loadArtwork(hit.imageUrl);
+      if (id !== loadId.current || artworkLock.current) return;
+      const fitted = await fitArtwork(loaded.bytes, loaded.mime);
+      const seen = trackRef.current;
+      if (id !== loadId.current || artworkLock.current || !seen || seen.coverUrl || seen.coverChanged || seen.hadCover) {
+        return;
+      }
+      const copy = new ArrayBuffer(fitted.bytes.byteLength);
+      new Uint8Array(copy).set(fitted.bytes);
+      const bytes = new Uint8Array(copy);
+      const url = URL.createObjectURL(new Blob([copy], { type: fitted.mime }));
+      rememberCover(url);
+      setTrack((current) => {
+        if (artworkLock.current || !current || current.coverUrl || current.coverChanged || current.hadCover) return current;
+        return {
+          ...current,
+          coverUrl: url,
+          coverBytes: bytes,
+          coverMime: fitted.mime,
+          coverFrom: 'search',
+          coverChanged: !bytesEqual(current.embeddedCover, bytes),
+        };
+      });
+    } catch (caught) {
+      if (id !== loadId.current || artworkLock.current) return;
+      setArtworkNote(caught instanceof Error ? caught.message : 'Artwork search failed. You can upload an image instead.');
+    } finally {
+      if (id === loadId.current) setArtworkBusy(false);
+    }
   }
 
   useEffect(() => {
@@ -322,10 +461,16 @@ export default function ToolPage() {
     let audio: AudioBuffer;
     try {
       audio = await decodeAudio(buffer);
-    } catch {
+    } catch (error) {
       if (id !== loadId.current) return;
       audioRef.current = null;
-      const message = 'This MP3 could not be decoded, so tempo and key were not measured. Tags can still be edited.';
+      const reason =
+        error instanceof Error && error.message.trim()
+          ? error.message.trim()
+          : 'The browser could not decode this MP3.';
+      const message = reason.includes('tags can still be edited')
+        ? reason
+        : `${reason.replace(/[.!?]\s*$/, '')}. Tempo and key were not measured. The tags can still be edited.`;
       trackEvent('processing_failed', { stage: 'decode' });
       setTrack((current) =>
         current
@@ -336,8 +481,8 @@ export default function ToolPage() {
                 ...current.analysis,
                 bpmPending: false,
                 keyPending: false,
-                bpmError: message,
-                keyError: message,
+                bpmError: 'Tempo was not measured because the audio could not be decoded.',
+                keyError: 'Key was not estimated because the audio could not be decoded.',
               },
             }
           : current,
@@ -354,6 +499,7 @@ export default function ToolPage() {
             ...current,
             peaks,
             technical: { ...current.technical, duration: audio.duration },
+            analysis: { ...current.analysis, bpmPending: true, keyPending: true },
           }
         : current,
     );
@@ -534,6 +680,90 @@ export default function ToolPage() {
     setExportNote(null);
     setExtraNote(null);
     setImportError(null);
+    setArtworkBusy(false);
+    setArtworkNote(null);
+    artworkLock.current = false;
+  }
+
+  function stopAnalysis() {
+    loadId.current += 1;
+    audioRef.current = null;
+    const current = trackRef.current;
+    if (!current) {
+      setImportError('Reading was stopped before the file could be opened.');
+      setTrack(null);
+      setPhase('idle');
+      return;
+    }
+    setTrack((trackState) =>
+      trackState
+        ? {
+            ...trackState,
+            waveformError:
+              trackState.peaks || trackState.waveformError
+                ? trackState.waveformError
+                : 'Decoding was stopped, so the waveform, tempo, and key were not measured. The tags can still be edited.',
+            analysis: {
+              ...trackState.analysis,
+              bpmPending: false,
+              keyPending: false,
+              bpm: trackState.analysis.bpm,
+              key: trackState.analysis.key,
+              bpmError:
+                trackState.analysis.bpm || trackState.analysis.bpmError
+                  ? trackState.analysis.bpmError
+                  : 'Tempo detection was stopped before it finished.',
+              keyError:
+                trackState.analysis.key || trackState.analysis.keyError
+                  ? trackState.analysis.keyError
+                  : 'Key estimation was stopped before it finished.',
+            },
+          }
+        : trackState,
+    );
+    setPhase('edit');
+  }
+
+  function applyArtwork(data: Uint8Array, mime: ImageMime, from: 'search' | 'upload') {
+    const copy = new ArrayBuffer(data.byteLength);
+    new Uint8Array(copy).set(data);
+    const bytes = new Uint8Array(copy);
+    const url = URL.createObjectURL(new Blob([copy], { type: mime }));
+    rememberCover(url);
+    setArtworkNote(null);
+    setTrack((current) =>
+      current
+        ? {
+            ...current,
+            coverUrl: url,
+            coverBytes: bytes,
+            coverMime: mime,
+            coverFrom: from,
+            coverChanged: !bytesEqual(current.embeddedCover, bytes),
+          }
+        : current,
+    );
+    setExportNote(null);
+    setExportError(false);
+  }
+
+  function removeArtwork() {
+    rememberCover(null);
+    setArtworkNote(null);
+    setTrack((current) =>
+      current
+        ? {
+            ...current,
+            coverUrl: null,
+            coverBytes: null,
+            coverMime: null,
+            coverFrom: null,
+            coverChanged: current.hadCover,
+          }
+        : current,
+    );
+    setExportNote(null);
+    setExportError(false);
   }
 
   function onDownload() {
@@ -546,6 +776,11 @@ export default function ToolPage() {
         original: track.fileFields,
         remixFrame: track.remixFrame,
         fallback: track.fallback,
+        artwork: !track.coverChanged
+          ? 'keep'
+          : track.coverBytes && track.coverMime
+            ? { data: track.coverBytes, mime: track.coverMime }
+            : 'remove',
       });
       const copy = new ArrayBuffer(result.bytes.byteLength);
       new Uint8Array(copy).set(result.bytes);
@@ -593,7 +828,24 @@ export default function ToolPage() {
         .join(' · ')
     : '';
 
+  const exportNotice = track
+    ? noticeWithArtwork(
+        track.plan.notice,
+        Boolean(track.coverChanged && track.coverBytes),
+        Boolean(track.coverChanged && !track.coverBytes),
+      )
+    : null;
+  const keptOnExport = track
+    ? track.coverChanged
+      ? track.kept.filter((item) => item !== 'artwork' && !item.endsWith(' images'))
+      : track.kept
+    : [];
   const stages = stagesFor(phase === 'processing' ? track : null);
+  const analysisProblem = !track
+    ? ''
+    : track.waveformError
+      ? track.waveformError
+      : [track.analysis.bpmError, track.analysis.keyError].filter(Boolean).join(' ');
 
   return (
     <div className={dragOver ? 'tool drag-active' : 'tool'}>
@@ -622,9 +874,21 @@ export default function ToolPage() {
       ) : null}
 
       {exportNote ? (
-        <p className={exportError ? 'status-strip hint-warn' : 'status-strip'} role="status" data-testid="export-status">
-          {exportNote}
-        </p>
+        exportError ? (
+          <ErrorBanner title="Could not prepare the file" testId="export-status" className="page-error">
+            {exportNote}
+          </ErrorBanner>
+        ) : (
+          <p className="status-strip" role="status" data-testid="export-status">
+            {exportNote}
+          </p>
+        )
+      ) : null}
+
+      {phase === 'edit' && analysisProblem ? (
+        <ErrorBanner title="Could not finish analysis" testId="analysis-error" className="page-error">
+          {analysisProblem}
+        </ErrorBanner>
       ) : null}
 
       {prompt ? (
@@ -667,7 +931,8 @@ export default function ToolPage() {
             peaks={track?.peaks ?? null}
             scanning={scanning || !track}
             stages={stages}
-            onEdit={track ? () => setPhase('edit') : undefined}
+            onEdit={track?.peaks ? () => setPhase('edit') : undefined}
+            onStop={stopAnalysis}
           />
         ) : null}
 
@@ -676,23 +941,36 @@ export default function ToolPage() {
             <ResultCompare name={track.name} fileFields={track.fileFields} fields={track.fields} preview={preview} />
             <div className="file-col">
               <div className="file-heading">
-                {track.coverUrl ? <img src={track.coverUrl} alt="Embedded artwork" className="cover" /> : null}
                 <div>
                   <p className="kicker">File</p>
                   <p className="tech-line">{tech}</p>
                 </div>
               </div>
+              <ArtworkPanel
+                previewUrl={track.coverUrl}
+                source={track.coverFrom}
+                artist={track.fields.artist}
+                title={track.fields.title}
+                album={track.fields.album}
+                remix={track.fields.remix}
+                busy={artworkBusy}
+                note={artworkNote}
+                onApply={applyArtwork}
+                onRemove={removeArtwork}
+                onInteract={() => {
+                  artworkLock.current = true;
+                  setArtworkNote(null);
+                }}
+              />
               {track.peaks ? (
                 <Waveform peaks={track.peaks} scanning={scanning} label={`Waveform of ${track.name}`} />
-              ) : (
-                <p className="hint hint-warn">{track.waveformError}</p>
-              )}
-              {extraNote ? <p className="hint">{extraNote}</p> : null}
-              {track.plan.notice ? <p className="hint">{track.plan.notice}</p> : null}
-              {track.kept.length > 0 ? (
-                <p className="hint">Also kept on export: {track.kept.join(', ')}.</p>
+              ) : track.waveformError ? (
+                <p className="hint hint-danger">{track.waveformError}</p>
               ) : null}
-              <p className="hint">Processed in this browser. The file is not uploaded.</p>
+              {extraNote ? <p className="hint">{extraNote}</p> : null}
+              {exportNotice ? <p className="hint">{exportNotice}</p> : null}
+              {keptOnExport.length > 0 ? <p className="hint">Also kept on export: {keptOnExport.join(', ')}.</p> : null}
+              <p className="hint">The audio stays in this browser and is not uploaded.</p>
             </div>
             <div className="edit-col">
               <MetadataEditor
