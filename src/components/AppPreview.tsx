@@ -17,9 +17,14 @@ export function AppPreview() {
           </svg>
         </span>
         <div>
-          <p className="preview-name">Nora Voss — Night Circuit</p>
+          <p className="kicker">Original</p>
+          <p className="preview-name">y2mate.com_Nora Voss_Night Circuit [f8K2p9xL].mp3</p>
           <p className="tech-line">MP3 · 320 kbps · 6:42</p>
         </div>
+      </div>
+      <div className="nameplate nameplate-result">
+        <p className="kicker kicker-blue">Cleaned result</p>
+        <p>Nora Voss - Night Circuit.mp3</p>
       </div>
       <Waveform peaks={PEAKS} scanning label="Decorative waveform" amplitude={36} compact className="wave-preview" />
       <div className="stat-row">
@@ -35,10 +40,6 @@ export function AppPreview() {
           <strong>Deep House</strong>
           <span>Genre</span>
         </div>
-      </div>
-      <div className="nameplate">
-        <p className="kicker">Filename</p>
-        <p>Nora Voss - Night Circuit (124 BPM) [F#m].mp3</p>
       </div>
     </div>
   );

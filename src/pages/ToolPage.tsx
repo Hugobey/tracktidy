@@ -5,11 +5,15 @@ import { Atmosphere } from '../components/Atmosphere.tsx';
 import { Button } from '../components/Button.tsx';
 import { Logo } from '../components/Logo.tsx';
 import { MetadataEditor } from '../components/MetadataEditor.tsx';
+import { SiteFooter } from '../components/SiteFooter.tsx';
+import { SiteHead } from '../components/SiteHead.tsx';
 import { UploadOverlay } from '../components/UploadOverlay.tsx';
 import { Waveform } from '../components/Waveform.tsx';
+import { trackEvent } from '../lib/analytics.ts';
 import { clearPending, peekPending } from '../lib/pendingFile.ts';
+import { TOOL_DESCRIPTION, TOOL_TITLE } from '../lib/site.ts';
 import { decodeAudio, detectBpm, detectKey, waveformPeaks } from '../lib/audio.ts';
-import { DEFAULT_TEMPLATE, renderFilename } from '../lib/filename.ts';
+import { DEFAULT_TEMPLATE, bpmToken, renderFilename, type FilenamePreview } from '../lib/filename.ts';
 import { formatBitrate, formatBytes, formatChannels, formatDuration, formatSampleRate } from '../lib/format.ts';
 import { writeTrack } from '../lib/id3.ts';
 import { readTrack } from '../lib/metadata.ts';
@@ -17,6 +21,38 @@ import { maxFileBytes, rejectionMessage } from '../lib/mp3.ts';
 import type { FallbackPayload, TagPlan, TechnicalInfo, TrackFields } from '../lib/types.ts';
 
 const TEMPLATE_KEY = 'tracktidy.template';
+
+const FIELD_LABELS: Record<keyof TrackFields, string> = {
+  artist: 'Artist',
+  title: 'Title',
+  remix: 'Remix',
+  album: 'Album',
+  genre: 'Genre',
+  bpm: 'BPM',
+  key: 'Key',
+};
+
+function comparable(key: keyof TrackFields, value: string): string {
+  const trimmed = value.trim();
+  if (key === 'bpm') return bpmToken(trimmed) || trimmed;
+  return trimmed;
+}
+
+function originalMetaLine(fields: TrackFields): string {
+  return (Object.keys(FIELD_LABELS) as (keyof TrackFields)[])
+    .map((key) => fields[key].trim())
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function updatedMeta(fields: TrackFields, fileFields: TrackFields): { label: string; value: string }[] {
+  return (Object.keys(FIELD_LABELS) as (keyof TrackFields)[])
+    .filter((key) => {
+      const current = comparable(key, fields[key]);
+      return current.length > 0 && current !== comparable(key, fileFields[key]);
+    })
+    .map((key) => ({ label: FIELD_LABELS[key], value: fields[key].trim() }));
+}
 
 type Analysis = {
   bpm: { value: string; detail: string } | null;
@@ -112,9 +148,11 @@ export default function ToolPage() {
   const dragDepth = useRef(0);
   const acceptRef = useRef<(list: FileList | File[]) => void>(() => {});
   const ingestRef = useRef<(file: File, extra: boolean) => void>(() => {});
+  const editedFields = useRef(new Set<string>());
+  const filenameKey = useRef('');
 
   useEffect(() => {
-    document.title = 'Clean a track — TrackTidy';
+    trackEvent('tool_opened');
   }, []);
 
   useEffect(() => {
@@ -178,6 +216,8 @@ export default function ToolPage() {
 
   async function ingest(file: File, extra: boolean) {
     const id = ++loadId.current;
+    editedFields.current = new Set();
+    filenameKey.current = '';
     audioRef.current = null;
     setPrompt(null);
     setImportError(null);
@@ -186,11 +226,13 @@ export default function ToolPage() {
     setExtraNote(extra ? 'Only the first file was used. TrackTidy handles one track at a time.' : null);
     setPhase('processing');
     setTrack(null);
+    trackEvent('file_upload_started');
 
     if (file.size > maxFileBytes()) {
       const mb = Math.round(file.size / (1024 * 1024));
       setImportError(`This file is ${mb} MB. TrackTidy processes one MP3 up to 100 MB in the browser.`);
       setPhase('idle');
+      trackEvent('processing_failed', { stage: 'size' });
       return;
     }
 
@@ -201,6 +243,7 @@ export default function ToolPage() {
       if (id !== loadId.current) return;
       setImportError('This file could not be read from disk.');
       setPhase('idle');
+      trackEvent('processing_failed', { stage: 'read' });
       return;
     }
     if (id !== loadId.current) return;
@@ -209,6 +252,7 @@ export default function ToolPage() {
     if (rejected) {
       setImportError(rejected);
       setPhase('idle');
+      trackEvent('processing_failed', { stage: 'type' });
       return;
     }
 
@@ -219,6 +263,7 @@ export default function ToolPage() {
       if (id !== loadId.current) return;
       setImportError('This MP3 could not be read. The file may be damaged.');
       setPhase('idle');
+      trackEvent('processing_failed', { stage: 'tags' });
       return;
     }
     if (id !== loadId.current) {
@@ -227,6 +272,11 @@ export default function ToolPage() {
     }
 
     rememberCover(parsed.coverUrl);
+    trackEvent('file_upload_completed');
+    trackEvent('metadata_analysis_completed', {
+      bpm_tag: parsed.fields.bpm.trim() ? 'yes' : 'no',
+      key_tag: parsed.fields.key.trim() ? 'yes' : 'no',
+    });
     const next: TrackState = {
       name: file.name,
       size: file.size,
@@ -276,6 +326,7 @@ export default function ToolPage() {
       if (id !== loadId.current) return;
       audioRef.current = null;
       const message = 'This MP3 could not be decoded, so tempo and key were not measured. Tags can still be edited.';
+      trackEvent('processing_failed', { stage: 'decode' });
       setTrack((current) =>
         current
           ? {
@@ -458,6 +509,10 @@ export default function ToolPage() {
   function updateField(key: keyof TrackFields, value: string) {
     setTrack((current) => (current ? { ...current, fields: { ...current.fields, [key]: value } } : current));
     setExportNote(null);
+    if (!editedFields.current.has(key)) {
+      editedFields.current.add(key);
+      trackEvent('metadata_edit_completed', { field: key });
+    }
   }
 
   function updateTemplate(value: string) {
@@ -504,15 +559,25 @@ export default function ToolPage() {
       window.setTimeout(() => URL.revokeObjectURL(url), 1500);
       const extra = result.notice ? ` ${result.notice}` : '';
       setExportNote(`Downloaded ${preview.file}.${extra}`.trim());
+      trackEvent('file_downloaded');
     } catch {
       setExportError(true);
       setExportNote('The file could not be prepared. Your original file was not changed.');
+      trackEvent('processing_failed', { stage: 'export' });
     } finally {
       setExporting(false);
     }
   }
 
   const preview = track ? renderFilename(template, track.fields) : null;
+
+  useEffect(() => {
+    if (!track || !preview?.file) return;
+    const key = `${loadId.current}:${template}`;
+    if (filenameKey.current === key) return;
+    filenameKey.current = key;
+    trackEvent('filename_generated');
+  }, [preview, template, track]);
 
   const scanning = Boolean(track && (track.analysis.bpmPending || track.analysis.keyPending || !track.peaks) && !track.waveformError);
   const tech = track
@@ -532,13 +597,14 @@ export default function ToolPage() {
 
   return (
     <div className={dragOver ? 'tool drag-active' : 'tool'}>
+      <SiteHead title={TOOL_TITLE} description={TOOL_DESCRIPTION} path="/app" />
       <Atmosphere />
       <a className="skip" href="#content">
         Skip to content
       </a>
       {phase !== 'idle' ? (
       <header className="appbar">
-        <Link to="/" className="logo-link">
+        <Link to="/" className="logo-link" aria-label="TrackTidy, home">
           <Logo />
         </Link>
         <p className="appbar-kicker">Single track</p>
@@ -607,13 +673,15 @@ export default function ToolPage() {
 
         {phase === 'edit' && track && preview ? (
           <section className="studio stage-in">
+            <ResultCompare name={track.name} fileFields={track.fileFields} fields={track.fields} preview={preview} />
             <div className="file-col">
-              <p className="kicker">File</p>
               <div className="file-heading">
                 {track.coverUrl ? <img src={track.coverUrl} alt="Embedded artwork" className="cover" /> : null}
-                <h1>{track.name}</h1>
+                <div>
+                  <p className="kicker">File</p>
+                  <p className="tech-line">{tech}</p>
+                </div>
               </div>
-              <p className="tech-line">{tech}</p>
               {track.peaks ? (
                 <Waveform peaks={track.peaks} scanning={scanning} label={`Waveform of ${track.name}`} />
               ) : (
@@ -647,6 +715,45 @@ export default function ToolPage() {
           </section>
         ) : null}
       </main>
+      <SiteFooter />
+    </div>
+  );
+}
+
+function ResultCompare({
+  name,
+  fileFields,
+  fields,
+  preview,
+}: {
+  name: string;
+  fileFields: TrackFields;
+  fields: TrackFields;
+  preview: FilenamePreview;
+}) {
+  const originalMeta = originalMetaLine(fileFields);
+  const updates = updatedMeta(fields, fileFields);
+  return (
+    <div className="result-band">
+      <div className="original-block">
+        <p className="kicker">Original</p>
+        <p className="original-file">{name}</p>
+        {originalMeta ? <p className="original-meta">{originalMeta}</p> : null}
+      </div>
+      <div className="nameplate nameplate-result" data-testid="filename-preview" aria-live="polite">
+        <p className="kicker kicker-blue">Cleaned result</p>
+        <h1>{preview.file || 'The name is empty. Add a field that has a value.'}</h1>
+        {updates.length > 0 ? (
+          <ul className="result-changes">
+            {updates.map((item) => (
+              <li key={item.label}>
+                <span>{item.label}</span>
+                {item.value}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
     </div>
   );
 }

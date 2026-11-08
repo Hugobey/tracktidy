@@ -70,10 +70,10 @@ export function AnalysisScreen({ name, peaks, scanning, stages, onEdit }: Props)
             </li>
           ))}
         </ol>
-        <p className="analyze-status">
+        <h1 className="analyze-status">
           <span className={reduced ? 'live-dot live-dot-still' : 'live-dot'} />
           {running || finished < stages.length ? 'Analyzing audio' : 'Analysis ready'}
-        </p>
+        </h1>
         <p className="analyze-file">{name}</p>
         <p className="analyze-note">This usually takes a few seconds.</p>
         {onEdit ? (

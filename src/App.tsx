@@ -1,33 +1,44 @@
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense, type ReactNode } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { ConsentBanner } from './components/ConsentBanner.tsx';
+import { ConsentProvider } from './components/Consent.tsx';
 import LandingPage from './pages/LandingPage.tsx';
+import NotFoundPage from './pages/NotFoundPage.tsx';
 
 const ToolPage = lazy(() => import('./pages/ToolPage.tsx'));
+const LegalNoticePage = lazy(() => import('./pages/LegalNoticePage.tsx'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage.tsx'));
+const TermsPage = lazy(() => import('./pages/TermsPage.tsx'));
+const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage.tsx'));
 
-function ToolFallback() {
+function PageFallback({ label }: { label: string }) {
   return (
     <main className="processing">
       <p className="kicker">TrackTidy</p>
-      <h1>Opening the tool</h1>
+      <h1>{label}</h1>
     </main>
   );
+}
+
+function lazyPage(node: ReactNode, label: string) {
+  return <Suspense fallback={<PageFallback label={label} />}>{node}</Suspense>;
 }
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route
-          path="/app"
-          element={
-            <Suspense fallback={<ToolFallback />}>
-              <ToolPage />
-            </Suspense>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <ConsentProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/app" element={lazyPage(<ToolPage />, 'Opening the tool')} />
+          <Route path="/legal-notice" element={lazyPage(<LegalNoticePage />, 'Opening the page')} />
+          <Route path="/privacy-policy" element={lazyPage(<PrivacyPage />, 'Opening the page')} />
+          <Route path="/terms-of-use" element={lazyPage(<TermsPage />, 'Opening the page')} />
+          <Route path="/cookie-policy" element={lazyPage(<CookiePolicyPage />, 'Opening the page')} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+        <ConsentBanner />
+      </ConsentProvider>
     </BrowserRouter>
   );
 }

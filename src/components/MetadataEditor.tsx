@@ -250,10 +250,6 @@ export function MetadataEditor({
               ))}
             </div>
             <p className="token-help">{'{artist} {title} {remix} {album} {genre} {bpm} {key}'}</p>
-            <div className="nameplate" data-testid="filename-preview" aria-live="polite">
-              <p className="kicker">Preview</p>
-              <p>{preview.file || 'The name is empty. Add a field that has a value.'}</p>
-            </div>
             {preview.missing.length > 0 && preview.file ? (
               <p className="hint">Left out of the name because they’re empty: {preview.missing.join(', ')}.</p>
             ) : null}

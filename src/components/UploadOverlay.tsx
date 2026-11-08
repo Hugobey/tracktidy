@@ -1,14 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Atmosphere } from './Atmosphere.tsx';
 import { Logo } from './Logo.tsx';
+import { useConsent } from './consent-context.ts';
 
 type Props = {
   error?: string | null;
   onClose: () => void;
   onFile: (file: File, extra: boolean) => void;
+  /** The landing page already has an h1, so its overlay title is a paragraph. */
+  heading?: 'h1' | 'p';
 };
 
-export function UploadOverlay({ error, onClose, onFile }: Props) {
+export function UploadOverlay({ error, onClose, onFile, heading = 'h1' }: Props) {
+  const { openSettings } = useConsent();
   const inputRef = useRef<HTMLInputElement>(null);
   const depth = useRef(0);
   const [dragOver, setDragOver] = useState(false);
@@ -39,16 +44,24 @@ export function UploadOverlay({ error, onClose, onFile }: Props) {
     <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="upload-title">
       <Atmosphere />
       <header className="sheet-bar">
-        <Logo />
+        <Link to="/" className="logo-link" aria-label="TrackTidy, home" onClick={onClose}>
+          <Logo />
+        </Link>
         <button type="button" className="btn btn-secondary" onClick={onClose}>
           Close
         </button>
       </header>
       <div className="sheet-body">
         <p className="kicker kicker-blue sheet-enter">Drop a track</p>
-        <h1 id="upload-title" className="sheet-enter d1">
-          Start with one track<span className="dot">.</span>
-        </h1>
+        {heading === 'h1' ? (
+          <h1 id="upload-title" className="sheet-title sheet-enter d1">
+            Start with one track<span className="dot">.</span>
+          </h1>
+        ) : (
+          <p id="upload-title" className="sheet-title sheet-enter d1">
+            Start with one track<span className="dot">.</span>
+          </p>
+        )}
         <p className="lede sheet-enter d2">
           Clean its metadata, detect the tempo, and rename the file. It stays on this computer.
         </p>
@@ -119,7 +132,12 @@ export function UploadOverlay({ error, onClose, onFile }: Props) {
             AIFF, FLAC, and M4A are refused.
           </p>
         </aside>
-        <p className="sheet-foot sheet-enter d4">One track at a time · In the browser · No account</p>
+        <p className="sheet-foot sheet-enter d4">
+          One track at a time · In the browser · No account ·{' '}
+          <button type="button" className="text-button" onClick={openSettings}>
+            Cookie settings
+          </button>
+        </p>
       </div>
       <input
         ref={inputRef}

@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { AppPreview } from '../components/AppPreview.tsx';
 import { Atmosphere } from '../components/Atmosphere.tsx';
 import { Button } from '../components/Button.tsx';
 import { Logo } from '../components/Logo.tsx';
+import { SiteFooter } from '../components/SiteFooter.tsx';
+import { SiteHead } from '../components/SiteHead.tsx';
 import { UploadOverlay } from '../components/UploadOverlay.tsx';
 import { stashPending } from '../lib/pendingFile.ts';
+import { HOME_DESCRIPTION, HOME_TITLE, homeJsonLd } from '../lib/site.ts';
 
 const STEPS = [
   {
@@ -52,25 +55,22 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  useEffect(() => {
-    document.title = 'TrackTidy — Your tracks. Perfectly organized.';
-  }, []);
-
   function openUpload() {
     setUploadOpen(true);
   }
 
   return (
     <div className="page">
+      <SiteHead title={HOME_TITLE} description={HOME_DESCRIPTION} path="/" jsonLd={homeJsonLd()} />
       <Atmosphere />
       <a className="skip" href="#content">
         Skip to content
       </a>
       <header className="nav">
         <div className="wrap nav-inner">
-          <a href="#top" className="logo-link" aria-label="TrackTidy">
+          <Link to="/" className="logo-link" aria-label="TrackTidy, home">
             <Logo />
-          </a>
+          </Link>
           <nav className="nav-links" aria-label="Page">
             <a href="#method">How it works</a>
             <a href="#capabilities">Features</a>
@@ -147,14 +147,10 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="footer">
-        <div className="wrap footer-inner">
-          <Logo />
-          <p>Local MP3 processing for DJs. No account. No upload.</p>
-        </div>
-      </footer>
+      <SiteFooter />
       {uploadOpen ? (
         <UploadOverlay
+          heading="p"
           onClose={() => setUploadOpen(false)}
           onFile={(file, extra) => {
             stashPending({ file, extra });
