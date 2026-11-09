@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom';
 import { LegalLayout } from '../components/LegalLayout.tsx';
 import { PUBLISHER } from '../legal/publisher.ts';
+import { routeMeta } from '../lib/site.ts';
 
-const DESCRIPTION = 'The storage and cookies TrackTidy uses, and how to accept or reject analytics.';
+const page = routeMeta('/cookie-policy');
 
 export default function CookiePolicyPage() {
   return (
     <LegalLayout
-      title="Cookie policy — TrackTidy"
-      description={DESCRIPTION}
-      path="/cookie-policy"
+      title={page.title}
+      description={page.description}
+      path={page.path}
       kicker="Cookies"
       heading="Cookie policy"
     >

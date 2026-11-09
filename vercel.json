@@ -1,0 +1,18 @@
+{
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "track-tidy.com" }],
+      "destination": "https://www.track-tidy.com/:path*",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    { "source": "/app", "destination": "/app/index.html" },
+    { "source": "/privacy-policy", "destination": "/privacy-policy/index.html" },
+    { "source": "/terms-of-use", "destination": "/terms-of-use/index.html" },
+    { "source": "/cookie-policy", "destination": "/cookie-policy/index.html" },
+    { "source": "/legal-notice", "destination": "/legal-notice/index.html" }
+  ]
+}

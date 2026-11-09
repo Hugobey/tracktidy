@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { applyRouteMeta } from '../scripts/prerender-routes.ts';
 import { measurementId, resetAnalyticsForTests, sanitizeEvent } from '../src/lib/analytics.ts';
 import { readConsent, writeConsent } from '../src/lib/consent.ts';
 import {
@@ -9,7 +11,7 @@ import {
   legalNoticeIsPublished,
   legalNoticeParagraphs,
 } from '../src/legal/publisher.ts';
-import { homeJsonLd, siteOrigin } from '../src/lib/site.ts';
+import { DEFAULT_ORIGIN, homeJsonLd, robotsTxt, routeMeta, siteOrigin, sitemapXml } from '../src/lib/site.ts';
 
 describe('analytics parameters', () => {
   it('drops filenames, tag values, and unknown events', () => {
@@ -110,7 +112,15 @@ describe('structured data', () => {
     expect(serialized).not.toContain('rue neuve');
     expect(serialized).not.toContain('Hugo Blanchart');
     expect(serialized).not.toContain('+33 7 77 37 25 07');
-    expect(siteOrigin('http://track-tidy.com')).toBe('https://track-tidy.com');
-    expect(siteOrigin('https://www.track-tidy.com/app')).toBe('https://www.track-tidy.com');
+    expect(siteOrigin('http://track-tidy.com')).toBe(DEFAULT_ORIGIN);
+    expect(siteOrigin('https://www.track-tidy.com/app')).toBe(DEFAULT_ORIGIN);
+    expect(readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8')).toBe(sitemapXml());
+    expect(readFileSync(new URL('../public/robots.txt', import.meta.url), 'utf8')).toBe(robotsTxt());
+    const shell = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const tool = applyRouteMeta(shell, routeMeta('/app'), DEFAULT_ORIGIN);
+    expect(tool).toContain('<title>MP3 metadata editor — TrackTidy</title>');
+    expect(tool).toContain('href="https://www.track-tidy.com/app"');
+    expect(tool).toContain('content="https://www.track-tidy.com/app"');
+    expect(tool).not.toContain('<title>TrackTidy — DJ file renamer and MP3 metadata editor</title>');
   });
 });

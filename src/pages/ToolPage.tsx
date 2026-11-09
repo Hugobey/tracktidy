@@ -14,7 +14,7 @@ import { Waveform } from '../components/Waveform.tsx';
 import { trackEvent } from '../lib/analytics.ts';
 import { bytesEqual, fitArtwork, loadArtwork, searchArtwork, type ImageMime } from '../lib/artwork.ts';
 import { clearPending, peekPending } from '../lib/pendingFile.ts';
-import { TOOL_DESCRIPTION, TOOL_TITLE } from '../lib/site.ts';
+import { routeMeta } from '../lib/site.ts';
 import { ANALYSIS_STEP_MS, decodeAudio, detectBpm, detectKey, waveformPeaks, withTimeout } from '../lib/audio.ts';
 import { DEFAULT_TEMPLATE, bpmToken, renderFilename, type FilenamePreview } from '../lib/filename.ts';
 import { formatBitrate, formatBytes, formatChannels, formatDuration, formatSampleRate } from '../lib/format.ts';
@@ -22,6 +22,8 @@ import { noticeWithArtwork, writeTrack } from '../lib/id3.ts';
 import { readTrack } from '../lib/metadata.ts';
 import { maxFileBytes, readErrorMessage, rejectionMessage, tooLargeMessage } from '../lib/mp3.ts';
 import type { FallbackPayload, TagPlan, TechnicalInfo, TrackFields } from '../lib/types.ts';
+
+const tool = routeMeta('/app');
 
 const TEMPLATE_KEY = 'tracktidy.template';
 
@@ -849,7 +851,7 @@ export default function ToolPage() {
 
   return (
     <div className={dragOver ? 'tool drag-active' : 'tool'}>
-      <SiteHead title={TOOL_TITLE} description={TOOL_DESCRIPTION} path="/app" />
+      <SiteHead title={tool.title} description={tool.description} path={tool.path} />
       <Atmosphere />
       <a className="skip" href="#content">
         Skip to content

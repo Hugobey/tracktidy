@@ -1,16 +1,16 @@
 import { Link } from 'react-router-dom';
 import { LegalLayout } from '../components/LegalLayout.tsx';
 import { PUBLISHER } from '../legal/publisher.ts';
+import { routeMeta } from '../lib/site.ts';
 
-const DESCRIPTION =
-  'How TrackTidy handles audio files, metadata, local storage, and optional analytics.';
+const page = routeMeta('/privacy-policy');
 
 export default function PrivacyPage() {
   return (
     <LegalLayout
-      title="Privacy policy — TrackTidy"
-      description={DESCRIPTION}
-      path="/privacy-policy"
+      title={page.title}
+      description={page.description}
+      path={page.path}
       kicker="Privacy"
       heading="Privacy policy"
     >

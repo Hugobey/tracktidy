@@ -12,7 +12,7 @@ The legal notice is published from `PUBLISHED_NOTICE` in `src/legal/publisher.ts
 
 Copy `.env.example` to `.env` locally or set the variables in the host’s build settings.
 
-- `VITE_SITE_URL` — `https://track-tidy.com` unless the live host is different. No path and no trailing slash. Rebuild after changing it, and update `public/robots.txt` and `public/sitemap.xml` if the host name changes.
+- `VITE_SITE_URL` — `https://www.track-tidy.com`. The apex host redirects there. No path and no trailing slash. Rebuild after changing it. `public/robots.txt` and `public/sitemap.xml` must use the same origin.
 - `VITE_GA_MEASUREMENT_ID` — the GA4 measurement ID. Leave it empty until the property exists.
 
 ## Google Analytics 4
@@ -42,10 +42,10 @@ Add these DNS records only after the mailbox provider gives you the exact values
 
 The legal notice identifies the host as Vercel Inc. The repository still has no deployment project configured. Before launch:
 
-- Serve the site only over HTTPS. Redirect HTTP to HTTPS, and redirect either `www` or the apex host to the single origin used in `VITE_SITE_URL`.
+- Serve the site only over HTTPS. Redirect HTTP to HTTPS, and redirect `track-tidy.com` to `https://www.track-tidy.com`.
 - Send HSTS once HTTPS is stable.
-- Map unknown paths to the app so the in-app 404 page can render, or serve `404.html` with HTTP status 404. A host that rewrites every path to `index.html` will return HTTP 200 for missing pages until its own 404 rule is added.
-- The static `index.html` shell carries the homepage title and canonical URL. Client-side routing replaces those tags after JavaScript runs. Crawlers that do not run JavaScript will see the homepage metadata on every address.
+- The build writes an HTML file for each public route, with that page’s title, description, and canonical URL. `vercel.json` serves those files. Unknown paths stay on `404.html` with HTTP 404 and `noindex`.
+- Google Search Console and the sitemap submission are account steps. The sitemap is `https://www.track-tidy.com/sitemap.xml`. There is no blog. The measurement ID stays empty until a GA4 property exists, so organic landing pages and conversions are not recorded yet.
 
 ## VAT position still to confirm
 

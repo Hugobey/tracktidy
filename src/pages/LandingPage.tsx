@@ -8,7 +8,9 @@ import { SiteFooter } from '../components/SiteFooter.tsx';
 import { SiteHead } from '../components/SiteHead.tsx';
 import { UploadOverlay } from '../components/UploadOverlay.tsx';
 import { stashPending } from '../lib/pendingFile.ts';
-import { HOME_DESCRIPTION, HOME_TITLE, homeJsonLd } from '../lib/site.ts';
+import { homeJsonLd, routeMeta } from '../lib/site.ts';
+
+const home = routeMeta('/');
 
 const STEPS = [
   {
@@ -61,7 +63,7 @@ export default function LandingPage() {
 
   return (
     <div className="page">
-      <SiteHead title={HOME_TITLE} description={HOME_DESCRIPTION} path="/" jsonLd={homeJsonLd()} />
+      <SiteHead title={home.title} description={home.description} path={home.path} jsonLd={homeJsonLd()} />
       <Atmosphere />
       <a className="skip" href="#content">
         Skip to content

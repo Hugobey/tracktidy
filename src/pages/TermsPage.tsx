@@ -1,14 +1,15 @@
 import { LegalLayout } from '../components/LegalLayout.tsx';
 import { PUBLISHER } from '../legal/publisher.ts';
+import { routeMeta } from '../lib/site.ts';
 
-const DESCRIPTION = 'The rules for using TrackTidy, including file rights and the limits of BPM and key estimates.';
+const page = routeMeta('/terms-of-use');
 
 export default function TermsPage() {
   return (
     <LegalLayout
-      title="Terms of use — TrackTidy"
-      description={DESCRIPTION}
-      path="/terms-of-use"
+      title={page.title}
+      description={page.description}
+      path={page.path}
       kicker="Terms"
       heading="Terms of use"
     >
