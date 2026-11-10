@@ -11,6 +11,7 @@ import { SiteFooter } from '../components/SiteFooter.tsx';
 import { SiteHead } from '../components/SiteHead.tsx';
 import { UploadOverlay } from '../components/UploadOverlay.tsx';
 import { Waveform } from '../components/Waveform.tsx';
+import { useConsent } from '../components/consent-context.ts';
 import { trackEvent } from '../lib/analytics.ts';
 import { bytesEqual, fitArtwork, loadArtwork, searchArtwork, type ImageMime } from '../lib/artwork.ts';
 import { clearPending, peekPending } from '../lib/pendingFile.ts';
@@ -173,9 +174,11 @@ export default function ToolPage() {
   const editedFields = useRef(new Set<string>());
   const filenameKey = useRef('');
 
+  const { status } = useConsent();
+
   useEffect(() => {
     trackEvent('tool_opened');
-  }, []);
+  }, [status]);
 
   useEffect(() => {
     trackRef.current = track;

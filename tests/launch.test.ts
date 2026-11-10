@@ -2,7 +2,13 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { applyRouteMeta } from '../scripts/prerender-routes.ts';
 import { redactAnalyticsUrl } from '../src/lib/vercel-analytics.ts';
-import { measurementId, resetAnalyticsForTests, sanitizeEvent } from '../src/lib/analytics.ts';
+import {
+  buildCollectQuery,
+  measurementId,
+  PUBLISHED_MEASUREMENT_ID,
+  resetAnalyticsForTests,
+  sanitizeEvent,
+} from '../src/lib/analytics.ts';
 import { readConsent, writeConsent } from '../src/lib/consent.ts';
 import {
   LEGAL_NOTICE_WITHHELD,
@@ -46,10 +52,27 @@ describe('analytics parameters', () => {
   it('accepts only a GA4 measurement id', () => {
     expect(measurementId('G-ABC123')).toBe('G-ABC123');
     expect(measurementId(' G-ABC123 ')).toBe('G-ABC123');
-    expect(measurementId('')).toBeNull();
+    expect(measurementId('')).toBe(PUBLISHED_MEASUREMENT_ID);
+    expect(measurementId(undefined)).toBe(PUBLISHED_MEASUREMENT_ID);
     expect(measurementId('UA-123')).toBeNull();
     expect(measurementId('G-ABC<script>')).toBeNull();
-    expect(measurementId(undefined)).toBeNull();
+  });
+
+  it('builds a collect hit without filenames or tag values', () => {
+    const query = buildCollectQuery(
+      PUBLISHED_MEASUREMENT_ID,
+      'metadata_edit_completed',
+      { field: 'artist' },
+      { location: 'https://www.track-tidy.com/app', title: 'TrackTidy' },
+      { cid: '123.456', sid: '789', seq: 2 },
+    );
+    const params = new URLSearchParams(query);
+    expect(params.get('tid')).toBe(PUBLISHED_MEASUREMENT_ID);
+    expect(params.get('en')).toBe('metadata_edit_completed');
+    expect(params.get('dl')).toBe('https://www.track-tidy.com/app');
+    expect(params.get('ep.field')).toBe('artist');
+    expect(query).not.toContain('nora');
+    expect(query).not.toContain('.mp3');
   });
 });
 

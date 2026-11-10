@@ -4,7 +4,7 @@ This file is configuration that lives outside the website. Do not change DNS or 
 
 ## Status
 
-`index.html` loads the supplied Google Tag Manager snippet for container `GTM-TWVDH6V3` on every page. That is not the official container bootstrap: it does not push `gtm.start`. The optional Google Analytics 4 script still waits until a visitor presses Accept and `VITE_GA_MEASUREMENT_ID` is a GA4 id (`G-…`). Reject does not load that Analytics script. Vercel Web Analytics loads with every page and does not set a cookie. Turn it on in the Vercel project under Analytics, or the script has nowhere to record visits.
+`index.html` loads the supplied Google Tag Manager snippet for container `GTM-TWVDH6V3` on every page. That container’s Google tag is `G-1DQDF61KJW`. It sends the first page view and does not forward later events. After Accept, the app sends page views and product events directly to that stream. Reject stops those hits. An explicit `VITE_GA_MEASUREMENT_ID` overrides the stream. Vercel Web Analytics loads with every page and does not set a cookie. Turn it on in the Vercel project under Analytics, or the script has nowhere to record visits.
 
 The legal notice is published from `PUBLISHED_NOTICE` in `src/legal/publisher.ts`. It names Hugo Blanchart, the Paris address, the telephone, SIREN, SIRET, RNE registration, and Vercel Inc. as host. The supplied VAT number is not printed: on 8 November 2026 the European Commission VIES service reported it as not valid. Namecheap is the registrar and is named only in the privacy policy, not on the legal notice.
 
@@ -13,7 +13,7 @@ The legal notice is published from `PUBLISHED_NOTICE` in `src/legal/publisher.ts
 Copy `.env.example` to `.env` locally or set the variables in the host’s build settings.
 
 - `VITE_SITE_URL` — `https://www.track-tidy.com`. The apex host redirects there. No path and no trailing slash. Rebuild after changing it. `public/robots.txt` and `public/sitemap.xml` must use the same origin.
-- `VITE_GA_MEASUREMENT_ID` — the GA4 measurement ID. Leave it empty until the property exists.
+- `VITE_GA_MEASUREMENT_ID` — optional override for the GA4 measurement ID. Empty uses `G-1DQDF61KJW`, the stream in the published container.
 
 ## Google Analytics 4
 
@@ -45,7 +45,7 @@ The legal notice identifies the host as Vercel Inc. The repository still has no 
 - Serve the site only over HTTPS. Redirect HTTP to HTTPS, and redirect `track-tidy.com` to `https://www.track-tidy.com`.
 - Send HSTS once HTTPS is stable.
 - The build writes an HTML file for each public route, with that page’s title, description, and canonical URL. `vercel.json` serves those files. Unknown paths stay on `404.html` with HTTP 404 and `noindex`.
-- Google Search Console and the sitemap submission are account steps. The sitemap is `https://www.track-tidy.com/sitemap.xml`. There is no blog. The measurement ID stays empty until a GA4 property exists, so organic landing pages and conversions are not recorded yet.
+- Google Search Console and the sitemap submission are account steps. The sitemap is `https://www.track-tidy.com/sitemap.xml`. There is no blog. Product events reach `G-1DQDF61KJW` after Accept. Mark `file_downloaded` as a conversion in the GA4 property if that is the conversion you want.
 
 ## VAT position still to confirm
 

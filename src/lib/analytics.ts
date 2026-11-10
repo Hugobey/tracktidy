@@ -18,17 +18,11 @@ const FIELDS = new Set(['artist', 'title', 'remix', 'album', 'genre', 'bpm', 'ke
 const STAGES = new Set(['size', 'read', 'type', 'tags', 'decode', 'export']);
 const YES_NO = new Set(['yes', 'no']);
 
-type Gtag = (...args: unknown[]) => void;
-
-declare global {
-  interface Window {
-    dataLayer?: unknown[];
-    gtag?: Gtag;
-  }
-}
+/** Stream installed in the published GTM container. An explicit G- ID overrides it. */
+export const PUBLISHED_MEASUREMENT_ID = 'G-1DQDF61KJW';
 
 export function measurementId(raw: string | undefined = import.meta.env.VITE_GA_MEASUREMENT_ID): string | null {
-  if (typeof raw !== 'string') return null;
+  if (typeof raw !== 'string' || raw.trim() === '') return PUBLISHED_MEASUREMENT_ID;
   const id = raw.trim();
   if (!/^G-[A-Za-z0-9]+$/.test(id)) return null;
   return id;
@@ -56,51 +50,72 @@ export function sanitizeEvent(name: string, params?: Record<string, string>): Re
   return {};
 }
 
-let startedFor: string | null = null;
 let lastEventKey = '';
 let lastEventAt = 0;
 let lastPage = '';
 let lastPageAt = 0;
+let hitSeq = 0;
+let sessionId = '';
 
-function gtag(...args: unknown[]) {
-  window.dataLayer?.push(args);
+/** GA4 collect query. The installed container does not forward gtag events. */
+export function buildCollectQuery(
+  id: string,
+  name: string,
+  params: Record<string, string>,
+  page: { location: string; title: string },
+  ids: { cid: string; sid: string; seq: number },
+): string {
+  const query = new URLSearchParams({
+    v: '2',
+    tid: id,
+    cid: ids.cid,
+    sid: ids.sid,
+    sct: '1',
+    seg: '1',
+    _s: String(ids.seq),
+    en: name,
+    dl: page.location,
+    dt: page.title,
+  });
+  for (const [key, value] of Object.entries(params)) query.set(`ep.${key}`, value);
+  return query.toString();
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const prefix = `${name}=`;
+  const row = document.cookie.split('; ').find((item) => item.startsWith(prefix));
+  return row ? decodeURIComponent(row.slice(prefix.length)) : null;
+}
+
+function clientId(): string {
+  const parts = readCookie('_ga')?.split('.') ?? [];
+  if (parts.length >= 4 && parts[2] && parts[3]) return `${parts[2]}.${parts[3]}`;
+  const cid = `${Math.floor(1_000_000_000 + Math.random() * 9_000_000_000)}.${Math.floor(Date.now() / 1000)}`;
+  document.cookie = `_ga=GA1.1.${cid}; path=/; max-age=63072000; SameSite=Lax`;
+  return cid;
+}
+
+function sendCollect(name: string, params: Record<string, string>, page: { location: string; title: string }): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const id = measurementId();
+  if (!id) return;
+  if (!sessionId) sessionId = String(Math.floor(Date.now() / 1000));
+  hitSeq += 1;
+  const query = buildCollectQuery(id, name, params, page, { cid: clientId(), sid: sessionId, seq: hitSeq });
+  void fetch(`https://www.google-analytics.com/g/collect?${query}`, {
+    method: 'POST',
+    mode: 'no-cors',
+    keepalive: true,
+  }).catch(() => undefined);
 }
 
 export function enableAnalytics(): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const id = measurementId();
   if (!id) return;
-  const disabled = `ga-disable-${id}`;
-  (window as unknown as Record<string, unknown>)[disabled] = false;
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = gtag;
-  if (startedFor === id) {
-    gtag('consent', 'update', {
-      analytics_storage: 'granted',
-      ad_storage: 'denied',
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-    });
-    return;
-  }
-  startedFor = id;
-  gtag('js', new Date());
-  gtag('consent', 'default', {
-    analytics_storage: 'granted',
-    ad_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-  });
-  gtag('config', id, {
-    send_page_view: false,
-    allow_google_signals: false,
-    allow_ad_personalization_signals: false,
-  });
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
-  script.dataset.purpose = 'analytics';
-  document.head.appendChild(script);
+  (window as unknown as Record<string, unknown>)[`ga-disable-${id}`] = false;
+  clientId();
 }
 
 export function clearAnalyticsCookies(id = measurementId()): void {
@@ -124,14 +139,6 @@ export function disableAnalytics(): void {
   const id = measurementId();
   if (!id) return;
   (window as unknown as Record<string, unknown>)[`ga-disable-${id}`] = true;
-  if (startedFor === id && window.gtag) {
-    window.gtag('consent', 'update', {
-      analytics_storage: 'denied',
-      ad_storage: 'denied',
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-    });
-  }
   clearAnalyticsCookies(id);
 }
 
@@ -145,34 +152,37 @@ export function trackPageView(pathname: string): void {
   lastPageAt = now;
   enableAnalytics();
   if (typeof window === 'undefined') return;
-  window.gtag?.('event', 'page_view', {
-    page_path: path,
-    page_location: `${window.location.origin}${path}`,
-    page_title: typeof document === 'undefined' ? '' : document.title,
+  sendCollect('page_view', { page_path: path }, {
+    location: `${window.location.origin}${path}`,
+    title: typeof document === 'undefined' ? '' : document.title,
   });
 }
 
 export function trackEvent(name: AnalyticsEvent, params?: Record<string, string>): void {
   const safe = sanitizeEvent(name, params);
   if (!safe) return;
+  if (readConsent() !== 'accepted') return;
+  if (!measurementId()) return;
   const key = `${name}:${JSON.stringify(safe)}`;
   const now = Date.now();
   if (key === lastEventKey && now - lastEventAt < 400) return;
   lastEventKey = key;
   lastEventAt = now;
-  if (readConsent() !== 'accepted') return;
-  if (!measurementId()) return;
   enableAnalytics();
-  window.gtag?.('event', name, safe);
+  sendCollect(name, safe, {
+    location: typeof window === 'undefined' ? '' : window.location.href.split('#')[0].split('?')[0] ?? '',
+    title: typeof document === 'undefined' ? '' : document.title,
+  });
 }
 
 /** Test hook so page-view dedupe does not leak between cases. */
 export function resetAnalyticsForTests(): void {
-  startedFor = null;
   lastEventKey = '';
   lastEventAt = 0;
   lastPage = '';
   lastPageAt = 0;
+  hitSeq = 0;
+  sessionId = '';
 }
 
 export function analyticsConfigured(): boolean {
