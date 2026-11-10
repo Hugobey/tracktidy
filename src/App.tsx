@@ -2,6 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ConsentBanner } from './components/ConsentBanner.tsx';
 import { ConsentProvider } from './components/Consent.tsx';
+import { VercelAnalytics } from './components/VercelAnalytics.tsx';
 import LandingPage from './pages/LandingPage.tsx';
 import NotFoundPage from './pages/NotFoundPage.tsx';
 
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/cookie-policy" element={lazyPage(<CookiePolicyPage />, 'Opening the page')} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        <VercelAnalytics />
         <ConsentBanner />
       </ConsentProvider>
     </BrowserRouter>

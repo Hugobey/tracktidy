@@ -14,7 +14,7 @@ export default function PrivacyPage() {
       kicker="Privacy"
       heading="Privacy policy"
     >
-      <p>Last updated: 8 November 2026.</p>
+      <p>Last updated: 10 November 2026.</p>
       <p>
         This policy describes the TrackTidy website as it works today. It is not a certificate of legal compliance.
         The controller is Hugo Blanchart, an entrepreneur individuel publishing the {PUBLISHER.brand} brand. Privacy
@@ -98,6 +98,14 @@ export default function PrivacyPage() {
         Tag Manager. The optional Google Analytics 4 script above is separate: it still loads only after Accept, and
         only when a measurement ID is configured.
       </p>
+      <p>
+        Each page also loads Vercel Web Analytics. It does not set a cookie and it does not wait for Accept or Reject.
+        The request sends the page path, the referrer, the browser, the device, and a coarse location. It does not
+        send audio, a filename, or tag values. Query strings are removed first. Vercel identifies a visit with a hash
+        that is discarded after 24 hours. Vercel Inc. is the provider, and it is also the host named on the legal
+        notice. The legal basis is the legitimate interest in understanding which pages are used (GDPR Article
+        6(1)(f)). This is separate from the optional Analytics 4 cookies.
+      </p>
       <h3>Hosting logs</h3>
       <p>
         The site files are static and are hosted by Vercel Inc. Serving a page can create a connection log, such as
@@ -116,7 +124,9 @@ export default function PrivacyPage() {
       <p>
         Audio and tags are not stored by TrackTidy. The template and the consent choice remain in your browser until
         you change or delete them. Analytics retention is the period set in the Google Analytics property. This
-        website does not set that period. It should be configured in Google Analytics before launch.
+        website does not set that period. It should be configured in Google Analytics before launch. Vercel discards
+        the Web Analytics visitor hash after 24 hours. Any longer retention of those page views is set by Vercel, not
+        by this website.
       </p>
 
       <h2>Your rights</h2>

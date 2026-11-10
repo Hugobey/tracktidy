@@ -14,7 +14,7 @@ export default function CookiePolicyPage() {
       kicker="Cookies"
       heading="Cookie policy"
     >
-      <p>Last updated: 8 November 2026.</p>
+      <p>Last updated: 10 November 2026.</p>
       <p>
         This page lists only the storage the site uses. Analytics cookies are optional. The banner offers Accept and
         Reject at the same time. Cookie settings in the footer opens that choice again.
@@ -55,10 +55,17 @@ export default function CookiePolicyPage() {
         </li>
       </ul>
       <p>
-        No other analytics vendor is named in this application. The tag manager container can load the tags configured
-        for it. Rejecting, or changing your mind in Cookie
+        The tag manager container can load the tags configured for it. Rejecting, or changing your mind in Cookie
         settings, stops collection and clears the analytics cookies this site can remove. You can also block or
         delete cookies in your browser.
+      </p>
+      <h2>Vercel Web Analytics</h2>
+      <p>
+        The page loads Vercel Web Analytics when it opens. It does not set a cookie, and it does not wait for Accept
+        or Reject. Vercel receives the page path, the referrer, the browser, the device, and a coarse location. A
+        visitor hash lasts 24 hours and is then discarded. Query strings are removed before the page view is sent.
+        Provider: Vercel Inc., the same company that hosts the site. This is separate from the optional Google
+        Analytics 4 cookies above.
       </p>
       <p>
         Questions: <a href={`mailto:${PUBLISHER.privacy}`}>{PUBLISHER.privacy}</a>. See the{' '}

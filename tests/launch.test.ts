@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { applyRouteMeta } from '../scripts/prerender-routes.ts';
+import { redactAnalyticsUrl } from '../src/lib/vercel-analytics.ts';
 import { measurementId, resetAnalyticsForTests, sanitizeEvent } from '../src/lib/analytics.ts';
 import { readConsent, writeConsent } from '../src/lib/consent.ts';
 import {
@@ -28,6 +29,18 @@ describe('analytics parameters', () => {
     });
     expect(sanitizeEvent('processing_failed', { stage: 'network' })).toBeNull();
     expect(sanitizeEvent('page_view', { page_path: '/app' })).toBeNull();
+  });
+
+  it('sends Vercel page views as a path only', () => {
+    const event = { type: 'pageview' as const, url: 'https://www.track-tidy.com/app?file=nora.mp3#cover' };
+    expect(redactAnalyticsUrl(event)).toEqual({
+      type: 'pageview',
+      url: 'https://www.track-tidy.com/app',
+    });
+    expect(redactAnalyticsUrl({ type: 'pageview', url: 'not a url' })).toEqual({
+      type: 'pageview',
+      url: 'not a url',
+    });
   });
 
   it('accepts only a GA4 measurement id', () => {

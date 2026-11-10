@@ -4,7 +4,7 @@ This file is configuration that lives outside the website. Do not change DNS or 
 
 ## Status
 
-`index.html` loads the supplied Google Tag Manager snippet for container `GTM-TWVDH6V3` on every page. That is not the official container bootstrap: it does not push `gtm.start`. The optional Google Analytics 4 script still waits until a visitor presses Accept and `VITE_GA_MEASUREMENT_ID` is a GA4 id (`G-…`). Reject does not load that Analytics script.
+`index.html` loads the supplied Google Tag Manager snippet for container `GTM-TWVDH6V3` on every page. That is not the official container bootstrap: it does not push `gtm.start`. The optional Google Analytics 4 script still waits until a visitor presses Accept and `VITE_GA_MEASUREMENT_ID` is a GA4 id (`G-…`). Reject does not load that Analytics script. Vercel Web Analytics loads with every page and does not set a cookie. Turn it on in the Vercel project under Analytics, or the script has nowhere to record visits.
 
 The legal notice is published from `PUBLISHED_NOTICE` in `src/legal/publisher.ts`. It names Hugo Blanchart, the Paris address, the telephone, SIREN, SIRET, RNE registration, and Vercel Inc. as host. The supplied VAT number is not printed: on 8 November 2026 the European Commission VIES service reported it as not valid. Namecheap is the registrar and is named only in the privacy policy, not on the legal notice.
 
