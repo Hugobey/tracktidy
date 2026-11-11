@@ -96,43 +96,49 @@ describe('consent storage', () => {
   });
 });
 
+const PRIVATE_MARKERS = [
+  'Hugo Blanchart',
+  '891239428',
+  '89123942800040',
+  'rue neuve',
+  '75011',
+  '+33 7 77 37 25 07',
+  'FR14891239428',
+];
+
 describe('legal notice gate', () => {
-  it('does not publish a notice while required facts are missing', () => {
+  it('does not publish a notice while the host is missing', () => {
     expect(legalNoticeIsPublished()).toBe(false);
     expect(legalNoticeParagraphs(UNPUBLISHED_NOTICE)).toBeNull();
     const withheld = LEGAL_NOTICE_WITHHELD.join(' ');
-    expect(withheld).not.toContain(PUBLISHER.siren);
-    expect(withheld).not.toContain('rue neuve');
-    expect(withheld).not.toContain('75011');
+    for (const marker of PRIVATE_MARKERS) expect(withheld).not.toContain(marker);
   });
 
-  it('includes the supplied registration details once every required fact is present', () => {
+  it('names the host and the contact emails, and leaves the publisher’s identity out', () => {
     const paragraphs = legalNoticeParagraphs({
-      legalName: 'Ada Example',
-      phone: '+33 1 00 00 00 00',
       vatNotice: 'VAT position supplied by the publisher.',
       registryNotice: 'Registry position supplied by the publisher.',
       host: { name: 'Example Host', address: '1 Example Street, Paris', phone: '+33 1 11 11 11 11' },
     });
-    expect(paragraphs?.join('\n')).toContain(PUBLISHER.siren);
-    expect(paragraphs?.join('\n')).toContain(PUBLISHER.siret);
-    expect(paragraphs?.join('\n')).toContain(PUBLISHER.address);
-    expect(paragraphs?.join('\n')).toContain('Ada Example');
-    expect(paragraphs?.join('\n')).toContain('Example Host');
+    const text = paragraphs?.join('\n') ?? '';
+    expect(text).toContain('Example Host');
+    expect(text).toContain(PUBLISHER.hello);
+    expect(text).not.toContain('Ada Example');
+    for (const marker of PRIVATE_MARKERS) expect(text).not.toContain(marker);
   });
 
-  it('publishes the checked notice without the VAT number VIES rejected', () => {
+  it('publishes the checked notice without personal identifiers or a VAT number', () => {
     const text = legalNoticeParagraphs(PUBLISHED_NOTICE)?.join('\n') ?? '';
     expect(legalNoticeIsPublished(PUBLISHED_NOTICE)).toBe(true);
-    expect(text).toContain('Hugo Blanchart');
-    expect(text).toContain('+33 7 77 37 25 07');
-    expect(text).toContain(PUBLISHER.siren);
-    expect(text).toContain(PUBLISHER.siret);
+    expect(text).toContain(PUBLISHER.hello);
+    expect(text).toContain(PUBLISHER.support);
+    expect(text).toContain(PUBLISHER.privacy);
     expect(text).toContain('Vercel Inc.');
     expect(text).toContain('+1 415 398 5463');
-    expect(text).toContain('Not registered with the RCS');
-    expect(text).not.toContain('FR14891239428');
+    expect(text).toContain('not registered with the RCS');
+    expect(text).toContain('No intra-EU VAT number is displayed.');
     expect(text).not.toContain('not published yet');
+    for (const marker of PRIVATE_MARKERS) expect(text).not.toContain(marker);
   });
 });
 
@@ -144,10 +150,7 @@ describe('structured data', () => {
     expect(serialized).not.toContain('aggregateRating');
     expect(serialized).not.toContain('review');
     expect(serialized).not.toContain('price');
-    expect(serialized).not.toContain(PUBLISHER.siren);
-    expect(serialized).not.toContain('rue neuve');
-    expect(serialized).not.toContain('Hugo Blanchart');
-    expect(serialized).not.toContain('+33 7 77 37 25 07');
+    for (const marker of PRIVATE_MARKERS) expect(serialized).not.toContain(marker);
     expect(siteOrigin('http://track-tidy.com')).toBe(DEFAULT_ORIGIN);
     expect(siteOrigin('https://www.track-tidy.com/app')).toBe(DEFAULT_ORIGIN);
     expect(readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8')).toBe(sitemapXml());

@@ -6,7 +6,7 @@ This file is configuration that lives outside the website. Do not change DNS or 
 
 `index.html` loads the supplied Google Tag Manager snippet for container `GTM-TWVDH6V3` on every page. That container’s Google tag is `G-1DQDF61KJW`. It sends the first page view and does not forward later events. After Accept, the app sends page views and product events directly to that stream. Reject stops those hits. An explicit `VITE_GA_MEASUREMENT_ID` overrides the stream. Vercel Web Analytics loads with every page and does not set a cookie. Turn it on in the Vercel project under Analytics, or the script has nowhere to record visits.
 
-The legal notice is published from `PUBLISHED_NOTICE` in `src/legal/publisher.ts`. It names Hugo Blanchart, the Paris address, the telephone, SIREN, SIRET, RNE registration, and Vercel Inc. as host. The supplied VAT number is not printed: on 8 November 2026 the European Commission VIES service reported it as not valid. Namecheap is the registrar and is named only in the privacy policy, not on the legal notice.
+The legal notice is published from `PUBLISHED_NOTICE` in `src/legal/publisher.ts`. It names the brand, the entrepreneur individuel status, the contact emails, and Vercel Inc. as host. It does not print the publisher’s name, personal address, personal telephone, SIREN, or SIRET. No intra-EU VAT number is displayed. Namecheap is the registrar and is named only in the privacy policy, not on the legal notice.
 
 ## Environment
 
@@ -49,4 +49,4 @@ The legal notice identifies the host as Vercel Inc. The repository still has no 
 
 ## VAT position still to confirm
 
-Do not add `FR14891239428` to the notice unless a later VIES check returns valid, or you confirm a different VAT position in writing. The notice currently says that no intra-EU VAT number is shown. If the right statement is an exemption, such as franchise en base, replace only the `vatNotice` sentence. Do not invent that exemption here.
+Do not add `FR14891239428` to the notice unless a later VIES check returns valid, or you confirm a different VAT position in writing. The notice currently says that no intra-EU VAT number is displayed. If the right statement is an exemption, such as franchise en base, replace only the `vatNotice` sentence. Do not invent that exemption here.

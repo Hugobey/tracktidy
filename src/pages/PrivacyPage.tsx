@@ -17,9 +17,9 @@ export default function PrivacyPage() {
       <p>Last updated: 10 November 2026.</p>
       <p>
         This policy describes the TrackTidy website as it works today. It is not a certificate of legal compliance.
-        The controller is Hugo Blanchart, an entrepreneur individuel publishing the {PUBLISHER.brand} brand. Privacy
-        requests: <a href={`mailto:${PUBLISHER.privacy}`}>{PUBLISHER.privacy}</a>. The postal address and telephone
-        number are on the <Link to="/legal-notice">legal notice</Link>.
+        The controller is the {PUBLISHER.status} who publishes the {PUBLISHER.brand} brand. Privacy requests:{' '}
+        <a href={`mailto:${PUBLISHER.privacy}`}>{PUBLISHER.privacy}</a>. The{' '}
+        <Link to="/legal-notice">legal notice</Link> gives the host and the contact emails.
       </p>
 
       <h2>Audio files stay in the browser</h2>
