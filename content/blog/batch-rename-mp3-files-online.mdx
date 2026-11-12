@@ -1,0 +1,74 @@
+---
+title: "How to Batch Rename MP3 Files Online (Fast DJ Workflow)"
+description: "Batch rename MP3 files by cleaning the tag first, then writing Artist - Title (BPM) [Key]. A workflow for renaming multiple MP3s, one track at a time."
+date: 2026-11-12
+cluster: Library prep
+keywords:
+  - batch rename MP3 files
+  - rename multiple MP3s
+---
+
+A fresh download rarely arrives with a name you can sort. It arrives as `01_track_final_v2_320kbps.mp3`, sometimes with the artist buried in a comment and the title stuffed with a promo URL. Rekordbox and Serato will import that string. You will not enjoy searching for it at 1 a.m.
+
+If you came here to batch rename MP3 files, or to rename multiple MP3s before a gig, the workable version is a queue. Same rules on every file. One file, then the next. A regex across the whole folder will rename the mistakes too.
+
+## Start from the tag, not the filename
+
+The filename is a label. The ID3 tag is what the DJ software searches. Rename first, with an empty artist field, and the file looks fixed in Finder while it stays invisible when you type the artist in Rekordbox.
+
+Open the file and check, in this order:
+
+1. Artist and title. Strip pool URLs, the word FINAL, and duplicate version junk.
+2. BPM. A tag of 0, or a tempo that is half of what you hear, sorts the track into the wrong pocket.
+3. Key, if you mix harmonically. Pick Camelot or open key and keep that choice for the crate.
+4. Only then write the filename from those fields.
+
+## A filename you can read in a crate
+
+Use one pattern. Don't improvise halfway through a USB.
+
+```
+Artist - Title (124 BPM) [8A].mp3
+```
+
+Artist, then title, then tempo, then key. In a plain file list you still group by artist. In Rekordbox or Serato you sort by the BPM tag. Either way, the tempo and key are visible without opening the file.
+
+## Before and after
+
+| Before | After |
+| --- | --- |
+| `01_track_final_v2_320kbps.mp3` | `Artist - Title (124 BPM) [8A].mp3` |
+| `artist_-_title_(extended_mix)_www.poolsite.com.mp3` | `Artist - Title (Extended Mix) (126 BPM) [9A].mp3` |
+| `FREE_DL_128_Night_Drive_MASTER.mp3` | `Nora Voss - Night Drive (118 BPM) [4A].mp3` |
+
+Nora Voss is a stand-in, the same one used in the app preview. Your file should carry the artist you would actually type into search.
+
+## The pass, file by file
+
+1. Drop in one MP3. If it is not an MP3, leave it. This pass writes MP3 tags.
+2. Fix artist and title so they match what you would type in a search box. `ARTIST` and `Artist feat. Someone` should not both exist for the same person. Pick `Artist` or `Artist, Someone` and stick to it.
+3. Delete promo text from the title and the comment. A URL is not a title.
+4. Read the BPM. If a detector says 62 and the track is house, store 124. Fold halves and doubles into the range you play, usually 90–180.
+5. Read the key as an estimate. It is a starting point, not a certificate. If it fights your ear, type the key you will use.
+6. Generate the filename from the cleaned fields. Read it once. A wrong artist baked into the name is worse than the ugly original, because it looks finished.
+7. Save the file. Take the next one.
+
+That queue is the batch. Each file still gets a look.
+
+> A rename that only swaps underscores for spaces turns `01_track_final_v2` into `01 track final v2`. It is still useless in a search box.
+
+## What not to automate
+
+A desktop tagger that re-encodes the MP3 to "apply" the tags spends audio quality you already paid for. Tags can change without touching the audio.
+
+A template applied to a whole folder of empty artist fields produces a pile of `(0 BPM).mp3`. Slow and correct beats fast and wrong on the night you are short a track.
+
+The same junk — URLs, all-caps artists, zip-file album names — shows up on almost every promo. The checklist for that cleanup is in [how to edit MP3 tags in bulk](/blog/edit-mp3-tags-in-bulk).
+
+## Do the pass in the browser
+
+[TrackTidy](https://www.track-tidy.com/) is the one-file version of this workflow. You open an MP3 in the browser. It reads the tags already in the file, detects BPM, estimates the key, and builds a filename. The audio is not re-encoded. The file is not uploaded to an account. It does not rename a folder in one shot.
+
+When the tags themselves are the mess, fix those before you trust the filename. That part is covered in [how to edit MP3 metadata online](/blog/edit-mp3-metadata-online).
+
+[Clean one track](/app).

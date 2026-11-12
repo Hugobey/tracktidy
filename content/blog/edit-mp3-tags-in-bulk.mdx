@@ -1,0 +1,77 @@
+---
+title: "How to Edit MP3 Tags in Bulk Without Losing Your Mind"
+description: "A bulk MP3 tag editor workflow for promo URLs and messy artist names. Edit multiple MP3 tags with one checklist, one file at a time."
+date: 2026-11-12
+cluster: Library prep
+keywords:
+  - bulk MP3 tag editor
+  - edit multiple MP3 tags
+---
+
+The slow part of tag editing is not the typing. It is the ceremony. Right-click, Properties or Get Info, wait for the panel, change one field, close the panel, lose your place, open the next file. Forty promos later, the set time moved and the crate did not.
+
+A bulk MP3 tag editor sounds like select-all. Most of the time you need to edit multiple MP3 tags that are almost the same and not quite: this title has a URL, this artist is in all caps, this comment is an ad. The fix is a short checklist you can run without thinking about the checklist.
+
+## Why one file in the OS eats the hour
+
+Finder and Explorer show you file properties, not a DJ tag form. You get a single info window, a comments box that may not be the frame your software reads, and no BPM readout next to the title. You switch to a player to hear whether the file is the edit you wanted, then switch back, then do it again.
+
+That switch is the tax. The tag change itself is a few words.
+
+## The junk on almost every promo
+
+You will see the same problems often enough to stop treating them as surprises.
+
+### URLs in the title
+
+`Night Drive (Extended) [free dl: poolsite.com]` should be `Night Drive (Extended Mix)`. The link is not the title. Take it out of the comment too, or the comment becomes the thing you read instead of the mix version.
+
+### Artist formatting
+
+`ARTIST`, `Artist`, and `Artist feat. Someone` will not group. Decide once:
+
+- Lead artist in the artist field: `Artist`
+- Guests either in the title or after a comma, not both styles in the same crate
+
+Write the rule down if you have to. Future-you searches one string.
+
+### Fake albums
+
+An album field set to the zip name, `Week_12_House_Pack`, makes a hundred unrelated tracks look like one release. Clear it, or set the real release name.
+
+### BPM and key left at zero
+
+Sorting by tempo does nothing useful until the number is real. Fill BPM. Fill key if you mix harmonically. Same system on every file.
+
+| Before | After |
+| --- | --- |
+| Title: `Night Drive [free dl: poolsite.com]` | Title: `Night Drive (Extended Mix)` |
+| Artist: `NORA VOSS feat DJ EXAMPLE` | Artist: `Nora Voss` |
+| Album: `Week_12_House_Pack` | Album: cleared, or the real release |
+| BPM: `0` | BPM: `118` |
+
+## A pass that stays fast
+
+Work one folder. Don't bounce between genres.
+
+1. Sort the folder by name so the ugly files are obvious.
+2. Open one MP3 in an editor that shows artist, title, album, genre, BPM, and key on one screen.
+3. Strip the URL and the free-download text from the title and the comment.
+4. Normalize the artist with your rule.
+5. Fill BPM and key. Fold a detected 59 into 118 if that is the tempo you play.
+6. Write a filename that matches the tags: `Artist - Title (124 BPM) [8A].mp3`. The rename pass is the one in [how to batch rename MP3 files online](/blog/batch-rename-mp3-files-online).
+7. Save. Next file. Don't reopen a file you just saved unless the filename looks wrong.
+
+If a file is the wrong edit, or not an MP3, skip it. Fixing tags on a mislabeled rip makes the mistake look official.
+
+> Select-all is how one empty artist field becomes a folder of files named `( BPM).mp3`. Promo cleanup is repetitive. It is not identical. The extended mix and the radio cut need different titles.
+
+## Run the checklist in TrackTidy
+
+[TrackTidy](https://www.track-tidy.com/) is built for this pass on a single MP3. Metadata, BPM, a key estimate, and a filename, in the browser, without installing a tagger and without re-encoding. It is not a library app. It will not edit a batch of files, and it will not upload your crate. You bring the queue. The page takes the next file.
+
+That is still faster than Get Info. The checklist sits on one screen, the audio stays on your machine, and you download a file your DJ software can search.
+
+What each field is for — artist, title, album, genre, BPM, and initial key — is in [how to edit MP3 metadata online](/blog/edit-mp3-metadata-online).
+
+[Clean the next track](/app).

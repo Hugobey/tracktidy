@@ -24,6 +24,7 @@ export function SiteFooter() {
           <Link to="/app">Clean a track</Link>
           <Link to="/#method">How it works</Link>
           <Link to="/#capabilities">Features</Link>
+          <Link to="/blog">Blog</Link>
         </nav>
         <nav className="footer-links" aria-label="Legal">
           <p className="footer-label">Legal</p>

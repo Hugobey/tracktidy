@@ -8,6 +8,7 @@ type Props = {
   description: string;
   path: string;
   index?: boolean;
+  ogType?: 'website' | 'article';
   jsonLd?: Record<string, unknown> | null;
 };
 
@@ -32,7 +33,7 @@ function upsertCanonical(href: string) {
   element.setAttribute('href', href);
 }
 
-export function SiteHead({ title, description, path, index = true, jsonLd = null }: Props) {
+export function SiteHead({ title, description, path, index = true, ogType = 'website', jsonLd = null }: Props) {
   const { status } = useConsent();
   const structured = jsonLd ? JSON.stringify(jsonLd) : '';
 
@@ -43,7 +44,7 @@ export function SiteHead({ title, description, path, index = true, jsonLd = null
     upsertMeta('name', 'description', description);
     upsertMeta('name', 'robots', robots);
     upsertCanonical(canonical);
-    upsertMeta('property', 'og:type', 'website');
+    upsertMeta('property', 'og:type', ogType);
     upsertMeta('property', 'og:site_name', 'TrackTidy');
     upsertMeta('property', 'og:title', title);
     upsertMeta('property', 'og:description', description);
@@ -66,7 +67,7 @@ export function SiteHead({ title, description, path, index = true, jsonLd = null
     }
 
     trackPageView(path);
-  }, [description, index, path, status, structured, title]);
+  }, [description, index, ogType, path, status, structured, title]);
 
   return null;
 }

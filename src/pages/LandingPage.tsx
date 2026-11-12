@@ -6,6 +6,7 @@ import { Button } from '../components/Button.tsx';
 import { Logo } from '../components/Logo.tsx';
 import { SiteFooter } from '../components/SiteFooter.tsx';
 import { SiteHead } from '../components/SiteHead.tsx';
+import { SiteNav } from '../components/SiteNav.tsx';
 import { UploadOverlay } from '../components/UploadOverlay.tsx';
 import { stashPending } from '../lib/pendingFile.ts';
 import { homeJsonLd, routeMeta } from '../lib/site.ts';
@@ -73,10 +74,7 @@ export default function LandingPage() {
           <Link to="/" className="logo-link" aria-label="TrackTidy, home">
             <Logo />
           </Link>
-          <nav className="nav-links" aria-label="Page">
-            <a href="#method">How it works</a>
-            <a href="#capabilities">Features</a>
-          </nav>
+          <SiteNav home />
           <Button onClick={openUpload}>Clean your first track</Button>
         </div>
       </header>

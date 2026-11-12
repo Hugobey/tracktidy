@@ -11,6 +11,8 @@ const LegalNoticePage = lazy(() => import('./pages/LegalNoticePage.tsx'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage.tsx'));
 const TermsPage = lazy(() => import('./pages/TermsPage.tsx'));
 const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage.tsx'));
+const BlogIndexPage = lazy(() => import('./pages/BlogIndexPage.tsx'));
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage.tsx'));
 
 function PageFallback({ label }: { label: string }) {
   return (
@@ -36,6 +38,8 @@ export default function App() {
           <Route path="/privacy-policy" element={lazyPage(<PrivacyPage />, 'Opening the page')} />
           <Route path="/terms-of-use" element={lazyPage(<TermsPage />, 'Opening the page')} />
           <Route path="/cookie-policy" element={lazyPage(<CookiePolicyPage />, 'Opening the page')} />
+          <Route path="/blog" element={lazyPage(<BlogIndexPage />, 'Opening guides')} />
+          <Route path="/blog/:slug" element={lazyPage(<BlogPostPage />, 'Opening the guide')} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <VercelAnalytics />

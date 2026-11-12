@@ -45,7 +45,7 @@ The legal notice identifies the host as Vercel Inc. The repository still has no 
 - Serve the site only over HTTPS. Redirect HTTP to HTTPS, and redirect `track-tidy.com` to `https://www.track-tidy.com`.
 - Send HSTS once HTTPS is stable.
 - The build writes an HTML file for each public route, with that page’s title, description, and canonical URL. `vercel.json` serves those files. Unknown paths stay on `404.html` with HTTP 404 and `noindex`.
-- Google Search Console and the sitemap submission are account steps. The sitemap is `https://www.track-tidy.com/sitemap.xml`. There is no blog. Product events reach `G-1DQDF61KJW` after Accept. Mark `file_downloaded` as a conversion in the GA4 property if that is the conversion you want.
+- Google Search Console and the sitemap submission are account steps. The sitemap is `https://www.track-tidy.com/sitemap.xml`. Guides live at `/blog`, from `content/blog/*.mdx`, and the build adds each one to the sitemap. Product events reach `G-1DQDF61KJW` after Accept. Mark `file_downloaded` as a conversion in the GA4 property if that is the conversion you want.
 
 ## VAT position still to confirm
 

@@ -1,7 +1,28 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { INDEXABLE_ROUTES, canonicalUrl, robotsTxt, sitemapXml } from '../src/lib/site.ts';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { articleFallback, blogIndexFallback } from './blog-html.ts';
+import { blogSitemapEntries, readBlogFiles } from './blog-files.ts';
+import { blogPostingJsonLd } from '../src/lib/blog-frontmatter.ts';
+import {
+  BLOG_INDEX_DESCRIPTION,
+  BLOG_INDEX_PATH,
+  BLOG_INDEX_TITLE,
+  INDEXABLE_ROUTES,
+  SITEMAP_LASTMOD,
+  canonicalUrl,
+  robotsTxt,
+  sitemapXml,
+} from '../src/lib/site.ts';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+export type PrerenderRoute = {
+  path: string;
+  title: string;
+  description: string;
+  ogType?: 'website' | 'article';
+};
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -14,7 +35,7 @@ function setMeta(html: string, attr: 'name' | 'property', key: string, content: 
 }
 
 /** Rewrites the homepage shell so a route has its own title, description, and canonical URL. */
-export function applyRouteMeta(html: string, route: (typeof INDEXABLE_ROUTES)[number], origin: string): string {
+export function applyRouteMeta(html: string, route: PrerenderRoute, origin: string): string {
   const title = escapeAttr(route.title);
   const description = escapeAttr(route.description);
   const canonical = canonicalUrl(route.path, origin);
@@ -27,22 +48,61 @@ export function applyRouteMeta(html: string, route: (typeof INDEXABLE_ROUTES)[nu
   next = setMeta(next, 'property', 'og:description', description);
   next = setMeta(next, 'property', 'og:url', canonical);
   next = setMeta(next, 'property', 'og:image', image);
+  if (route.ogType) next = setMeta(next, 'property', 'og:type', route.ogType);
   next = setMeta(next, 'name', 'twitter:title', title);
   next = setMeta(next, 'name', 'twitter:description', description);
   next = setMeta(next, 'name', 'twitter:image', image);
   return next;
 }
 
+export function injectJsonLd(html: string, data: Record<string, unknown>): string {
+  const json = JSON.stringify(data).replace(/</g, '\\u003c');
+  const script = `<script type="application/ld+json" id="tracktidy-ld">${json}</script>`;
+  if (html.includes('id="tracktidy-ld"')) return html.replace(/<script type="application\/ld\+json" id="tracktidy-ld">[\s\S]*?<\/script>/, script);
+  return html.replace('</head>', `  ${script}\n  </head>`);
+}
+
+export function injectFallback(html: string, inner: string): string {
+  const marker = '<div id="root"></div>';
+  if (!html.includes(marker)) throw new Error('Missing #root');
+  if (inner.includes('</noscript>')) throw new Error('Fallback HTML cannot close noscript');
+  return html.replace(marker, `<noscript>${inner}</noscript>\n    ${marker}`);
+}
+
+function writeRoute(dist: string, routePath: string, html: string): void {
+  const file = routePath === '/' ? join(dist, 'index.html') : join(dist, routePath.slice(1), 'index.html');
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, html);
+}
+
 export function prerenderDist(dist = join(process.cwd(), 'dist'), origin?: string): void {
   const shell = readFileSync(join(dist, 'index.html'), 'utf8');
   const host = origin ?? new URL(canonicalUrl('/')).origin;
   for (const route of INDEXABLE_ROUTES) {
-    const rendered = applyRouteMeta(shell, route, host);
-    const file = route.path === '/' ? join(dist, 'index.html') : join(dist, route.path.slice(1), 'index.html');
-    mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, rendered);
+    writeRoute(dist, route.path, applyRouteMeta(shell, route, host));
   }
-  writeFileSync(join(dist, 'sitemap.xml'), sitemapXml(host));
+
+  const posts = readBlogFiles(ROOT);
+  writeRoute(
+    dist,
+    BLOG_INDEX_PATH,
+    injectFallback(
+      applyRouteMeta(shell, { path: BLOG_INDEX_PATH, title: BLOG_INDEX_TITLE, description: BLOG_INDEX_DESCRIPTION }, host),
+      blogIndexFallback(posts),
+    ),
+  );
+  for (const post of posts) {
+    const page = injectFallback(
+      injectJsonLd(
+        applyRouteMeta(shell, { path: post.path, title: post.title, description: post.description, ogType: 'article' }, host),
+        blogPostingJsonLd(post, host),
+      ),
+      articleFallback(post, posts),
+    );
+    writeRoute(dist, post.path, page);
+  }
+
+  writeFileSync(join(dist, 'sitemap.xml'), sitemapXml(host, SITEMAP_LASTMOD, blogSitemapEntries(ROOT)));
   writeFileSync(join(dist, 'robots.txt'), robotsTxt(host));
 }
 

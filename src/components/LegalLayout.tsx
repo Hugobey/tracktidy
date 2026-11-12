@@ -5,6 +5,7 @@ import { Button } from './Button.tsx';
 import { Logo } from './Logo.tsx';
 import { SiteFooter } from './SiteFooter.tsx';
 import { SiteHead } from './SiteHead.tsx';
+import { SiteNav } from './SiteNav.tsx';
 
 type Props = {
   title: string;
@@ -29,10 +30,7 @@ export function LegalLayout({ title, description, path, index = true, kicker, he
           <Link to="/" className="logo-link" aria-label="TrackTidy, home">
             <Logo />
           </Link>
-          <nav className="nav-links" aria-label="Page">
-            <Link to="/#method">How it works</Link>
-            <Link to="/#capabilities">Features</Link>
-          </nav>
+          <SiteNav />
           <Button to="/app">Clean your first track</Button>
         </div>
       </header>

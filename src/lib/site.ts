@@ -5,6 +5,11 @@ export const DEFAULT_ORIGIN = 'https://www.track-tidy.com';
 
 export const SITEMAP_LASTMOD = '2026-11-09';
 
+export const BLOG_INDEX_PATH = '/blog';
+export const BLOG_INDEX_TITLE = 'DJ library guides — TrackTidy';
+export const BLOG_INDEX_DESCRIPTION =
+  'Practical guides for cleaning MP3 tags, renaming files, and reading BPM and key. One track at a time, in the browser.';
+
 export const HOME_TITLE = 'TrackTidy — DJ file renamer and MP3 metadata editor';
 export const HOME_DESCRIPTION =
   'DJ file renamer and MP3 metadata editor. Detect BPM, estimate musical key, and generate MP3 filenames. One track at a time, in your browser.';
@@ -73,10 +78,16 @@ export function routeMeta(path: IndexableRoute['path']): IndexableRoute {
   return found;
 }
 
-export function sitemapXml(origin = DEFAULT_ORIGIN, lastmod = SITEMAP_LASTMOD): string {
-  const urls = INDEXABLE_ROUTES.map(
-    (route) => `  <url>\n    <loc>${canonicalUrl(route.path, origin)}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`,
-  ).join('\n');
+export type SitemapEntry = {
+  path: string;
+  lastmod: string;
+};
+
+export function sitemapXml(origin = DEFAULT_ORIGIN, lastmod = SITEMAP_LASTMOD, extra: SitemapEntry[] = []): string {
+  const entries: SitemapEntry[] = [...INDEXABLE_ROUTES.map((route) => ({ path: route.path, lastmod })), ...extra];
+  const urls = entries
+    .map((entry) => `  <url>\n    <loc>${canonicalUrl(entry.path, origin)}</loc>\n    <lastmod>${entry.lastmod}</lastmod>\n  </url>`)
+    .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 

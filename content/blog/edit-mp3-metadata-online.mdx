@@ -1,0 +1,75 @@
+---
+title: "How to Edit MP3 Metadata Online: Clean ID3 Tags in Seconds"
+description: "Edit MP3 metadata in the browser — artist, title, album, genre, BPM, and initial key. An online MP3 tag editor that does not re-encode the audio."
+date: 2026-11-12
+cluster: Library prep
+keywords:
+  - edit MP3 metadata
+  - online MP3 tag editor
+---
+
+The filename is what you see on a USB. The metadata is what Rekordbox and Serato search. You can have a perfect name and an empty artist field, and the track still will not come up when you type the artist. That is a tag problem.
+
+You do not need a desktop tagger installed to fix it. An MP3 already carries the text. A browser page can read those frames, let you edit them, and write them back without re-encoding the audio.
+
+## The fields worth editing
+
+Leave the obscure frames alone unless you know you need them. These are the ones that change a prep session:
+
+| Field | Frame | What you use it for |
+| --- | --- | --- |
+| Artist | TPE1 | The string you type when you search |
+| Title | TIT2 | The track name, without a promo URL |
+| Album | TALB | Keeping a real release together |
+| Genre | TCON | Filtering, if you actually filter by genre |
+| BPM | TBPM | Sorting by tempo |
+| Initial key | TKEY | Harmonic mixing, in one system |
+
+**Artist.** One spelling. `ARTIST` and `Artist` will not group.
+
+**Title.** The track name. `Night Drive (Extended) [free dl: poolsite.com]` should be `Night Drive (Extended Mix)`.
+
+**Album.** Useful when a release should stay together. Useless when it still says the name of the zip file.
+
+**Genre.** Your genre, not the store's. If you never filter by genre, don't invent one.
+
+**BPM.** A number. `0` and a blank field both sort like junk.
+
+**Initial key.** Camelot (`8A`) or open key, matching the software you play on. Don't mix the two systems in one crate.
+
+Comments are optional. If the comment is a promo paragraph, clear it. The software will show it, and it will not help you find the track.
+
+## Why a bad tag breaks search
+
+DJ software indexes the tag. You search that index.
+
+An empty artist means a search for the artist returns nothing, even when the filename contains the name. A title that still says `free download at poolsite.com` means you have to remember the URL to find your own edit. A BPM of 0 hides the track when you sort by tempo. A key written as `Am` in one file and `8A` in the next splits one harmonic group into two that don't look related.
+
+Corrupted tags fail more quietly. The artist text landed in the title, or an old ID3v1 field still holds a truncated name while the ID3v2 field is empty. The software shows one of them. You search for the other.
+
+Re-analyzing the library does not invent text that was never in the file. Analysis can suggest BPM and key. It cannot know that the artist was misspelled.
+
+## Edit without installing anything
+
+This is the online MP3 tag editor pass. You edit MP3 metadata in the browser, then download the file.
+
+1. Open one MP3. Confirm it is the track you think it is. The wrong file with the right tags is a classic prep mistake.
+2. Read the artist and title out loud. If you would not say it on a rider, rewrite it.
+3. Set album and genre only when you will filter by them.
+4. Set BPM from a detector, then fold obvious halves and doubles into the tempo you play. A 62 that is really 124 should be stored as 124 if that is how you browse.
+5. Set the key you want stored. Treat the estimate as a suggestion. Your ear wins an argument with a key finder.
+6. Clear comment spam.
+7. Write the file. Then [rename it from the cleaned tags](/blog/batch-rename-mp3-files-online), so the USB label and the search box finally match.
+
+```
+Before: Night Drive (Extended) [free dl: poolsite.com]
+After:  Night Drive (Extended Mix)
+```
+
+## What "online" should mean
+
+Online should mean the page loads from the web. It should not mean the audio goes to someone else's server for storage. [TrackTidy](https://www.track-tidy.com/) runs the edit in your browser, one MP3 at a time. There is no account and no library upload. You fix the tags, download the file, and move on.
+
+It will not push a new artist name onto fifty files at once. If a stack of promos needs the same cleanup — URLs in the title, inconsistent artist spelling — use the same steps on each file. The checklist is the bulk tool. The editor just stops you opening Get Info for every field. That longer pass is written up in [how to edit MP3 tags in bulk](/blog/edit-mp3-tags-in-bulk).
+
+[Edit one MP3](/app).
