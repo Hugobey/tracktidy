@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { AppPreview } from '../components/AppPreview.tsx';
 import { Atmosphere } from '../components/Atmosphere.tsx';
 import { Button } from '../components/Button.tsx';
+import { FileDrop } from '../components/FileDrop.tsx';
 import { Logo } from '../components/Logo.tsx';
 import { SiteFooter } from '../components/SiteFooter.tsx';
 import { SiteHead } from '../components/SiteHead.tsx';
 import { SiteNav } from '../components/SiteNav.tsx';
-import { UploadOverlay } from '../components/UploadOverlay.tsx';
-import { stashPending } from '../lib/pendingFile.ts';
 import { homeJsonLd, routeMeta } from '../lib/site.ts';
+import { useTrackSession } from '../session/session-context.ts';
 
 const home = routeMeta('/');
 
@@ -55,12 +55,54 @@ const FEATURES = [
 ];
 
 export default function LandingPage() {
-  const navigate = useNavigate();
-  const [uploadOpen, setUploadOpen] = useState(false);
+  const session = useTrackSession();
+  const { hash } = useLocation();
+  const [hot, setHot] = useState(false);
+  const depth = useRef(0);
+  const acceptRef = useRef(session.acceptFiles);
+  useEffect(() => {
+    acceptRef.current = session.acceptFiles;
+  });
 
-  function openUpload() {
-    setUploadOpen(true);
-  }
+  useEffect(() => {
+    if (hash !== '#upload') return;
+    document.getElementById('upload')?.scrollIntoView({ block: 'center' });
+  }, [hash]);
+
+  useEffect(() => {
+    const hasFiles = (event: DragEvent) => event.dataTransfer?.types.includes('Files') ?? false;
+    const onDragEnter = (event: DragEvent) => {
+      if (!hasFiles(event)) return;
+      event.preventDefault();
+      depth.current += 1;
+      setHot(true);
+    };
+    const onDragOver = (event: DragEvent) => {
+      if (!hasFiles(event)) return;
+      event.preventDefault();
+    };
+    const onDragLeave = () => {
+      depth.current = Math.max(0, depth.current - 1);
+      if (depth.current === 0) setHot(false);
+    };
+    const onDrop = (event: DragEvent) => {
+      if (!event.dataTransfer?.files?.length) return;
+      event.preventDefault();
+      depth.current = 0;
+      setHot(false);
+      acceptRef.current(event.dataTransfer.files);
+    };
+    window.addEventListener('dragenter', onDragEnter);
+    window.addEventListener('dragover', onDragOver);
+    window.addEventListener('dragleave', onDragLeave);
+    window.addEventListener('drop', onDrop);
+    return () => {
+      window.removeEventListener('dragenter', onDragEnter);
+      window.removeEventListener('dragover', onDragOver);
+      window.removeEventListener('dragleave', onDragLeave);
+      window.removeEventListener('drop', onDrop);
+    };
+  }, []);
 
   return (
     <div className="page">
@@ -75,7 +117,6 @@ export default function LandingPage() {
             <Logo />
           </Link>
           <SiteNav home />
-          <Button onClick={openUpload}>Clean your first track</Button>
         </div>
       </header>
 
@@ -91,14 +132,17 @@ export default function LandingPage() {
             <p className="lede enter d3">
               Clean metadata. Detect BPM. Rename your tracks. Get your music ready to play.
             </p>
-            <div className="hero-actions enter d3">
-              <Button onClick={openUpload}>Clean your first track</Button>
-              <Button href="#method" variant="secondary">
-                How it works
-              </Button>
-            </div>
-            <p className="reassure enter d4">One track at a time. In the browser. No account.</p>
           </div>
+          {session.phase === 'edit' && session.track ? (
+            <p className="resume-strip">
+              {session.track.name} is still open in this tab. <Link to="/app">Continue editing</Link>
+            </p>
+          ) : null}
+          <FileDrop hot={hot} error={session.phase === 'idle' ? session.importError : null} onFile={session.openFile} />
+          <p className="reassure">One track at a time. In the browser. No account.</p>
+        </section>
+
+        <section className="hero-demo wrap" aria-label="Before and after">
           <AppPreview />
         </section>
 
@@ -141,23 +185,13 @@ export default function LandingPage() {
             <div className="closing">
               <h2>Get your music library in order.</h2>
               <p>Start with a single track.</p>
-              <Button onClick={openUpload}>Clean your first track</Button>
+              <Button href="#upload">Upload a track</Button>
             </div>
           </div>
         </section>
       </main>
 
       <SiteFooter />
-      {uploadOpen ? (
-        <UploadOverlay
-          heading="p"
-          onClose={() => setUploadOpen(false)}
-          onFile={(file, extra) => {
-            stashPending({ file, extra });
-            navigate('/app');
-          }}
-        />
-      ) : null}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Atmosphere } from './Atmosphere.tsx';
 import { Button } from './Button.tsx';
 import { Logo } from './Logo.tsx';
 import { SiteFooter } from './SiteFooter.tsx';
@@ -12,15 +11,15 @@ type Props = {
   description: string;
   path: string;
   ogType?: 'website' | 'article';
+  image?: string;
   jsonLd?: Record<string, unknown> | null;
   children: ReactNode;
 };
 
-export function BlogShell({ title, description, path, ogType = 'website', jsonLd = null, children }: Props) {
+export function GuideShell({ title, description, path, ogType = 'website', image, jsonLd = null, children }: Props) {
   return (
-    <div className="page">
-      <SiteHead title={title} description={description} path={path} ogType={ogType} jsonLd={jsonLd} />
-      <Atmosphere />
+    <div className="page guides-page">
+      <SiteHead title={title} description={description} path={path} ogType={ogType} image={image} jsonLd={jsonLd} />
       <a className="skip" href="#content">
         Skip to content
       </a>
@@ -29,11 +28,11 @@ export function BlogShell({ title, description, path, ogType = 'website', jsonLd
           <Link to="/" className="logo-link" aria-label="TrackTidy, home">
             <Logo />
           </Link>
-          <SiteNav current="blog" />
-          <Button to="/app">Clean your first track</Button>
+          <SiteNav current="guides" />
+          <Button to="/#upload">Clean your first track</Button>
         </div>
       </header>
-      <main id="content" className="blog-main">
+      <main id="content" className="guides-main">
         {children}
       </main>
       <SiteFooter />

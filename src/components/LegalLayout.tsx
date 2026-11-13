@@ -31,7 +31,7 @@ export function LegalLayout({ title, description, path, index = true, kicker, he
             <Logo />
           </Link>
           <SiteNav />
-          <Button to="/app">Clean your first track</Button>
+          <Button to="/#upload">Clean your first track</Button>
         </div>
       </header>
       <main id="content" className="legal-main">

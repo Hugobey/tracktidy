@@ -21,10 +21,10 @@ export function SiteFooter() {
         <nav className="footer-links" aria-label="Pages">
           <p className="footer-label">Navigate</p>
           <Link to="/">Home</Link>
-          <Link to="/app">Clean a track</Link>
+          <Link to="/#upload">Clean a track</Link>
           <Link to="/#method">How it works</Link>
           <Link to="/#capabilities">Features</Link>
-          <Link to="/blog">Blog</Link>
+          <Link to="/guides">Guides</Link>
         </nav>
         <nav className="footer-links" aria-label="Legal">
           <p className="footer-label">Legal</p>

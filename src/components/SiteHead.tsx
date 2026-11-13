@@ -9,6 +9,7 @@ type Props = {
   path: string;
   index?: boolean;
   ogType?: 'website' | 'article';
+  image?: string;
   jsonLd?: Record<string, unknown> | null;
 };
 
@@ -33,7 +34,7 @@ function upsertCanonical(href: string) {
   element.setAttribute('href', href);
 }
 
-export function SiteHead({ title, description, path, index = true, ogType = 'website', jsonLd = null }: Props) {
+export function SiteHead({ title, description, path, index = true, ogType = 'website', image, jsonLd = null }: Props) {
   const { status } = useConsent();
   const structured = jsonLd ? JSON.stringify(jsonLd) : '';
 
@@ -41,6 +42,7 @@ export function SiteHead({ title, description, path, index = true, ogType = 'web
     document.title = title;
     const canonical = canonicalUrl(path);
     const robots = index ? 'index,follow' : 'noindex,nofollow';
+    const picture = image ? new URL(image, canonicalUrl('/')).href : `${canonicalUrl('/').replace(/\/$/, '')}/og.png`;
     upsertMeta('name', 'description', description);
     upsertMeta('name', 'robots', robots);
     upsertCanonical(canonical);
@@ -49,11 +51,11 @@ export function SiteHead({ title, description, path, index = true, ogType = 'web
     upsertMeta('property', 'og:title', title);
     upsertMeta('property', 'og:description', description);
     upsertMeta('property', 'og:url', canonical);
-    upsertMeta('property', 'og:image', `${canonicalUrl('/').replace(/\/$/, '')}/og.png`);
+    upsertMeta('property', 'og:image', picture);
     upsertMeta('name', 'twitter:card', 'summary_large_image');
     upsertMeta('name', 'twitter:title', title);
     upsertMeta('name', 'twitter:description', description);
-    upsertMeta('name', 'twitter:image', `${canonicalUrl('/').replace(/\/$/, '')}/og.png`);
+    upsertMeta('name', 'twitter:image', picture);
 
     const existing = document.getElementById('tracktidy-ld');
     if (structured) {
@@ -67,7 +69,7 @@ export function SiteHead({ title, description, path, index = true, ogType = 'web
     }
 
     trackPageView(path);
-  }, [description, index, ogType, path, status, structured, title]);
+  }, [description, image, index, ogType, path, status, structured, title]);
 
   return null;
 }

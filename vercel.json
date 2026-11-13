@@ -14,7 +14,7 @@
     { "source": "/terms-of-use", "destination": "/terms-of-use/index.html" },
     { "source": "/cookie-policy", "destination": "/cookie-policy/index.html" },
     { "source": "/legal-notice", "destination": "/legal-notice/index.html" },
-    { "source": "/blog", "destination": "/blog/index.html" },
-    { "source": "/blog/:slug", "destination": "/blog/:slug/index.html" }
+    { "source": "/guides", "destination": "/guides/index.html" },
+    { "source": "/guides/:slug", "destination": "/guides/:slug/index.html" }
   ]
 }

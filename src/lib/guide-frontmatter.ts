@@ -1,40 +1,50 @@
 import { PUBLISHER } from '../legal/publisher.ts';
 import { canonicalUrl, siteOrigin } from './site.ts';
 
-export type BlogFrontmatter = {
+export type GuideFrontmatter = {
   title: string;
   description: string;
   date: string;
-  cluster: string;
+  author: string;
+  authorRole: string;
+  category: string;
+  heroImage: string;
   keywords: string[];
 };
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const HERO = /^\/images\/guides\/[a-z0-9-]+\.(?:jpg|jpeg|png|webp)$/;
 
-/** Subset of YAML used by `content/blog`. Values may be quoted. Lists use two-space dashes. */
-export function parseBlogSource(source: string, slug: string): { frontmatter: BlogFrontmatter; body: string } {
-  if (!SLUG.test(slug)) throw new Error(`Bad blog slug: ${slug}`);
+/** Subset of YAML used by `content/guides`. Values may be quoted. Lists use two-space dashes. */
+export function parseGuideSource(source: string, slug: string): { frontmatter: GuideFrontmatter; body: string } {
+  if (!SLUG.test(slug)) throw new Error(`Bad guide slug: ${slug}`);
   const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!match) throw new Error(`Missing frontmatter in ${slug}`);
   const data = parseFields(match[1] ?? '', slug);
+  const declared = data.slug;
+  if (typeof declared === 'string' && declared !== slug) throw new Error(`Slug mismatch in ${slug}`);
   const date = requiredString(data, 'date', slug);
   if (!isIsoDate(date)) throw new Error(`Bad date in ${slug}`);
+  const heroImage = requiredString(data, 'heroImage', slug);
+  if (!HERO.test(heroImage)) throw new Error(`Bad hero image in ${slug}`);
   const keywords = data.keywords;
-  if (!Array.isArray(keywords) || keywords.length === 0) throw new Error(`Missing keywords in ${slug}`);
   return {
     frontmatter: {
       title: requiredString(data, 'title', slug),
       description: requiredString(data, 'description', slug),
       date,
-      cluster: requiredString(data, 'cluster', slug),
-      keywords,
+      author: requiredString(data, 'author', slug),
+      authorRole: optionalString(data, 'authorRole'),
+      category: requiredString(data, 'category', slug),
+      heroImage,
+      keywords: Array.isArray(keywords) ? keywords : [],
     },
     body: source.slice(match[0].length),
   };
 }
 
 export function readingMinutes(body: string): number {
-  const words = body.trim().split(/\s+/).filter(Boolean).length;
+  const words = body.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
 }
 
@@ -42,7 +52,7 @@ export function readingLabel(minutes: number): string {
   return `${minutes} min read`;
 }
 
-export function formatBlogDate(iso: string): string {
+export function formatGuideDate(iso: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!match) return iso;
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
@@ -54,49 +64,52 @@ export function formatBlogDate(iso: string): string {
   }).format(date);
 }
 
-export function comparePosts<T extends { date: string; slug: string }>(a: T, b: T): number {
+export function authorInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0] ?? '')
+    .join('')
+    .toUpperCase();
+}
+
+export function compareGuides<T extends { date: string; slug: string }>(a: T, b: T): number {
   if (a.date !== b.date) return a.date < b.date ? 1 : -1;
   return a.slug.localeCompare(b.slug);
 }
 
-export function relatedPosts<T extends { slug: string; cluster: string }>(posts: readonly T[], slug: string, count = 2): T[] {
-  const current = posts.find((post) => post.slug === slug);
-  const others = posts.filter((post) => post.slug !== slug);
-  const same = others.filter((post) => post.cluster === current?.cluster);
-  const rest = others.filter((post) => post.cluster !== current?.cluster);
+export function relatedGuides<T extends { slug: string; category: string }>(guides: readonly T[], slug: string, count = 2): T[] {
+  const current = guides.find((guide) => guide.slug === slug);
+  const others = guides.filter((guide) => guide.slug !== slug);
+  const same = others.filter((guide) => guide.category === current?.category);
+  const rest = others.filter((guide) => guide.category !== current?.category);
   return [...same, ...rest].slice(0, count);
 }
 
-export function blogPostingJsonLd(
-  post: { title: string; description: string; date: string; path: string },
+export function guidePostingJsonLd(
+  guide: { title: string; description: string; date: string; path: string; author: string; authorRole: string; heroImage: string },
   origin = siteOrigin(),
 ): Record<string, unknown> {
-  const url = canonicalUrl(post.path, origin);
+  const url = canonicalUrl(guide.path, origin);
+  const author: Record<string, unknown> = { '@type': 'Person', name: guide.author };
+  if (guide.authorRole) author.jobTitle = guide.authorRole;
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
-    headline: post.title,
-    description: post.description,
-    datePublished: post.date,
+    headline: guide.title,
+    description: guide.description,
+    datePublished: guide.date,
     inLanguage: 'en',
     url,
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': url,
-    },
-    author: {
-      '@type': 'Organization',
-      name: PUBLISHER.brand,
-      url: `${origin}/`,
-    },
+    image: new URL(guide.heroImage, `${origin}/`).href,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    author,
     publisher: {
       '@type': 'Organization',
       name: PUBLISHER.brand,
       url: `${origin}/`,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${origin}/favicon.svg`,
-      },
+      logo: { '@type': 'ImageObject', url: `${origin}/favicon.svg` },
     },
   };
 }
@@ -110,7 +123,7 @@ function parseFields(raw: string, slug: string): Record<string, string | string[
     if (item && listKey) {
       const current = result[listKey];
       const value = unquote(item[1] ?? '');
-      if (!value) throw new Error(`Empty keyword in ${slug}`);
+      if (!value) throw new Error(`Empty list item in ${slug}`);
       if (Array.isArray(current)) current.push(value);
       else result[listKey] = [value];
       continue;
@@ -134,6 +147,11 @@ function requiredString(data: Record<string, string | string[]>, key: string, sl
   const value = data[key];
   if (typeof value !== 'string' || value.trim() === '') throw new Error(`Missing ${key} in ${slug}`);
   return value.trim();
+}
+
+function optionalString(data: Record<string, string | string[]>, key: string): string {
+  const value = data[key];
+  return typeof value === 'string' ? value.trim() : '';
 }
 
 function unquote(value: string): string {

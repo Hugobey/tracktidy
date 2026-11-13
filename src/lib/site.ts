@@ -5,9 +5,9 @@ export const DEFAULT_ORIGIN = 'https://www.track-tidy.com';
 
 export const SITEMAP_LASTMOD = '2026-11-09';
 
-export const BLOG_INDEX_PATH = '/blog';
-export const BLOG_INDEX_TITLE = 'DJ library guides — TrackTidy';
-export const BLOG_INDEX_DESCRIPTION =
+export const GUIDE_INDEX_PATH = '/guides';
+export const GUIDE_INDEX_TITLE = 'Guides — TrackTidy';
+export const GUIDE_INDEX_DESCRIPTION =
   'Practical guides for cleaning MP3 tags, renaming files, and reading BPM and key. One track at a time, in the browser.';
 
 export const HOME_TITLE = 'TrackTidy — DJ file renamer and MP3 metadata editor';

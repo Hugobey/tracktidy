@@ -6,18 +6,18 @@ import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 import { defineConfig } from 'vitest/config';
 import { prerenderDist } from './scripts/prerender-routes.ts';
 
-function blogSource() {
+function guideSource() {
   return {
-    name: 'blog-source',
+    name: 'guide-source',
     enforce: 'pre' as const,
     transform(code: string, id: string) {
-      if (!id.includes('.mdx') || !id.includes('blog-source')) return;
+      if (!id.includes('.mdx') || !id.includes('guide-source')) return;
       return { code: `export default ${JSON.stringify(code)}`, map: null };
     },
   };
 }
 
-function blogMdx() {
+function guideMdx() {
   const plugin = mdx({
     remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm],
   });
@@ -25,7 +25,7 @@ function blogMdx() {
     ...plugin,
     enforce: 'pre' as const,
     transform(code: string, id: string) {
-      if (id.includes('blog-source')) return;
+      if (id.includes('guide-source')) return;
       return plugin.transform.call(this, code, id);
     },
   };
@@ -42,7 +42,7 @@ function prerenderRoutes() {
 }
 
 export default defineConfig({
-  plugins: [blogSource(), blogMdx(), react(), prerenderRoutes()],
+  plugins: [guideSource(), guideMdx(), react(), prerenderRoutes()],
   server: {
     port: 5173,
     strictPort: true,

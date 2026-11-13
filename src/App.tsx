@@ -5,14 +5,14 @@ import { ConsentProvider } from './components/Consent.tsx';
 import { VercelAnalytics } from './components/VercelAnalytics.tsx';
 import LandingPage from './pages/LandingPage.tsx';
 import NotFoundPage from './pages/NotFoundPage.tsx';
-
-const ToolPage = lazy(() => import('./pages/ToolPage.tsx'));
+import ToolPage from './pages/ToolPage.tsx';
+import { TrackSessionProvider } from './session/TrackSession.tsx';
 const LegalNoticePage = lazy(() => import('./pages/LegalNoticePage.tsx'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage.tsx'));
 const TermsPage = lazy(() => import('./pages/TermsPage.tsx'));
 const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage.tsx'));
-const BlogIndexPage = lazy(() => import('./pages/BlogIndexPage.tsx'));
-const BlogPostPage = lazy(() => import('./pages/BlogPostPage.tsx'));
+const GuidesIndexPage = lazy(() => import('./pages/GuidesIndexPage.tsx'));
+const GuidePage = lazy(() => import('./pages/GuidePage.tsx'));
 
 function PageFallback({ label }: { label: string }) {
   return (
@@ -31,19 +31,21 @@ export default function App() {
   return (
     <BrowserRouter>
       <ConsentProvider>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/app" element={lazyPage(<ToolPage />, 'Opening the tool')} />
-          <Route path="/legal-notice" element={lazyPage(<LegalNoticePage />, 'Opening the page')} />
-          <Route path="/privacy-policy" element={lazyPage(<PrivacyPage />, 'Opening the page')} />
-          <Route path="/terms-of-use" element={lazyPage(<TermsPage />, 'Opening the page')} />
-          <Route path="/cookie-policy" element={lazyPage(<CookiePolicyPage />, 'Opening the page')} />
-          <Route path="/blog" element={lazyPage(<BlogIndexPage />, 'Opening guides')} />
-          <Route path="/blog/:slug" element={lazyPage(<BlogPostPage />, 'Opening the guide')} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-        <VercelAnalytics />
-        <ConsentBanner />
+        <TrackSessionProvider>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/app" element={<ToolPage />} />
+            <Route path="/legal-notice" element={lazyPage(<LegalNoticePage />, 'Opening the page')} />
+            <Route path="/privacy-policy" element={lazyPage(<PrivacyPage />, 'Opening the page')} />
+            <Route path="/terms-of-use" element={lazyPage(<TermsPage />, 'Opening the page')} />
+            <Route path="/cookie-policy" element={lazyPage(<CookiePolicyPage />, 'Opening the page')} />
+            <Route path="/guides" element={lazyPage(<GuidesIndexPage />, 'Opening guides')} />
+            <Route path="/guides/:slug" element={lazyPage(<GuidePage />, 'Opening the guide')} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+          <VercelAnalytics />
+          <ConsentBanner />
+        </TrackSessionProvider>
       </ConsentProvider>
     </BrowserRouter>
   );

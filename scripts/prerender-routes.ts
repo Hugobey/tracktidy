@@ -1,13 +1,13 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { articleFallback, blogIndexFallback } from './blog-html.ts';
-import { blogSitemapEntries, readBlogFiles } from './blog-files.ts';
-import { blogPostingJsonLd } from '../src/lib/blog-frontmatter.ts';
+import { guideFallback, guideIndexFallback } from './guide-html.ts';
+import { guideSitemapEntries, readGuideFiles } from './guide-files.ts';
+import { guidePostingJsonLd } from '../src/lib/guide-frontmatter.ts';
 import {
-  BLOG_INDEX_DESCRIPTION,
-  BLOG_INDEX_PATH,
-  BLOG_INDEX_TITLE,
+  GUIDE_INDEX_DESCRIPTION,
+  GUIDE_INDEX_PATH,
+  GUIDE_INDEX_TITLE,
   INDEXABLE_ROUTES,
   SITEMAP_LASTMOD,
   canonicalUrl,
@@ -22,6 +22,7 @@ export type PrerenderRoute = {
   title: string;
   description: string;
   ogType?: 'website' | 'article';
+  image?: string;
 };
 
 function escapeAttr(value: string): string {
@@ -39,7 +40,7 @@ export function applyRouteMeta(html: string, route: PrerenderRoute, origin: stri
   const title = escapeAttr(route.title);
   const description = escapeAttr(route.description);
   const canonical = canonicalUrl(route.path, origin);
-  const image = `${origin}/og.png`;
+  const image = route.image ? new URL(route.image, `${origin}/`).href : `${origin}/og.png`;
   let next = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`);
   next = setMeta(next, 'name', 'description', description);
   next = setMeta(next, 'name', 'robots', 'index,follow');
@@ -82,27 +83,31 @@ export function prerenderDist(dist = join(process.cwd(), 'dist'), origin?: strin
     writeRoute(dist, route.path, applyRouteMeta(shell, route, host));
   }
 
-  const posts = readBlogFiles(ROOT);
+  const guides = readGuideFiles(ROOT);
   writeRoute(
     dist,
-    BLOG_INDEX_PATH,
+    GUIDE_INDEX_PATH,
     injectFallback(
-      applyRouteMeta(shell, { path: BLOG_INDEX_PATH, title: BLOG_INDEX_TITLE, description: BLOG_INDEX_DESCRIPTION }, host),
-      blogIndexFallback(posts),
+      applyRouteMeta(shell, { path: GUIDE_INDEX_PATH, title: GUIDE_INDEX_TITLE, description: GUIDE_INDEX_DESCRIPTION }, host),
+      guideIndexFallback(guides),
     ),
   );
-  for (const post of posts) {
+  for (const guide of guides) {
     const page = injectFallback(
       injectJsonLd(
-        applyRouteMeta(shell, { path: post.path, title: post.title, description: post.description, ogType: 'article' }, host),
-        blogPostingJsonLd(post, host),
+        applyRouteMeta(
+          shell,
+          { path: guide.path, title: guide.title, description: guide.description, ogType: 'article', image: guide.heroImage },
+          host,
+        ),
+        guidePostingJsonLd(guide, host),
       ),
-      articleFallback(post, posts),
+      guideFallback(guide, guides),
     );
-    writeRoute(dist, post.path, page);
+    writeRoute(dist, guide.path, page);
   }
 
-  writeFileSync(join(dist, 'sitemap.xml'), sitemapXml(host, SITEMAP_LASTMOD, blogSitemapEntries(ROOT)));
+  writeFileSync(join(dist, 'sitemap.xml'), sitemapXml(host, SITEMAP_LASTMOD, guideSitemapEntries(ROOT)));
   writeFileSync(join(dist, 'robots.txt'), robotsTxt(host));
 }
 

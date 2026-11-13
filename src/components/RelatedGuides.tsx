@@ -4,20 +4,20 @@ type Guide = {
   slug: string;
   path: string;
   title: string;
-  cluster: string;
+  category: string;
 };
 
-export function RelatedGuides({ posts }: { posts: Guide[] }) {
-  if (posts.length === 0) return null;
+export function RelatedGuides({ guides }: { guides: Guide[] }) {
+  if (guides.length === 0) return null;
   return (
     <section className="related" aria-labelledby="related-guides" data-testid="related-guides">
       <h2 id="related-guides">Related guides</h2>
       <ul>
-        {posts.map((post) => (
-          <li key={post.slug}>
-            <Link to={post.path}>
-              <span className="cluster-badge">{post.cluster}</span>
-              <span className="related-title">{post.title}</span>
+        {guides.map((guide) => (
+          <li key={guide.slug}>
+            <Link to={guide.path}>
+              <span className="guide-pill">{guide.category}</span>
+              <span className="related-title">{guide.title}</span>
             </Link>
           </li>
         ))}

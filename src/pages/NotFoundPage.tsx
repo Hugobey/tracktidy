@@ -16,7 +16,7 @@ export default function NotFoundPage() {
       <p>The address may be mistyped, or the page may have moved.</p>
       <p className="legal-actions">
         <Link to="/">Back to the homepage</Link>
-        <Link to="/app">Clean a track</Link>
+        <Link to="/#upload">Clean a track</Link>
       </p>
     </LegalLayout>
   );

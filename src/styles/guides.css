@@ -1,0 +1,504 @@
+/* Light editorial surface for /guides only. The rest of the site stays dark. */
+
+body:has(.guides-page) {
+  background: #f8f9fa;
+  color: #171717;
+  color-scheme: light;
+}
+
+body:has(.guides-page)::before {
+  display: none;
+}
+
+.guides-page {
+  min-height: 100vh;
+  background: #f8f9fa;
+  color: #171717;
+}
+
+.guides-page .nav {
+  background: rgba(248, 249, 250, 0.92);
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.guides-page .logo-link,
+.guides-page .nav-links a[aria-current='page'] {
+  color: #171717;
+}
+
+.guides-page .nav-links a {
+  color: #525252;
+}
+
+.guides-page .nav-links a:hover {
+  color: #171717;
+}
+
+.guides-page .footer {
+  border-top-color: #e5e5e5;
+}
+
+.guides-page .footer-brand p,
+.guides-page .footer-label,
+.guides-page .footer-links a,
+.guides-page .footer-links button {
+  color: #525252;
+}
+
+.guides-page .footer-brand a,
+.guides-page .footer-links a:hover,
+.guides-page .footer-links button:hover {
+  color: #171717;
+}
+
+.guides-main {
+  padding: 128px 0 72px;
+}
+
+.guides-page h1 {
+  max-width: 18ch;
+  margin: 0 0 16px;
+  color: #171717;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+}
+
+.guides-page h2,
+.guides-page h3 {
+  color: #171717;
+}
+
+.guide-kicker {
+  margin: 0 0 12px;
+  color: #525252;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.guides-intro {
+  margin-bottom: 28px;
+}
+
+.guides-dek,
+.guide-dek {
+  max-width: 62ch;
+  margin: 0;
+  color: #525252;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.guide-pill {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #171717;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.guide-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.guide-grid a {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 22px;
+  text-decoration: none;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 16px 40px rgba(23, 23, 23, 0.06);
+}
+
+.guide-card-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #f1f5f9;
+}
+
+.guide-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  padding: 18px 18px 20px;
+}
+
+.guide-grid h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+}
+
+.guide-grid p {
+  margin: 0;
+  color: #525252;
+}
+
+.guide-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: auto;
+  color: #525252;
+  font-size: 13px;
+}
+
+.guide-sheet {
+  width: min(760px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 48px);
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 24px;
+  box-shadow: 0 18px 50px rgba(23, 23, 23, 0.06);
+}
+
+.guide-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.guide-crumb a {
+  color: #525252;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.guide-crumb a:hover {
+  color: #171717;
+}
+
+.guide-byline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0 24px;
+  padding: 14px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.guide-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #171717;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.guide-byline-id {
+  min-width: 0;
+}
+
+.guide-author {
+  margin: 0;
+  color: #171717;
+  font-weight: 500;
+}
+
+.guide-role,
+.guide-byline-meta {
+  margin: 0;
+  color: #525252;
+  font-size: 14px;
+}
+
+.guide-byline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-left: auto;
+}
+
+.guide-hero {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  margin: 0 0 28px;
+  border-radius: 18px;
+  background: #f1f5f9;
+}
+
+.guide-copy {
+  max-width: 68ch;
+  color: #525252;
+}
+
+.guide-copy h2 {
+  margin: 36px 0 12px;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.guide-copy h3 {
+  margin: 22px 0 8px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.guide-copy p,
+.guide-copy li {
+  color: #525252;
+}
+
+.guide-copy p,
+.guide-copy ul,
+.guide-copy ol,
+.guide-copy pre,
+.guide-copy blockquote {
+  margin-top: 14px;
+}
+
+.guide-copy > :first-child {
+  margin-top: 0;
+}
+
+.guide-copy ul {
+  margin-bottom: 0;
+  padding-left: 1.2em;
+}
+
+.guide-copy ol {
+  list-style: none;
+  counter-reset: guide-step;
+  margin-bottom: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.guide-copy ol > li {
+  counter-increment: guide-step;
+  position: relative;
+  padding: 16px 16px 16px 68px;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.guide-copy ol > li::before {
+  content: counter(guide-step, decimal-leading-zero);
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  color: #171717;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+.guide-copy li + li {
+  margin-top: 6px;
+}
+
+.guide-copy ol > li + li {
+  margin-top: 0;
+}
+
+.guide-copy strong {
+  color: #171717;
+  font-weight: 500;
+}
+
+.guide-copy a {
+  color: #171717;
+  text-underline-offset: 3px;
+}
+
+.guide-copy code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  color: #171717;
+}
+
+.guide-copy p code,
+.guide-copy li code,
+.guide-copy td code,
+.guide-copy pre {
+  background: #f1f5f9;
+  border: 1px solid #e5e5e5;
+}
+
+.guide-copy p code,
+.guide-copy li code,
+.guide-copy td code {
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+.guide-copy pre {
+  padding: 14px 16px;
+  overflow: auto;
+  border-radius: 16px;
+}
+
+.guide-copy blockquote {
+  margin-bottom: 0;
+  padding: 4px 0 4px 16px;
+  border-left: 2px solid #e5e5e5;
+}
+
+.guide-callout {
+  margin: 22px 0;
+  padding: 18px 18px 20px;
+  border-radius: 18px;
+  background: #f1f5f9;
+  border: 1px solid #e5e5e5;
+}
+
+.guide-callout-copy p {
+  margin: 0;
+  color: #171717;
+}
+
+.guide-callout .btn {
+  margin-top: 14px;
+}
+
+.guide-table-scroll {
+  margin-top: 16px;
+  overflow-x: auto;
+  border-radius: 16px;
+  background: #f1f5f9;
+  border: 1px solid #e5e5e5;
+}
+
+.guide-copy table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: #f1f5f9;
+}
+
+.guide-copy td code {
+  white-space: nowrap;
+}
+
+.guide-copy th,
+.guide-copy td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e5e5e5;
+  text-align: left;
+  vertical-align: top;
+}
+
+.guide-copy th {
+  color: #525252;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.guide-copy td {
+  color: #171717;
+}
+
+.guide-copy tr:last-child td {
+  border-bottom: 0;
+}
+
+.related {
+  margin-top: 36px;
+}
+
+.related h2 {
+  margin: 0 0 14px;
+  font-size: clamp(26px, 3vw, 32px);
+}
+
+.related ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.related a {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 18px;
+  text-decoration: none;
+  border: 1px solid #e5e5e5;
+  background: #f1f5f9;
+}
+
+.related a:hover {
+  border-color: #d4d4d4;
+}
+
+.related-title {
+  color: #171717;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+@media (max-width: 720px) {
+  .guides-main {
+    padding-top: 168px;
+  }
+
+  .guide-byline {
+    flex-wrap: wrap;
+  }
+
+  .guide-byline-meta {
+    width: 100%;
+    margin-left: 58px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide-grid a,
+  .guides-page .btn {
+    transition: none;
+  }
+
+  .guides-page .btn:hover {
+    transform: none;
+  }
+}

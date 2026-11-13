@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { blogSitemapEntries } from '../scripts/blog-files.ts';
+import { guideSitemapEntries } from '../scripts/guide-files.ts';
 import { applyRouteMeta } from '../scripts/prerender-routes.ts';
 import { redactAnalyticsUrl } from '../src/lib/vercel-analytics.ts';
 import {
@@ -159,7 +159,7 @@ describe('structured data', () => {
     expect(siteOrigin('http://track-tidy.com')).toBe(DEFAULT_ORIGIN);
     expect(siteOrigin('https://www.track-tidy.com/app')).toBe(DEFAULT_ORIGIN);
     expect(readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8')).toBe(
-      sitemapXml(DEFAULT_ORIGIN, SITEMAP_LASTMOD, blogSitemapEntries(root)),
+      sitemapXml(DEFAULT_ORIGIN, SITEMAP_LASTMOD, guideSitemapEntries(root)),
     );
     expect(readFileSync(new URL('../public/robots.txt', import.meta.url), 'utf8')).toBe(robotsTxt());
     const shell = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
