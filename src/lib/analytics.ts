@@ -21,6 +21,16 @@ const YES_NO = new Set(['yes', 'no']);
 /** Stream installed in the published GTM container. An explicit G- ID overrides it. */
 export const PUBLISHED_MEASUREMENT_ID = 'G-1DQDF61KJW';
 
+/** Loopback names only. A public visit still reaches analytics from the visitor’s connection. */
+export function isLocalAnalyticsHost(hostname: string): boolean {
+  const host = hostname.trim().toLowerCase().replace(/^\[|\]$/g, '');
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0' || host.endsWith('.localhost');
+}
+
+function onLocalPage(): boolean {
+  return typeof window !== 'undefined' && isLocalAnalyticsHost(window.location.hostname);
+}
+
 export function measurementId(raw: string | undefined = import.meta.env.VITE_GA_MEASUREMENT_ID): string | null {
   if (typeof raw !== 'string' || raw.trim() === '') return PUBLISHED_MEASUREMENT_ID;
   const id = raw.trim();
@@ -97,7 +107,7 @@ function clientId(): string {
 }
 
 function sendCollect(name: string, params: Record<string, string>, page: { location: string; title: string }): void {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  if (typeof window === 'undefined' || typeof document === 'undefined' || onLocalPage()) return;
   const id = measurementId();
   if (!id) return;
   if (!sessionId) sessionId = String(Math.floor(Date.now() / 1000));
@@ -143,6 +153,7 @@ export function disableAnalytics(): void {
 }
 
 export function trackPageView(pathname: string): void {
+  if (onLocalPage()) return;
   if (readConsent() !== 'accepted') return;
   if (!measurementId()) return;
   const path = pathname.startsWith('/') ? pathname : `/${pathname}`;
@@ -161,6 +172,7 @@ export function trackPageView(pathname: string): void {
 export function trackEvent(name: AnalyticsEvent, params?: Record<string, string>): void {
   const safe = sanitizeEvent(name, params);
   if (!safe) return;
+  if (onLocalPage()) return;
   if (readConsent() !== 'accepted') return;
   if (!measurementId()) return;
   const key = `${name}:${JSON.stringify(safe)}`;

@@ -839,18 +839,35 @@ function SessionChrome() {
         </div>
       ) : null}
       {session.prompt ? (
-        <div className="confirm confirm-pop" role="alertdialog" aria-labelledby="confirm-title">
-          <p id="confirm-title">
-            {session.prompt.kind === 'close'
-              ? 'Start a new track? Edits that are not downloaded will be lost.'
-              : 'Replace this track? Edits that are not downloaded will be lost.'}
-          </p>
-          <button type="button" className="btn btn-secondary" onClick={session.dismissPrompt}>
-            Keep current
-          </button>
-          <button type="button" className="btn btn-primary" onClick={session.confirmPrompt}>
-            {session.prompt.kind === 'close' ? 'New track' : 'Replace'}
-          </button>
+        <div
+          className="confirm-layer"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) session.dismissPrompt();
+          }}
+        >
+          <div
+            className="confirm"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="confirm-title"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') session.dismissPrompt();
+            }}
+          >
+            <p id="confirm-title">
+              {session.prompt.kind === 'close'
+                ? 'Start a new track? Edits that are not downloaded will be lost.'
+                : 'Replace this track? Edits that are not downloaded will be lost.'}
+            </p>
+            <div className="confirm-actions">
+              <button autoFocus type="button" className="btn btn-secondary" onClick={session.dismissPrompt}>
+                Keep current
+              </button>
+              <button type="button" className="btn btn-primary" onClick={session.confirmPrompt}>
+                {session.prompt.kind === 'close' ? 'New track' : 'Replace'}
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
     </>

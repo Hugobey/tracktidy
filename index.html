@@ -28,11 +28,18 @@
     />
     <meta name="twitter:image" content="https://www.track-tidy.com/og.png" />
     <title>TrackTidy — DJ file renamer and MP3 metadata editor</title>
-    <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-TWVDH6V3"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+      (function () {
+        var host = location.hostname.replace(/^\[|\]$/g, '');
+        if (host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0' || host.slice(-10) === '.localhost') return;
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-TWVDH6V3';
+        document.head.appendChild(script);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+      })();
     </script>
   </head>
   <body>

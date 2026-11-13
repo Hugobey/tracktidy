@@ -4,7 +4,7 @@ This file is configuration that lives outside the website. Do not change DNS or 
 
 ## Status
 
-`index.html` loads the supplied Google Tag Manager snippet for container `GTM-TWVDH6V3` on every page. That container’s Google tag is `G-1DQDF61KJW`. It sends the first page view and does not forward later events. After Accept, the app sends page views and product events directly to that stream. Reject stops those hits. An explicit `VITE_GA_MEASUREMENT_ID` overrides the stream. Vercel Web Analytics loads with every page and does not set a cookie. Turn it on in the Vercel project under Analytics, or the script has nowhere to record visits.
+`index.html` loads the supplied Google Tag Manager snippet for container `GTM-TWVDH6V3` on the public site. It does not load on localhost, 127.0.0.1, or ::1, so a local preview does not send that machine’s address. That container’s Google tag is `G-1DQDF61KJW`. It sends the first page view and does not forward later events. After Accept, the app sends page views and product events directly to that stream. Reject stops those hits. An explicit `VITE_GA_MEASUREMENT_ID` overrides the stream. Vercel Web Analytics loads on the public site and does not set a cookie. The same loopback hosts are dropped before a page view is sent. Turn it on in the Vercel project under Analytics, or the script has nowhere to record visits.
 
 The legal notice is published from `PUBLISHED_NOTICE` in `src/legal/publisher.ts`. It names the brand, the entrepreneur individuel status, the contact emails, and Vercel Inc. as host. It does not print the publisher’s name, personal address, personal telephone, SIREN, or SIRET. No intra-EU VAT number is displayed. Namecheap is the registrar and is named only in the privacy policy, not on the legal notice.
 

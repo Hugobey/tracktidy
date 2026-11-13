@@ -7,6 +7,7 @@ import { applyRouteMeta } from '../scripts/prerender-routes.ts';
 import { redactAnalyticsUrl } from '../src/lib/vercel-analytics.ts';
 import {
   buildCollectQuery,
+  isLocalAnalyticsHost,
   measurementId,
   PUBLISHED_MEASUREMENT_ID,
   resetAnalyticsForTests,
@@ -52,6 +53,17 @@ describe('analytics parameters', () => {
       type: 'pageview',
       url: 'not a url',
     });
+    expect(redactAnalyticsUrl({ type: 'pageview', url: 'http://127.0.0.1:4173/app' })).toBeNull();
+    expect(redactAnalyticsUrl({ type: 'pageview', url: 'http://localhost:5173/' })).toBeNull();
+    expect(redactAnalyticsUrl({ type: 'pageview', url: 'http://[::1]:5173/guides' })).toBeNull();
+  });
+
+  it('treats only loopback names as local analytics hosts', () => {
+    expect(isLocalAnalyticsHost('localhost')).toBe(true);
+    expect(isLocalAnalyticsHost('127.0.0.1')).toBe(true);
+    expect(isLocalAnalyticsHost('::1')).toBe(true);
+    expect(isLocalAnalyticsHost('[::1]')).toBe(true);
+    expect(isLocalAnalyticsHost('www.track-tidy.com')).toBe(false);
   });
 
   it('accepts only a GA4 measurement id', () => {
