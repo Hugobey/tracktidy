@@ -9,6 +9,7 @@ export type GuideFrontmatter = {
   authorRole: string;
   category: string;
   heroImage: string;
+  heroAlt: string;
   keywords: string[];
 };
 
@@ -37,6 +38,7 @@ export function parseGuideSource(source: string, slug: string): { frontmatter: G
       authorRole: optionalString(data, 'authorRole'),
       category: requiredString(data, 'category', slug),
       heroImage,
+      heroAlt: optionalString(data, 'heroAlt'),
       keywords: Array.isArray(keywords) ? keywords : [],
     },
     body: source.slice(match[0].length),

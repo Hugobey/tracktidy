@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from './Button.tsx';
+import { GuideThemeToggle } from './GuideThemeToggle.tsx';
 import { Logo } from './Logo.tsx';
 import { SiteFooter } from './SiteFooter.tsx';
 import { SiteHead } from './SiteHead.tsx';
@@ -29,6 +30,7 @@ export function GuideShell({ title, description, path, ogType = 'website', image
             <Logo />
           </Link>
           <SiteNav current="guides" />
+          <GuideThemeToggle />
           <Button to="/#upload">Clean your first track</Button>
         </div>
       </header>

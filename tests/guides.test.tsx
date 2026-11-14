@@ -22,7 +22,7 @@ import GuidesIndexPage from '../src/pages/GuidesIndexPage.tsx';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PRIVATE_MARKERS = ['Hugo Blanchart', '891239428', 'rue neuve', '75011', '+33 7 77 37 25 07', 'FR14891239428'];
-const HERO = '/images/guides/batch-rename-hero.jpg';
+const HERO = '/images/guides/rename-booth.jpg';
 
 const FRONT = `---
 title: "One: a title"
@@ -31,7 +31,7 @@ date: "2026-11-12"
 author: "Julian Vance"
 authorRole: "Resident DJ & Audio Systems Engineer"
 category: "Workflow"
-heroImage: "/images/guides/batch-rename-hero.jpg"
+heroImage: "/images/guides/rename-booth.jpg"
 keywords:
   - alpha
 ---
@@ -79,10 +79,15 @@ describe('seeded guides', () => {
       'How to Edit MP3 Tags in Bulk Without Losing Your Mind',
     ]);
     for (const guide of guides) {
-      expect(guide.date).toBe('2026-11-12');
+      expect(guide.date).toBe('2026-11-14');
       expect(guide.author).toBe('Julian Vance');
       expect(guide.authorRole).toBe('Resident DJ & Audio Systems Engineer');
-      expect(guide.heroImage).toBe(HERO);
+      expect(guide.heroImage.startsWith('/images/guides/')).toBe(true);
+      expect(guide.title).not.toContain('—');
+      expect(guide.title).not.toContain('--');
+      expect(guide.description).not.toContain('—');
+      expect(guide.description).not.toContain('--');
+      expect(guide.body).not.toContain('—');
       expect(guide.path.startsWith('/guides/')).toBe(true);
       expect(guide.keywords.length).toBeGreaterThan(0);
       expect(guide.minutes).toBeGreaterThanOrEqual(1);
@@ -99,6 +104,8 @@ describe('seeded guides', () => {
     expect(rename?.body).toContain('does not rename a folder');
     expect(rename?.body).toContain('does not take WAV');
     expect(rename?.description).not.toContain('batch rename multiple MP3 files directly');
+    expect(new Set(guides.map((guide) => guide.heroImage)).size).toBe(guides.length);
+    expect(rename?.heroImage).toBe(HERO);
     expect(metadata?.body).toContain('](/guides/batch-rename-mp3-files-online)');
     expect(metadata?.body).toContain('Rekordbox');
     expect(metadata?.body).toContain('Serato');
@@ -120,11 +127,11 @@ describe('guide seo', () => {
   it('adds /guides and each article without moving older routes', () => {
     const entries = guideSitemapEntries(root);
     expect(entries.map((entry) => entry.path)).toEqual(['/guides', ...guides.map((guide) => guide.path)]);
-    expect(entries.every((entry) => entry.lastmod === '2026-11-12')).toBe(true);
+    expect(entries.every((entry) => entry.lastmod === '2026-11-14')).toBe(true);
     const xml = sitemapXml(DEFAULT_ORIGIN, SITEMAP_LASTMOD, entries);
     expect(xml).toContain('<loc>https://www.track-tidy.com/app</loc>\n    <lastmod>2026-11-09</lastmod>');
     expect(xml).toContain(
-      '<loc>https://www.track-tidy.com/guides/edit-mp3-metadata-online</loc>\n    <lastmod>2026-11-12</lastmod>',
+      '<loc>https://www.track-tidy.com/guides/edit-mp3-metadata-online</loc>\n    <lastmod>2026-11-14</lastmod>',
     );
     expect(xml).not.toContain('/blog');
     expect(readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8')).toBe(xml);
@@ -161,10 +168,10 @@ describe('guide seo', () => {
     expect(html).toContain(`content="${guide.description}"`);
     expect(html).toContain('href="https://www.track-tidy.com/guides/batch-rename-mp3-files-online"');
     expect(html).toContain('property="og:type" content="article"');
-    expect(html).toContain('property="og:image" content="https://www.track-tidy.com/images/guides/batch-rename-hero.jpg"');
+    expect(html).toContain('property="og:image" content="https://www.track-tidy.com/images/guides/rename-booth.jpg"');
     expect(html).toContain('"@type":"BlogPosting"');
     expect(html).toContain('"headline":"How to Batch Rename MP3 Files Online (Fast DJ Workflow)"');
-    expect(html).toContain('"datePublished":"2026-11-12"');
+    expect(html).toContain('"datePublished":"2026-11-14"');
     expect(html).toContain('"@type":"Person"');
     expect(html).toContain('"name":"Julian Vance"');
     expect(html).toContain('"jobTitle":"Resident DJ & Audio Systems Engineer"');
@@ -202,7 +209,7 @@ describe('guide pages', () => {
     expect(html).toContain('Metadata');
     expect(html).toContain('DJ Prep');
     expect(html).toContain('Julian Vance');
-    expect(html).toContain('12 November 2026');
+    expect(html).toContain('14 November 2026');
     expect(html).toContain('min read');
     expect(html).toContain('href="/guides/batch-rename-mp3-files-online"');
     expect(html).toContain('href="/guides"');
@@ -215,6 +222,8 @@ describe('guide pages', () => {
     expect(html).toContain('Julian Vance');
     expect(html).toContain('Resident DJ &amp; Audio Systems Engineer');
     expect(html).toContain('>JV<');
+    expect(html).toContain('Night');
+    expect(html).toContain('aria-label="Night mode off"');
     expect(html).toContain(`src="${HERO}"`);
     expect(html).toContain('href="/#upload"');
     expect(html).toContain('Clean a track');

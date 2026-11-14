@@ -6,7 +6,7 @@ export const DEFAULT_ORIGIN = 'https://www.track-tidy.com';
 export const SITEMAP_LASTMOD = '2026-11-09';
 
 export const GUIDE_INDEX_PATH = '/guides';
-export const GUIDE_INDEX_TITLE = 'Guides — TrackTidy';
+export const GUIDE_INDEX_TITLE = 'Guides: TrackTidy';
 export const GUIDE_INDEX_DESCRIPTION =
   'Practical guides for cleaning MP3 tags, renaming files, and reading BPM and key. One track at a time, in the browser.';
 

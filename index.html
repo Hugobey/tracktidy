@@ -30,6 +30,16 @@
     <title>TrackTidy — DJ file renamer and MP3 metadata editor</title>
     <script>
       (function () {
+        try {
+          var path = location.pathname;
+          if (path !== '/guides' && path.indexOf('/guides/') !== 0) return;
+          var theme = localStorage.getItem('tracktidy.guides.theme');
+          if (theme === 'light' || theme === 'dark') document.documentElement.setAttribute('data-guide-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
+    <script>
+      (function () {
         var host = location.hostname.replace(/^\[|\]$/g, '');
         if (host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0' || host.slice(-10) === '.localhost') return;
         var script = document.createElement('script');

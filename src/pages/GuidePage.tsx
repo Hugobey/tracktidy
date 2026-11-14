@@ -51,7 +51,7 @@ export default function GuidePage() {
         <img
           className="guide-hero"
           src={guide.heroImage}
-          alt="A quiet desk with USB drives, a notebook, and a coiled audio cable, set up for sorting music files."
+          alt={guide.heroAlt || 'Photograph for this guide.'}
         />
         <div className="guide-copy">
           <Content components={{ a: GuideLink, table: GuideTable, Callout: GuideCallout }} />

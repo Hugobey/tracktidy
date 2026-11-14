@@ -1,44 +1,52 @@
 ---
 title: "How to Batch Rename MP3 Files Online (Fast DJ Workflow)"
 description: "Rename messy downloaded MP3s into Artist - Title (BPM) [Key]. A browser workflow for a whole crate, one file at a time, with no desktop app."
-date: "2026-11-12"
+date: "2026-11-14"
 slug: "batch-rename-mp3-files-online"
 author: "Julian Vance"
 authorRole: "Resident DJ & Audio Systems Engineer"
 category: "Workflow"
-heroImage: "/images/guides/batch-rename-hero.jpg"
+heroImage: "/images/guides/rename-booth.jpg"
+heroAlt: "A hand over a DJ controller in purple club light, with illuminated jog wheels."
 keywords:
   - batch rename MP3 files
   - rename multiple MP3s
 ---
 
-If you download music packs, promo pools, or stems regularly, the folder looks like a landfill: `track_final_v2_master(1).mp3`, `04-track-04.mp3`, producer tags welded onto the title.
+Saturday afternoon, the USB is still empty, and the Beatport folder looks like a junk drawer. The first file is `track_final_v2_master(1).mp3`. Under it sits `04-track-04.mp3`, then a title with the producer's tag welded on. None of them tell you what you are about to play.
 
-Messy names wreck the crate in Rekordbox, Serato, and Traktor. Search looks at the tags. A file list looks at the name. When those disagree, you scroll instead of playing.
+Rekordbox and Serato search the tags. Finder, File Explorer, and the little screen on a lot of players show the filename. When those two disagree, you stop trusting both and you start scrolling.
 
 <Callout type="tool-promo">
 **Want to fix a file right now?** Open TrackTidy and clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
 </Callout>
 
-## Why renaming in Finder kills prep
+<figure>
+  <img src="/images/guides/explorer-drives.jpg" alt="File Explorer in Windows 11, open on This PC, listing two drives with free space." />
+  <figcaption>File Explorer on Windows 11, stopped at the drive list. A USB shows up here, and the filenames inside it still will not carry BPM or key. Public domain screenshot via Wikimedia Commons.</figcaption>
+</figure>
 
-Right-click, type, enter, next file. A fresh pile of promos eats the hour. A desktop rename that only swaps underscores turns `track_final_v2` into `track final v2` and calls it done. It does not write `Artist - Title (124 BPM) [8A].mp3`, and it does not notice the artist field is empty.
+## Finder will not save the night
 
-TrackTidy does not rename a folder in one shot. It also does not take WAV. The workable version of a big cleanup is a queue: the same pattern, one MP3, then the next. You still look at each file. A bad template on 200 tracks is a worse night than a slow one.
+You can rename by hand. Right-click, type, hit return, next file. After a dozen promos the names get shorter, because you are bored and the set is tonight.
 
-## The pass, in the browser
+A rename tool that only swaps underscores is worse than slow. `track_final_v2` becomes `track final v2`, and the artist field is still empty. You wanted something you can read in a dark booth: `Artist - Title (124 BPM) [8A].mp3`.
 
-1. **Open one MP3.** Drop a single file into the tool. It is read in the browser. If it is not an MP3, leave it.
-2. **Set the name from the tags.** Clean the artist and title first, then use a pattern you can scan: `Artist - Title (124 BPM) [8A]`.
-3. **Read the preview.** Compare the messy name with the new one. Download only when the name matches the track you meant.
+A Bandcamp crate of unmastered WAV promos is a normal Friday. TrackTidy does not rename a folder in one shot, and it does not take WAV. Convert those, or leave them. A big MP3 cleanup is a queue. Same pattern, one file, then the next. You still look at each file. A bad template on 200 tracks ruins a night faster than a slow one.
 
-## Before and after
+## The pass I actually use
+
+1. **Drop a single MP3.** The page reads it in the browser. If it is not an MP3, I leave it where it is.
+2. **Fix the artist and the title first.** Then I apply a pattern I can scan: `Artist - Title (124 BPM) [8A]`.
+3. **Read the preview before downloading.** If I would not say that name to another DJ, it is not done.
+
+## Two names, so you can see the difference
 
 | Messy original | Clean name |
 | --- | --- |
 | `12_track_name_MASTER_final_320.mp3` | `Artist - Track Name (124 BPM) [8A].mp3` |
 | `unknown_artist_unmastered.mp3` | `Producer - Song Title (128 BPM) [4B].mp3` |
 
-That second row is the target, not a guess the page invented. If the tag never had an artist, you type the artist. The tool does not know it.
+That second row is the shape you are aiming for. It is not a guess the page invented. If the tag never had an artist, you type the artist. The tool does not know who made the record.
 
-The audio is not re-encoded. You are changing the label and the tags, not the master. When the title is full of a promo URL, or the artist field is empty, fix the tags before you trust the filename. That pass is in [how to edit MP3 metadata online](/guides/edit-mp3-metadata-online). A folder full of the same junk is the checklist in [how to edit MP3 tags in bulk](/guides/edit-mp3-tags-in-bulk).
+The audio is not re-encoded. You are changing the label and the tags, not the master. If the title is still a promo URL, or the artist field is blank, fix the tags before you trust the filename. That part is in [how to edit MP3 metadata online](/guides/edit-mp3-metadata-online). A whole folder of the same junk is the checklist in [how to edit MP3 tags in bulk](/guides/edit-mp3-tags-in-bulk).
