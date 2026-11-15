@@ -37,8 +37,9 @@ export function ConsentBanner() {
       </p>
       <p id="consent-copy">
         {choice} TrackTidy can record which pages and actions are used. Audio, filenames, and metadata stay on this
-        device. Optional Analytics 4 cookies are set only after you accept. The page also loads Vercel Web Analytics,
-        which does not set a cookie, and a Google Tag Manager container.{' '}
+        device. Optional Analytics 4 and PostHog cookies are set only after you accept. PostHog, when a project key is
+        configured, receives the same pages and actions. It does not record the screen or what you type. The page also
+        loads Vercel Web Analytics, which does not set a cookie, and a Google Tag Manager container.{' '}
         <Link to="/cookie-policy">Cookie policy</Link>
         {' · '}
         <Link to="/privacy-policy">Privacy policy</Link>

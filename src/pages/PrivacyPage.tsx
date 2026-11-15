@@ -14,7 +14,7 @@ export default function PrivacyPage() {
       kicker="Privacy"
       heading="Privacy policy"
     >
-      <p>Last updated: 10 November 2026.</p>
+      <p>Last updated: 15 November 2026.</p>
       <p>
         This policy describes the TrackTidy website as it works today. It is not a certificate of legal compliance.
         The controller is the {PUBLISHER.status} who publishes the {PUBLISHER.brand} brand. Privacy requests:{' '}
@@ -68,6 +68,12 @@ export default function PrivacyPage() {
         refusal. It is kept
         until you change it in Cookie settings or clear site data.
       </p>
+      <p>
+        A browser the publisher marks for exclusion stores <code>tracktidy.device</code> with the value{' '}
+        <code>owner</code> in local storage and in a first-party cookie of the same name. That marker is what keeps
+        the browser out of analytics when the network address changes. The site does not read the network address to
+        decide this. The marker is not set on an ordinary visit. Clearing site data removes it.
+      </p>
       <h3>Optional analytics</h3>
       <p>
         If you accept, and only if a Google Analytics 4 measurement ID is configured for the site, the browser loads
@@ -93,6 +99,13 @@ export default function PrivacyPage() {
         advertising cookies from the optional Analytics 4 script.
       </p>
       <p>
+        If you accept, and a PostHog project key is configured for the build, the same page views and product actions
+        are also sent to PostHog. The default host is eu.i.posthog.com. PostHog may store a cookie and local storage
+        entries whose names start with <code>ph_</code>. The screen is not recorded. Typed text, filenames, and tag
+        values are not collected. No name or email is attached. The legal basis is the same consent.
+        If you reject, PostHog is not loaded. If it was already loaded, further events stop.
+      </p>
+      <p>
         Each page also loads the Google Tag Manager container GTM-TWVDH6V3 from googletagmanager.com. That request
         happens when the page loads, before an analytics choice. Tags inside the container are configured in Google
         Tag Manager. The optional Google Analytics 4 script above is separate: it still loads only after Accept, and
@@ -104,7 +117,12 @@ export default function PrivacyPage() {
         send audio, a filename, or tag values. Query strings are removed first. Vercel identifies a visit with a hash
         that is discarded after 24 hours. Vercel Inc. is the provider, and it is also the host named on the legal
         notice. The legal basis is the legitimate interest in understanding which pages are used (GDPR Article
-        6(1)(f)). This is separate from the optional Analytics 4 cookies.
+        6(1)(f)). This is separate from the optional Analytics 4 and PostHog cookies.
+      </p>
+      <p>
+        A browser that stores the device marker, and any visit opened on localhost, is not sent to Google Analytics 4,
+        Google Tag Manager, Vercel Web Analytics, or PostHog. That does not delete measurements those providers already
+        stored. The host can still keep a connection log, described below.
       </p>
       <h3>Hosting logs</h3>
       <p>
@@ -122,11 +140,11 @@ export default function PrivacyPage() {
 
       <h2>How long data is kept</h2>
       <p>
-        Audio and tags are not stored by TrackTidy. The template and the consent choice remain in your browser until
-        you change or delete them. Analytics retention is the period set in the Google Analytics property. This
-        website does not set that period. It should be configured in Google Analytics before launch. Vercel discards
-        the Web Analytics visitor hash after 24 hours. Any longer retention of those page views is set by Vercel, not
-        by this website.
+        Audio and tags are not stored by TrackTidy. The template, the consent choice, and the device marker remain in
+        your browser until you change or delete them. Analytics retention is the period set in the Google Analytics
+        property. This website does not set that period. It should be configured in Google Analytics before launch.
+        PostHog commonly keeps its cookie for up to one year. Vercel discards the Web Analytics visitor hash after 24
+        hours. Any longer retention of those page views is set by Vercel or PostHog, not by this website.
       </p>
 
       <h2>Your rights</h2>

@@ -12,7 +12,17 @@ import {
   PUBLISHED_MEASUREMENT_ID,
   resetAnalyticsForTests,
   sanitizeEvent,
+  shouldRecordAnalytics,
 } from '../src/lib/analytics.ts';
+import {
+  deviceFlag,
+  expiredOwnerCookie,
+  ownerCookie,
+  readOwnerMarker,
+  setOwnerDeviceForTests,
+} from '../src/lib/device.ts';
+import { posthogHost, posthogKey, stripUrlQuery, DEFAULT_POSTHOG_HOST } from '../src/lib/posthog-config.ts';
+import { bindPostHogClient, captureProductEvent, resetPostHogForTests, stopPostHog } from '../src/lib/posthog-client.ts';
 import { readConsent, writeConsent } from '../src/lib/consent.ts';
 import {
   LEGAL_NOTICE_WITHHELD,
@@ -64,6 +74,61 @@ describe('analytics parameters', () => {
     expect(isLocalAnalyticsHost('::1')).toBe(true);
     expect(isLocalAnalyticsHost('[::1]')).toBe(true);
     expect(isLocalAnalyticsHost('www.track-tidy.com')).toBe(false);
+  });
+
+  it('recognizes the publisher device from storage or the cookie, not from an IP address', () => {
+    expect(readOwnerMarker(null, null)).toBe(false);
+    expect(readOwnerMarker('owner', null)).toBe(true);
+    expect(readOwnerMarker(null, 'tracktidy.device=owner')).toBe(true);
+    expect(readOwnerMarker(null, 'theme=dark; tracktidy.device=owner')).toBe(true);
+    expect(readOwnerMarker('visitor', 'tracktidy.consent=accepted')).toBe(false);
+    expect(deviceFlag('?tt-device=owner')).toBe('owner');
+    expect(deviceFlag('?file=a&tt-device=clear')).toBe('clear');
+    expect(deviceFlag('?tt-device=nope')).toBeNull();
+    expect(ownerCookie(true)).toContain('; Secure');
+    expect(ownerCookie(false)).not.toContain('Secure');
+    expect(expiredOwnerCookie()).toContain('Max-Age=0');
+    setOwnerDeviceForTests(true);
+    expect(shouldRecordAnalytics()).toBe(false);
+    expect(redactAnalyticsUrl({ type: 'pageview', url: 'https://www.track-tidy.com/app' })).toBeNull();
+    setOwnerDeviceForTests(null);
+    expect(shouldRecordAnalytics()).toBe(true);
+  });
+
+  it('leaves PostHog off without a project key and strips page queries', () => {
+    expect(posthogKey(undefined)).toBeNull();
+    expect(posthogKey('')).toBeNull();
+    expect(posthogKey('phc_short')).toBeNull();
+    expect(posthogKey('phc_abc123def0')).toBe('phc_abc123def0');
+    expect(posthogKey(' phc_abc123def0 ')).toBe('phc_abc123def0');
+    expect(posthogKey('phc_<script>alert')).toBeNull();
+    expect(posthogHost(undefined)).toBe(DEFAULT_POSTHOG_HOST);
+    expect(posthogHost('http://evil.example')).toBe(DEFAULT_POSTHOG_HOST);
+    expect(posthogHost('https://eu.i.posthog.com/capture')).toBe('https://eu.i.posthog.com');
+    expect(stripUrlQuery('https://www.track-tidy.com/app?file=nora.mp3#cover')).toBe('https://www.track-tidy.com/app');
+    const seen: string[] = [];
+    bindPostHogClient({
+      capture: (name) => {
+        seen.push(name);
+      },
+      opt_out_capturing: () => undefined,
+      opt_in_capturing: () => undefined,
+    });
+    captureProductEvent('file_downloaded', {});
+    expect(seen).toEqual([]);
+    stopPostHog();
+    resetPostHogForTests();
+  });
+
+  it('skips tag manager on the publisher device before the container script', () => {
+    const shell = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const device = shell.indexOf('tracktidy.device');
+    const gtm = shell.indexOf('https://www.googletagmanager.com/gtm.js?id=GTM-TWVDH6V3');
+    expect(device).toBeGreaterThan(-1);
+    expect(gtm).toBeGreaterThan(device);
+    expect(shell).toContain('tt-device');
+    expect(shell).not.toContain('gtm.start');
+    expect(shell).not.toContain('ns.html');
   });
 
   it('accepts only a GA4 measurement id', () => {

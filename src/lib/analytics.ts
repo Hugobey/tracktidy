@@ -1,4 +1,6 @@
 import { readConsent } from './consent.ts';
+import { isOwnerDevice } from './device.ts';
+import { captureProductEvent } from './posthog-client.ts';
 import { siteOrigin } from './site.ts';
 
 export const ANALYTICS_EVENTS = [
@@ -29,6 +31,11 @@ export function isLocalAnalyticsHost(hostname: string): boolean {
 
 function onLocalPage(): boolean {
   return typeof window !== 'undefined' && isLocalAnalyticsHost(window.location.hostname);
+}
+
+/** Loopback and the publisher’s own browser send nothing, whatever the IP address is. */
+export function shouldRecordAnalytics(): boolean {
+  return !onLocalPage() && !isOwnerDevice();
 }
 
 export function measurementId(raw: string | undefined = import.meta.env.VITE_GA_MEASUREMENT_ID): string | null {
@@ -107,7 +114,7 @@ function clientId(): string {
 }
 
 function sendCollect(name: string, params: Record<string, string>, page: { location: string; title: string }): void {
-  if (typeof window === 'undefined' || typeof document === 'undefined' || onLocalPage()) return;
+  if (typeof window === 'undefined' || typeof document === 'undefined' || !shouldRecordAnalytics()) return;
   const id = measurementId();
   if (!id) return;
   if (!sessionId) sessionId = String(Math.floor(Date.now() / 1000));
@@ -121,7 +128,7 @@ function sendCollect(name: string, params: Record<string, string>, page: { locat
 }
 
 export function enableAnalytics(): void {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  if (typeof window === 'undefined' || typeof document === 'undefined' || !shouldRecordAnalytics()) return;
   const id = measurementId();
   if (!id) return;
   (window as unknown as Record<string, unknown>)[`ga-disable-${id}`] = false;
@@ -153,7 +160,7 @@ export function disableAnalytics(): void {
 }
 
 export function trackPageView(pathname: string): void {
-  if (onLocalPage()) return;
+  if (!shouldRecordAnalytics()) return;
   if (readConsent() !== 'accepted') return;
   if (!measurementId()) return;
   const path = pathname.startsWith('/') ? pathname : `/${pathname}`;
@@ -172,14 +179,15 @@ export function trackPageView(pathname: string): void {
 export function trackEvent(name: AnalyticsEvent, params?: Record<string, string>): void {
   const safe = sanitizeEvent(name, params);
   if (!safe) return;
-  if (onLocalPage()) return;
+  if (!shouldRecordAnalytics()) return;
   if (readConsent() !== 'accepted') return;
-  if (!measurementId()) return;
   const key = `${name}:${JSON.stringify(safe)}`;
   const now = Date.now();
   if (key === lastEventKey && now - lastEventAt < 400) return;
   lastEventKey = key;
   lastEventAt = now;
+  captureProductEvent(name, safe);
+  if (!measurementId()) return;
   enableAnalytics();
   sendCollect(name, safe, {
     location: typeof window === 'undefined' ? '' : window.location.href.split('#')[0].split('?')[0] ?? '',

@@ -2,6 +2,8 @@ import { lazy, Suspense, type ReactNode } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ConsentBanner } from './components/ConsentBanner.tsx';
 import { ConsentProvider } from './components/Consent.tsx';
+import { DeviceQuery } from './components/DeviceQuery.tsx';
+import { PostHogAnalytics } from './components/PostHogAnalytics.tsx';
 import { VercelAnalytics } from './components/VercelAnalytics.tsx';
 import LandingPage from './pages/LandingPage.tsx';
 import NotFoundPage from './pages/NotFoundPage.tsx';
@@ -43,7 +45,9 @@ export default function App() {
             <Route path="/guides/:slug" element={lazyPage(<GuidePage />, 'Opening the guide')} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          <DeviceQuery />
           <VercelAnalytics />
+          <PostHogAnalytics />
           <ConsentBanner />
         </TrackSessionProvider>
       </ConsentProvider>

@@ -17,6 +17,7 @@
     "@vercel/analytics": "^2.0.1",
     "browser-id3-writer": "^6.4.0",
     "music-metadata": "^12.3.5",
+    "posthog-js": "^1.449.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.5",

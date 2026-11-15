@@ -6,6 +6,8 @@ This file is configuration that lives outside the website. Do not change DNS or 
 
 `index.html` loads the supplied Google Tag Manager snippet for container `GTM-TWVDH6V3` on the public site. It does not load on localhost, 127.0.0.1, or ::1, so a local preview does not send that machine’s address. That container’s Google tag is `G-1DQDF61KJW`. It sends the first page view and does not forward later events. After Accept, the app sends page views and product events directly to that stream. Reject stops those hits. An explicit `VITE_GA_MEASUREMENT_ID` overrides the stream. Vercel Web Analytics loads on the public site and does not set a cookie. The same loopback hosts are dropped before a page view is sent. Turn it on in the Vercel project under Analytics, or the script has nowhere to record visits.
 
+Open `https://www.track-tidy.com/?tt-device=owner` once in each browser that should be ignored. That stores `tracktidy.device=owner` in local storage and a first-party cookie. Later visits from that browser are not sent to Google Tag Manager, Google Analytics 4, Vercel Web Analytics, or PostHog, including after the IP address changes. `?tt-device=clear` removes the marker. Clearing site data removes it too. The marker is in the page source. It is not a password. Hosting logs can still show the connection. PostHog stays off until `VITE_POSTHOG_KEY` is set and the site is rebuilt.
+
 The legal notice is published from `PUBLISHED_NOTICE` in `src/legal/publisher.ts`. It names the brand, the entrepreneur individuel status, the contact emails, and Vercel Inc. as host. It does not print the publisher’s name, personal address, personal telephone, SIREN, or SIRET. No intra-EU VAT number is displayed. Namecheap is the registrar and is named only in the privacy policy, not on the legal notice.
 
 ## Environment
@@ -14,6 +16,8 @@ Copy `.env.example` to `.env` locally or set the variables in the host’s build
 
 - `VITE_SITE_URL` — `https://www.track-tidy.com`. The apex host redirects there. No path and no trailing slash. Rebuild after changing it. `public/robots.txt` and `public/sitemap.xml` must use the same origin.
 - `VITE_GA_MEASUREMENT_ID` — optional override for the GA4 measurement ID. Empty uses `G-1DQDF61KJW`, the stream in the published container.
+- `VITE_POSTHOG_KEY` — PostHog project key, starting with `phc_`. Empty leaves PostHog off. Set it in the host’s build settings and rebuild. Do not commit a real key.
+- `VITE_POSTHOG_HOST` — optional. Empty uses `https://eu.i.posthog.com`.
 
 ## Google Analytics 4
 
@@ -27,6 +31,10 @@ Before the measurement ID is added to the build:
 - Confirm the stream is not linked to Google Ads.
 
 The site sets `send_page_view` to false, keeps ad storage denied, and sends only the events documented in the privacy policy. Parameters do not include filenames, tag values, or audio.
+
+## PostHog
+
+PostHog loads only after Accept, and only when `VITE_POSTHOG_KEY` is a `phc_` key. Autocapture, session recording, surveys, heatmaps, and exception capture are off. Page views are the path only. Product events use the same allow-list as Google Analytics 4. The publisher device and loopback hosts are not sent. The screen is not recorded and nothing typed into the editor is collected.
 
 ## Email
 

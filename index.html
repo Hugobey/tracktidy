@@ -41,7 +41,39 @@
     <script>
       (function () {
         var host = location.hostname.replace(/^\[|\]$/g, '');
-        if (host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0' || host.slice(-10) === '.localhost') return;
+        var local = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0' || host.slice(-10) === '.localhost';
+        var owner = false;
+        try {
+          var params = new URLSearchParams(location.search);
+          var flag = params.get('tt-device');
+          function writeOwner() {
+            localStorage.setItem('tracktidy.device', 'owner');
+            var secure = location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie = 'tracktidy.device=owner; Path=/; Max-Age=315360000; SameSite=Lax' + secure;
+          }
+          function cookieOwner() {
+            var name = 'tracktidy.device=';
+            var parts = document.cookie ? document.cookie.split(';') : [];
+            for (var i = 0; i < parts.length; i++) {
+              var part = parts[i].replace(/^\s+/, '');
+              if (part.indexOf(name) === 0) return part.slice(name.length) === 'owner';
+            }
+            return false;
+          }
+          if (flag === 'owner') writeOwner();
+          else if (flag === 'clear') {
+            localStorage.removeItem('tracktidy.device');
+            document.cookie = 'tracktidy.device=; Path=/; Max-Age=0; SameSite=Lax';
+          }
+          if (flag === 'owner' || flag === 'clear') {
+            params.delete('tt-device');
+            var query = params.toString();
+            history.replaceState(history.state, '', location.pathname + (query ? '?' + query : '') + location.hash);
+          }
+          owner = flag === 'clear' ? false : localStorage.getItem('tracktidy.device') === 'owner' || cookieOwner();
+          if (owner) writeOwner();
+        } catch (e) {}
+        if (local || owner) return;
         var script = document.createElement('script');
         script.async = true;
         script.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-TWVDH6V3';

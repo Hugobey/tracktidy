@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { disableAnalytics, enableAnalytics } from '../lib/analytics.ts';
 import { readConsent, writeConsent, type ConsentStatus } from '../lib/consent.ts';
+import { stopPostHog } from '../lib/posthog-client.ts';
 import { ConsentContext, type ConsentContextValue } from './consent-context.ts';
 
 export function ConsentProvider({ children }: { children: ReactNode }) {
@@ -20,6 +21,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
       reject: () => {
         writeConsent('rejected');
         disableAnalytics();
+        stopPostHog();
         setStatus('rejected');
         setPanelOpen(false);
       },
