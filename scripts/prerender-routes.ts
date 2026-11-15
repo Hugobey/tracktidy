@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { guideFallback, guideIndexFallback } from './guide-html.ts';
 import { guideSitemapEntries, readGuideFiles } from './guide-files.ts';
-import { guidePostingJsonLd } from '../src/lib/guide-frontmatter.ts';
+import { guideFaqJsonLd, guidePostingJsonLd } from '../src/lib/guide-frontmatter.ts';
 import {
   GUIDE_INDEX_DESCRIPTION,
   GUIDE_INDEX_PATH,
@@ -56,7 +56,7 @@ export function applyRouteMeta(html: string, route: PrerenderRoute, origin: stri
   return next;
 }
 
-export function injectJsonLd(html: string, data: Record<string, unknown>): string {
+export function injectJsonLd(html: string, data: Record<string, unknown> | readonly Record<string, unknown>[]): string {
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
   const script = `<script type="application/ld+json" id="tracktidy-ld">${json}</script>`;
   if (html.includes('id="tracktidy-ld"')) return html.replace(/<script type="application\/ld\+json" id="tracktidy-ld">[\s\S]*?<\/script>/, script);
@@ -93,14 +93,22 @@ export function prerenderDist(dist = join(process.cwd(), 'dist'), origin?: strin
     ),
   );
   for (const guide of guides) {
+    const posting = guidePostingJsonLd(guide, host);
+    const faq = guideFaqJsonLd(guide.body);
     const page = injectFallback(
       injectJsonLd(
         applyRouteMeta(
           shell,
-          { path: guide.path, title: guide.title, description: guide.description, ogType: 'article', image: guide.heroImage },
+          {
+            path: guide.path,
+            title: guide.pageTitle,
+            description: guide.description,
+            ogType: 'article',
+            image: guide.ogImage,
+          },
           host,
         ),
-        guidePostingJsonLd(guide, host),
+        faq ? [posting, faq] : posting,
       ),
       guideFallback(guide, guides),
     );

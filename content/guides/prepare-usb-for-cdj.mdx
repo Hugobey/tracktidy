@@ -1,0 +1,105 @@
+---
+title: "How to Prepare a USB Drive for CDJs: Format, Tags and File Names"
+description: "Format a USB for CDJs, clean the tags the screen reads, and keep file names readable. A prep checklist for the night before your set."
+date: "2026-11-14"
+slug: "prepare-usb-for-cdj"
+author: "Julian Vance"
+authorRole: "Resident DJ & Audio Systems Engineer"
+category: "DJ Prep"
+heroImage: "/images/guides/usb-crate.jpg"
+heroAlt: "Wooden crates full of vinyl records on a table in a record shop."
+keywords:
+  - prepare USB for CDJ
+  - format USB for CDJ
+  - USB for CDJ FAT32 or exFAT
+  - CDJ USB file names
+  - ID3 tags CDJ
+  - DJ USB checklist
+  - CDJ doesn't read USB
+---
+
+<p className="guide-caption">Crates of old records at Dumb Records in Springfield, Illinois. The USB stick is the crate now, and it needs the same care. Photo by 1981 Digital on <a href="https://unsplash.com/photos/8Af45sMHB-M">Unsplash</a>.</p>
+
+You walk up to the booth, plug in the stick, and the player shows nothing. Or it shows `track_final_v2_master(1).mp3` forty times. The set was fine at home. The USB was not.
+
+Three things decide whether a CDJ treats your stick well: the format, the tags, and the names. All three are fixable the night before.
+
+<Callout type="tool-promo">
+**Want to fix a file right now?** Open TrackTidy and clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
+</Callout>
+
+## Format first
+
+If the player cannot read the drive, nothing else matters. FAT32 is the safe pick. The CDJ-2000 manual lists FAT, FAT32, and HFS+ as supported file systems. Newer players, including the CDJ-3000, XDJ-XZ, and XDJ-RX3, also read exFAT. NTFS is not read by Pioneer players.
+
+| Format | Works on | The catch |
+| --- | --- | --- |
+| FAT32 | Practically every CDJ and XDJ | 4 GB limit per file, which an MP3 will never hit |
+| exFAT | Newer players only | An older deck will not see the drive |
+| HFS+ | Players that read Mac OS Extended | Windows cannot read it without extra software |
+| NTFS | None of them | Reformat it |
+
+Check your own player's manual before you commit, since models and firmware differ. Reformatting erases the drive, so copy your music off first. Sources: the [CDJ-2000 operating instructions](https://attrade.ru/upload/iblock/afd/PIONEER_CDJ_2000.pdf.pdf), and the [OneLibrary export guide](https://cdn.rekordbox.com/files/20260317132052/OneLibrary-Compatible-USB-Device-Export-.pdf) for the exFAT player list.
+
+## What the screen actually reads
+
+The player shows what is in the tags. The CDJ-2000 manual says it reads ID3 versions 1.0, 1.1, 2.2, 2.3, and 2.4, and shows title, album, and artist. It also shows JPEG artwork stored in the file.
+
+<figure>
+  <img src="/images/guides/usb-cdjs.jpg" alt="Three Pioneer CDJs and two turntables in a nightclub booth." width="1600" height="896" loading="lazy" />
+  <figcaption>Three CDJs and two SL-1210 turntables at Bob Beaman Nightclub in Munich. Photo by Arnold Jaeger Werner, <a href="https://creativecommons.org/licenses/by/2.0/">CC BY 2.0</a>.</figcaption>
+</figure>
+
+So an empty artist field is an empty artist field on the screen. A title that still carries a promo URL is a title with a promo URL. If you export through rekordbox, it reads the same tags.
+
+The six fields worth fixing, and why they matter, are in [how to edit MP3 metadata online](/guides/edit-mp3-metadata-online). The short version for a gig:
+
+- Artist and title, written the way you would say them out loud.
+- BPM, folded into the range you play. If it came back at half, see [how to find the BPM of a song online](/guides/find-bpm-of-a-song-online).
+- Key, in one system on every file. See the [Camelot wheel guide](/guides/camelot-wheel-harmonic-mixing).
+
+## Names, for when you browse folders
+
+Sometimes you browse the stick by folder, and the filename is all you get. This is where `Artist - Title (BPM) [Key]` earns its place.
+
+```
+Before: 03_one_more_time_FINAL_320.mp3
+After:  Daft Punk - One More Time (123 BPM) [10B].mp3
+```
+
+The rename pass is in [how to batch rename MP3 files online](/guides/batch-rename-mp3-files-online). Keep it consistent, and keep folders small. The CDJ-2000 manual says files past the 10,000th in a single folder cannot be displayed. One folder per night or per style is plenty.
+
+On format, MP3 at 320 kbps constant bitrate is the safe choice. The manual notes that search is slower on variable bitrate files. TrackTidy opens MP3 only, so a WAV promo needs converting first, or it stays where it is.
+
+## The night before
+
+1. Back up the music folder to your laptop.
+2. Format the stick, FAT32 unless you know your players read exFAT.
+3. Copy the music across.
+4. Fix tags, BPM, and key on anything that still looks wrong.
+5. Rename the files from the cleaned tags.
+6. Plug it into a player or ask someone with one, and scroll the folder.
+7. Eject it properly. Pulling it out mid-write is how you corrupt it.
+8. Put a second stick in your bag.
+
+## Where TrackTidy fits
+
+[TrackTidy](https://www.track-tidy.com/) cleans one MP3 in the browser: tags, BPM, an estimated key, and a filename. No install, no account, and the audio stays on your machine. It does not format drives and it does not touch a folder in one go. The pass for a pile of files is the checklist in [how to edit MP3 tags in bulk](/guides/edit-mp3-tags-in-bulk).
+
+## Quick answers
+
+### What file system should I use for a CDJ USB?
+
+FAT32 is the safest. It is read by practically every CDJ and XDJ.
+
+### Can a CDJ read exFAT?
+
+Only newer players, such as the CDJ-3000, XDJ-XZ, and XDJ-RX3. Check yours.
+
+### Does my CDJ read the tags in my MP3?
+
+Yes. It displays title, album, artist, and artwork from the ID3 tags, so fix them before you copy.
+
+Want to fix a file right now? Clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
+
+[Clean a track](/#upload)

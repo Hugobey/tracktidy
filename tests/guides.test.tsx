@@ -11,6 +11,7 @@ import { ConsentProvider } from '../src/components/Consent.tsx';
 import { GUIDE_CTA } from '../src/lib/guide-cta.ts';
 import {
   formatGuideDate,
+  guideFaqJsonLd,
   guidePostingJsonLd,
   parseGuideSource,
   readingMinutes,
@@ -52,42 +53,73 @@ describe('guide frontmatter', () => {
     ).toThrow(/Bad date/);
   });
 
-  it('picks two other guides and prefers the same category', () => {
+  it('lists the other guides in the shared order', () => {
     const guides = [
       { slug: 'a', category: 'Workflow', title: 'A' },
       { slug: 'b', category: 'Workflow', title: 'B' },
       { slug: 'c', category: 'Metadata', title: 'C' },
       { slug: 'd', category: 'Workflow', title: 'D' },
     ];
-    expect(relatedGuides(guides, 'a').map((guide) => guide.slug)).toEqual(['b', 'd']);
+    expect(relatedGuides(guides, 'a').map((guide) => guide.slug)).toEqual(['b', 'c', 'd']);
+    const shipped = [
+      'find-bpm-of-a-song-online',
+      'camelot-wheel-harmonic-mixing',
+      'prepare-usb-for-cdj',
+      'edit-mp3-metadata-online',
+      'batch-rename-mp3-files-online',
+      'edit-mp3-tags-in-bulk',
+    ];
+    expect(relatedGuides(shipped.map((slug) => ({ slug })), 'find-bpm-of-a-song-online').map((guide) => guide.slug)).toEqual(
+      shipped.filter((slug) => slug !== 'find-bpm-of-a-song-online'),
+    );
   });
 });
 
 describe('seeded guides', () => {
   const guides = readGuideFiles(root);
 
-  it('ships the three guides under /guides', () => {
+  it('ships the six guides under /guides', () => {
     expect(guides.map((guide) => guide.slug)).toEqual([
       'batch-rename-mp3-files-online',
+      'camelot-wheel-harmonic-mixing',
       'edit-mp3-metadata-online',
       'edit-mp3-tags-in-bulk',
+      'find-bpm-of-a-song-online',
+      'prepare-usb-for-cdj',
     ]);
-    expect(guides.map((guide) => guide.category)).toEqual(['Workflow', 'Metadata', 'DJ Prep']);
+    expect(guides.map((guide) => guide.category)).toEqual([
+      'Workflow',
+      'Harmonic Mixing',
+      'Metadata',
+      'DJ Prep',
+      'BPM',
+      'DJ Prep',
+    ]);
     expect(guides.map((guide) => guide.title)).toEqual([
       'How to Batch Rename MP3 Files Online (Fast DJ Workflow)',
+      'How to Read the Camelot Wheel and Mix in Key',
       'How to Edit MP3 Metadata Online: Clean ID3 Tags in Seconds',
       'How to Edit MP3 Tags in Bulk Without Losing Your Mind',
+      'How to Find the BPM of a Song Online (And Fix Half-Time Errors)',
+      'How to Prepare a USB Drive for CDJs: Format, Tags and File Names',
     ]);
     for (const guide of guides) {
       expect(guide.date).toBe('2026-11-14');
       expect(guide.author).toBe('Julian Vance');
       expect(guide.authorRole).toBe('Resident DJ & Audio Systems Engineer');
       expect(guide.heroImage.startsWith('/images/guides/')).toBe(true);
+      expect(guide.pageTitle.length).toBeLessThanOrEqual(160);
+      expect(guide.description.length).toBeLessThanOrEqual(160);
       expect(guide.title).not.toContain('—');
+      expect(guide.title).not.toContain('–');
       expect(guide.title).not.toContain('--');
+      expect(guide.pageTitle).not.toContain('—');
+      expect(guide.pageTitle).not.toContain('–');
       expect(guide.description).not.toContain('—');
+      expect(guide.description).not.toContain('–');
       expect(guide.description).not.toContain('--');
       expect(guide.body).not.toContain('—');
+      expect(guide.body).not.toContain('–');
       expect(guide.path.startsWith('/guides/')).toBe(true);
       expect(guide.keywords.length).toBeGreaterThan(0);
       expect(guide.minutes).toBeGreaterThanOrEqual(1);
@@ -95,10 +127,12 @@ describe('seeded guides', () => {
       expect(guide.body).not.toContain('/blog/');
       expect(guide.body).not.toContain('Free Batch Renamer');
       for (const marker of PRIVATE_MARKERS) expect(guide.body).not.toContain(marker);
+      const others = guides.filter((item) => item.slug !== guide.slug);
+      for (const other of others) expect(guide.body).toContain(`](${other.path})`);
     }
-    const rename = guides[0];
-    const metadata = guides[1];
-    const bulk = guides[2];
+    const rename = guides.find((guide) => guide.slug === 'batch-rename-mp3-files-online');
+    const metadata = guides.find((guide) => guide.slug === 'edit-mp3-metadata-online');
+    const bulk = guides.find((guide) => guide.slug === 'edit-mp3-tags-in-bulk');
     expect(rename?.body).toContain('12_track_name_MASTER_final_320.mp3');
     expect(rename?.body).toContain('Artist - Track Name (124 BPM) [8A].mp3');
     expect(rename?.body).toContain('does not rename a folder');
@@ -112,6 +146,13 @@ describe('seeded guides', () => {
     expect(metadata?.body).toContain('https://www.track-tidy.com/');
     expect(bulk?.body).toContain('will not edit a batch of files');
     expect(bulk?.body).toContain('poolsite.com');
+    const camelot = guides.find((guide) => guide.slug === 'camelot-wheel-harmonic-mixing');
+    expect(camelot?.pageTitle).toBe('Camelot Wheel Explained: Find the Key of a Song and Mix in Key');
+    expect(camelot?.ogImage).toBe('/images/guides/camelot-wheel.png');
+    expect(camelot?.heroImage).toBe('/images/guides/camelot-film-dj.jpg');
+    expect(guideFaqJsonLd(camelot?.body ?? '')).toMatchObject({ '@type': 'FAQPage' });
+    expect(guides.find((guide) => guide.slug === 'find-bpm-of-a-song-online')?.body).toContain('does not open WAV');
+    expect(guides.find((guide) => guide.slug === 'prepare-usb-for-cdj')?.body).toContain('does not touch a folder');
   });
 
   it('keeps the call to action honest about one file', () => {
@@ -205,9 +246,14 @@ describe('guide pages', () => {
     expect(html).toContain('How to Batch Rename MP3 Files Online (Fast DJ Workflow)');
     expect(html).toContain('How to Edit MP3 Metadata Online: Clean ID3 Tags in Seconds');
     expect(html).toContain('How to Edit MP3 Tags in Bulk Without Losing Your Mind');
+    expect(html).toContain('How to Find the BPM of a Song Online (And Fix Half-Time Errors)');
+    expect(html).toContain('How to Read the Camelot Wheel and Mix in Key');
+    expect(html).toContain('How to Prepare a USB Drive for CDJs: Format, Tags and File Names');
     expect(html).toContain('Workflow');
     expect(html).toContain('Metadata');
     expect(html).toContain('DJ Prep');
+    expect(html).toContain('BPM');
+    expect(html).toContain('Harmonic Mixing');
     expect(html).toContain('Julian Vance');
     expect(html).toContain('14 November 2026');
     expect(html).toContain('min read');
@@ -217,7 +263,7 @@ describe('guide pages', () => {
     expect(html).not.toContain('/blog');
   });
 
-  it('renders the byline, the hero, the tool callout, and the other two guides', () => {
+  it('renders the byline, the hero, the tool callout, and the other guides', () => {
     const html = renderAt('/guides/batch-rename-mp3-files-online', 'guide');
     expect(html).toContain('Julian Vance');
     expect(html).toContain('Resident DJ &amp; Audio Systems Engineer');
@@ -230,6 +276,9 @@ describe('guide pages', () => {
     expect(html).toContain('does not rename a folder');
     expect(html).toContain('href="/guides/edit-mp3-metadata-online"');
     expect(html).toContain('href="/guides/edit-mp3-tags-in-bulk"');
+    expect(html).toContain('href="/guides/find-bpm-of-a-song-online"');
+    expect(html).toContain('href="/guides/camelot-wheel-harmonic-mixing"');
+    expect(html).toContain('href="/guides/prepare-usb-for-cdj"');
     expect(html).not.toContain('Free Batch Renamer');
     expect(html).not.toContain('Batch rename tracks');
   });

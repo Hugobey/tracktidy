@@ -6,7 +6,7 @@ import { GuideShell } from '../components/GuideShell.tsx';
 import { RelatedGuides } from '../components/RelatedGuides.tsx';
 import NotFoundPage from './NotFoundPage.tsx';
 import { GUIDES, guideBySlug } from '../lib/guides.ts';
-import { guidePostingJsonLd, relatedGuides } from '../lib/guide-frontmatter.ts';
+import { guideFaqJsonLd, guidePostingJsonLd, relatedGuides } from '../lib/guide-frontmatter.ts';
 
 function GuideLink({ href, children }: ComponentProps<'a'>): ReactNode {
   if (typeof href === 'string' && href.startsWith('/') && !href.startsWith('//')) {
@@ -30,15 +30,17 @@ export default function GuidePage() {
 
   const Content = guide.Component;
   const related = relatedGuides(GUIDES, guide.slug);
+  const posting = guidePostingJsonLd(guide);
+  const faq = guideFaqJsonLd(guide.body);
 
   return (
     <GuideShell
-      title={guide.title}
+      title={guide.pageTitle}
       description={guide.description}
       path={guide.path}
       ogType="article"
-      image={guide.heroImage}
-      jsonLd={guidePostingJsonLd(guide)}
+      image={guide.ogImage}
+      jsonLd={faq ? [posting, faq] : posting}
     >
       <article className="guide-sheet">
         <p className="guide-crumb">

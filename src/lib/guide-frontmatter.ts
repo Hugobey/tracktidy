@@ -3,6 +3,7 @@ import { canonicalUrl, siteOrigin } from './site.ts';
 
 export type GuideFrontmatter = {
   title: string;
+  pageTitle: string;
   description: string;
   date: string;
   author: string;
@@ -10,8 +11,19 @@ export type GuideFrontmatter = {
   category: string;
   heroImage: string;
   heroAlt: string;
+  ogImage: string;
   keywords: string[];
 };
+
+/** Related guides, skipping the current page. Same order on every article. */
+export const RELATED_GUIDE_ORDER = [
+  'find-bpm-of-a-song-online',
+  'camelot-wheel-harmonic-mixing',
+  'prepare-usb-for-cdj',
+  'edit-mp3-metadata-online',
+  'batch-rename-mp3-files-online',
+  'edit-mp3-tags-in-bulk',
+] as const;
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const HERO = /^\/images\/guides\/[a-z0-9-]+\.(?:jpg|jpeg|png|webp)$/;
@@ -28,10 +40,14 @@ export function parseGuideSource(source: string, slug: string): { frontmatter: G
   if (!isIsoDate(date)) throw new Error(`Bad date in ${slug}`);
   const heroImage = requiredString(data, 'heroImage', slug);
   if (!HERO.test(heroImage)) throw new Error(`Bad hero image in ${slug}`);
+  const ogImage = optionalString(data, 'ogImage');
+  if (ogImage && !HERO.test(ogImage)) throw new Error(`Bad og image in ${slug}`);
   const keywords = data.keywords;
+  const title = requiredString(data, 'title', slug);
   return {
     frontmatter: {
-      title: requiredString(data, 'title', slug),
+      title,
+      pageTitle: optionalString(data, 'pageTitle') || title,
       description: requiredString(data, 'description', slug),
       date,
       author: requiredString(data, 'author', slug),
@@ -39,6 +55,7 @@ export function parseGuideSource(source: string, slug: string): { frontmatter: G
       category: requiredString(data, 'category', slug),
       heroImage,
       heroAlt: optionalString(data, 'heroAlt'),
+      ogImage: ogImage || heroImage,
       keywords: Array.isArray(keywords) ? keywords : [],
     },
     body: source.slice(match[0].length),
@@ -81,16 +98,59 @@ export function compareGuides<T extends { date: string; slug: string }>(a: T, b:
   return a.slug.localeCompare(b.slug);
 }
 
-export function relatedGuides<T extends { slug: string; category: string }>(guides: readonly T[], slug: string, count = 2): T[] {
-  const current = guides.find((guide) => guide.slug === slug);
-  const others = guides.filter((guide) => guide.slug !== slug);
-  const same = others.filter((guide) => guide.category === current?.category);
-  const rest = others.filter((guide) => guide.category !== current?.category);
-  return [...same, ...rest].slice(0, count);
+export function relatedGuides<T extends { slug: string }>(guides: readonly T[], slug: string): T[] {
+  const rank = new Map<string, number>(RELATED_GUIDE_ORDER.map((id, index) => [id, index]));
+  return guides
+    .filter((guide) => guide.slug !== slug)
+    .sort((a, b) => {
+      const left = rank.get(a.slug) ?? RELATED_GUIDE_ORDER.length;
+      const right = rank.get(b.slug) ?? RELATED_GUIDE_ORDER.length;
+      if (left !== right) return left - right;
+      return a.slug.localeCompare(b.slug);
+    });
+}
+
+export function guideFaqs(body: string): { question: string; answer: string }[] {
+  const heading = body.match(/^## Quick answers\s*$/m);
+  if (!heading || heading.index === undefined) return [];
+  const section = body.slice(heading.index + heading[0].length).split(/^## /m)[0] ?? '';
+  return section
+    .split(/^### /m)
+    .slice(1)
+    .map((chunk) => {
+      const [questionLine, ...rest] = chunk.split('\n');
+      const question = (questionLine ?? '').trim();
+      const answer = (rest.join('\n').trim().split(/\n\s*\n/)[0] ?? '').replace(/\s+/g, ' ').trim();
+      return { question, answer };
+    })
+    .filter((faq) => faq.question !== '' && faq.answer !== '');
+}
+
+export function guideFaqJsonLd(body: string): Record<string, unknown> | null {
+  const faqs = guideFaqs(body);
+  if (faqs.length === 0) return null;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+    })),
+  };
 }
 
 export function guidePostingJsonLd(
-  guide: { title: string; description: string; date: string; path: string; author: string; authorRole: string; heroImage: string },
+  guide: {
+    title: string;
+    description: string;
+    date: string;
+    path: string;
+    author: string;
+    authorRole: string;
+    heroImage: string;
+    ogImage?: string;
+  },
   origin = siteOrigin(),
 ): Record<string, unknown> {
   const url = canonicalUrl(guide.path, origin);
@@ -104,7 +164,7 @@ export function guidePostingJsonLd(
     datePublished: guide.date,
     inLanguage: 'en',
     url,
-    image: new URL(guide.heroImage, `${origin}/`).href,
+    image: new URL(guide.ogImage || guide.heroImage, `${origin}/`).href,
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     author,
     publisher: {

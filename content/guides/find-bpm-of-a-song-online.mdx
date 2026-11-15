@@ -1,0 +1,117 @@
+---
+title: "How to Find the BPM of a Song Online (And Fix Half-Time Errors)"
+description: "Find the BPM of any MP3 in your browser, then fix half-time and double-time readings before they wreck your crate. Real tracks, real numbers."
+date: "2026-11-14"
+slug: "find-bpm-of-a-song-online"
+author: "Julian Vance"
+authorRole: "Resident DJ & Audio Systems Engineer"
+category: "BPM"
+heroImage: "/images/guides/bpm-booth.jpg"
+heroAlt: "A DJ setup with two turntables, a mixer and headphones on a wooden table."
+keywords:
+  - find the BPM of a song
+  - MP3 BPM finder online
+  - BPM detector online
+  - half-time BPM
+  - double-time BPM
+  - how to find BPM of an MP3
+  - TBPM tag
+---
+
+<p className="guide-caption">A small home booth with turntables and a mixer. Every deck on that table wants a tempo you can trust. Photo by Arsyad Basyarudin on <a href="https://unsplash.com/photos/K2pdQIcFXfo">Unsplash</a>.</p>
+
+Friday night prep. You sort the crate by tempo to build a warm-up, and a house record lands between two slow tracks because its BPM field says 62. The record is 123. Nothing is broken. The detector counted every second beat, and the sort did exactly what you asked.
+
+A BPM number is only useful when it matches the tempo you actually play. Here is how to read it, and how to fix it when it comes back at half or double.
+
+<Callout type="tool-promo">
+**Want to fix a file right now?** Open TrackTidy and clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
+</Callout>
+
+## Three ways to get a BPM
+
+| Method | Good for | The catch |
+| --- | --- | --- |
+| Tap it | A quick sanity check on one record | Your hand drifts, and 200 files is a long afternoon |
+| DJ software analysis | A whole library, with beat grids | You have to import first, and it only helps inside that app |
+| Read it in the browser | One MP3 you want to check right now | One file at a time, and you still make the call |
+
+Tapping is honest and slow. Library software such as rekordbox, Serato, or the free open source Mixxx will analyse everything you import and draw a beat grid.
+
+<figure>
+  <img src="/images/guides/bpm-mixxx.png" alt="The Mixxx 2.3.0 main window, with waveforms and a BPM readout for each deck." width="3840" height="2160" loading="lazy" />
+  <figcaption>Mixxx 2.3.0 shows a BPM per deck. Software like this analyses a library. Checking one file is a different job. Screenshot by Mixxx contributors, <a href="https://www.gnu.org/licenses/gpl.html">GPL</a>.</figcaption>
+</figure>
+
+The browser route is the one I use when a single file looks wrong. [TrackTidy](https://www.track-tidy.com/) reads the MP3, shows a BPM estimate, and lets you change the number before you save it. The audio stays on your machine.
+
+## The half-time trap
+
+Detectors lock onto a pulse. If the kick lands at 123 and the detector locks onto every second kick, you get 61.5. Nothing is wrong with the file. The number is just in a different gear.
+
+You fix it with a range, not a formula. Decide what tempo band you play, and fold the reading into it.
+
+| Style | Typical range |
+| --- | --- |
+| House | 120 to 130 |
+| Techno | 130 to 145 |
+| Drum and bass | 160 to 180 |
+| Hip hop | 70 to 100, often stored doubled |
+
+A house track that reads 62 is 124. A drum and bass track that reads 87 is 174. If you browse hip hop at 90 and the tag says 180, halve it. Pick one convention and keep it across the crate, or the sort splits in two.
+
+## Real numbers, so you can see the spread
+
+These are the tempos public track databases list for records most people know. Your copy can sit a point or two away, and radio edits, extended mixes, and remasters shift things.
+
+| Track | Artist | Listed BPM |
+| --- | --- | --- |
+| Get Lucky | Daft Punk, Pharrell Williams, Nile Rodgers | 116 |
+| Latch | Disclosure, Sam Smith | 122 |
+| One More Time | Daft Punk | 123 |
+| Wake Me Up | Avicii | 124 |
+| Levels | Avicii | 126 |
+
+Levels is a good lesson in rounding. One database lists 126 and sheet music for it marks about 127. Both are fine. A DJ cares about the grid, not the decimal.
+
+Latch is the odd one. Disclosure have said its 6/8 feel made it awkward for radio and not obviously a club record, and it is listed at 122 BPM. If you count it by ear and keep losing your place, that is why. Trust the grid and then trust your head.
+
+Sources for the figures are the [Mixgraph](https://www.mixgraph.io/artists/avicii) catalog pages for [Avicii](https://www.mixgraph.io/artists/avicii) and [Daft Punk](https://www.mixgraph.io/artists/daft-punk), and the [Latch](https://en.wikipedia.org/wiki/Latch_(song)) article on Wikipedia.
+
+## A pass that takes a minute
+
+1. Open one MP3 and read the BPM estimate.
+2. Say it against your range. If a house track reads 62, fold it up to 124.
+3. Nod your head for fifteen seconds and count. If it feels wrong, it is wrong.
+4. Write the number into the BPM field. A blank and a `0` both sort like junk.
+5. Set the key while the file is open. How to read it is in the [Camelot wheel guide](/guides/camelot-wheel-harmonic-mixing).
+6. Save, then [rename the file from the cleaned tags](/guides/batch-rename-mp3-files-online) so the name says `Artist - Title (124 BPM) [10B].mp3`.
+
+```
+Before: BPM tag empty, filename 03_one_more_time_FINAL_320.mp3
+After:  BPM 123, filename Daft Punk - One More Time (123 BPM) [10B].mp3
+```
+
+One honest limit. A single BPM is an average. A live drummer or a track that speeds up will drift, and the beat grid in your DJ software is the place to correct that, not the tag.
+
+## What the browser tool does and does not do
+
+It reads one MP3, estimates the tempo, and lets you edit the field. It does not open WAV, and it does not process a folder. Run the same minute on each file. The field-by-field detail, including where BPM lives in the file, is in [how to edit MP3 metadata online](/guides/edit-mp3-metadata-online). The checklist for a pile of promos is [how to edit MP3 tags in bulk](/guides/edit-mp3-tags-in-bulk). When the pile is going on a stick for a gig, finish with [how to prepare a USB drive for CDJs](/guides/prepare-usb-for-cdj).
+
+## Quick answers
+
+### What is a normal BPM for house music?
+
+Most house sits between 120 and 130 BPM. Techno usually runs 130 to 145.
+
+### Why does my BPM show half of what I expected?
+
+The detector locked onto every second beat. Fold the number into the range you play, for example 62 becomes 124.
+
+### Does changing the BPM tag change the audio?
+
+No. It edits the label stored in the file. The audio is not re-encoded.
+
+Want to fix a file right now? Clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
+
+[Clean a track](/#upload)

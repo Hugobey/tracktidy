@@ -10,7 +10,7 @@ type Props = {
   index?: boolean;
   ogType?: 'website' | 'article';
   image?: string;
-  jsonLd?: Record<string, unknown> | null;
+  jsonLd?: Record<string, unknown> | readonly Record<string, unknown>[] | null;
 };
 
 function upsertMeta(attribute: 'name' | 'property', key: string, content: string) {

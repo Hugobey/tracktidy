@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-labelledby="t d">
+<title id="t">Camelot wheel</title>
+<desc id="d">The 24 Camelot codes. The outer ring holds the major keys, 1B to 12B. The inner ring holds the minor keys, 1A to 12A. Neighbouring numbers are neighbouring keys.</desc>
+<rect width="900" height="900" fill="#111318"/>
+<style>text{font-family:Inter,Helvetica,Arial,sans-serif;text-anchor:middle;fill:#111318}.code{font-weight:700;font-size:34px}.key{font-size:22px;font-weight:500}.small{font-size:20px;fill:#c9ced8}.ctr{fill:#e8eaf0}</style>
+<path d="M562.9,45.5 A420,420 0 0 1 743.9,149.9 L655.7,239.9 A294,294 0 0 0 529.1,166.8 Z" fill="hsl(230,70%,68%)"/>
+<path d="M526.9,174.5 A286,286 0 0 1 650.1,245.7 L561.9,335.7 A160,160 0 0 0 493.0,295.9 Z" fill="hsl(230,55%,52%)"/>
+<text class="code" x="628.5" y="138.8">1B</text><text class="key" x="628.5" y="166.8">B</text>
+<text class="code" x="562.5" y="253.1" style="font-size:30px">1A</text><text class="key" x="562.5" y="279.1" style="font-size:20px">Abm</text>
+<path d="M750.1,156.1 A420,420 0 0 1 854.5,337.1 L733.2,370.9 A294,294 0 0 0 660.1,244.3 Z" fill="hsl(260,70%,68%)"/>
+<path d="M654.3,249.9 A286,286 0 0 1 725.5,373.1 L604.1,407.0 A160,160 0 0 0 564.3,338.1 Z" fill="hsl(260,55%,52%)"/>
+<text class="code" x="759.2" y="269.5">2B</text><text class="key" x="759.2" y="297.5">F#</text>
+<text class="code" x="644.9" y="335.5" style="font-size:30px">2A</text><text class="key" x="644.9" y="361.5" style="font-size:20px">Ebm</text>
+<path d="M856.8,345.6 A420,420 0 0 1 856.8,554.4 L734.8,523.1 A294,294 0 0 0 734.8,376.9 Z" fill="hsl(290,70%,68%)"/>
+<path d="M727.0,378.9 A286,286 0 0 1 727.0,521.1 L605.0,489.8 A160,160 0 0 0 605.0,410.2 Z" fill="hsl(290,55%,52%)"/>
+<text class="code" x="807.0" y="448.0">3B</text><text class="key" x="807.0" y="476.0">Db</text>
+<text class="code" x="675.0" y="448.0" style="font-size:30px">3A</text><text class="key" x="675.0" y="474.0" style="font-size:20px">Bbm</text>
+<path d="M854.5,562.9 A420,420 0 0 1 750.1,743.9 L660.1,655.7 A294,294 0 0 0 733.2,529.1 Z" fill="hsl(320,70%,68%)"/>
+<path d="M725.5,526.9 A286,286 0 0 1 654.3,650.1 L564.3,561.9 A160,160 0 0 0 604.1,493.0 Z" fill="hsl(320,55%,52%)"/>
+<text class="code" x="759.2" y="626.5">4B</text><text class="key" x="759.2" y="654.5">Ab</text>
+<text class="code" x="644.9" y="560.5" style="font-size:30px">4A</text><text class="key" x="644.9" y="586.5" style="font-size:20px">Fm</text>
+<path d="M743.9,750.1 A420,420 0 0 1 562.9,854.5 L529.1,733.2 A294,294 0 0 0 655.7,660.1 Z" fill="hsl(350,70%,68%)"/>
+<path d="M650.1,654.3 A286,286 0 0 1 526.9,725.5 L493.0,604.1 A160,160 0 0 0 561.9,564.3 Z" fill="hsl(350,55%,52%)"/>
+<text class="code" x="628.5" y="757.2">5B</text><text class="key" x="628.5" y="785.2">Eb</text>
+<text class="code" x="562.5" y="642.9" style="font-size:30px">5A</text><text class="key" x="562.5" y="668.9" style="font-size:20px">Cm</text>
+<path d="M554.4,856.8 A420,420 0 0 1 345.6,856.8 L376.9,734.8 A294,294 0 0 0 523.1,734.8 Z" fill="hsl(20,70%,68%)"/>
+<path d="M521.1,727.0 A286,286 0 0 1 378.9,727.0 L410.2,605.0 A160,160 0 0 0 489.8,605.0 Z" fill="hsl(20,55%,52%)"/>
+<text class="code" x="450.0" y="805.0">6B</text><text class="key" x="450.0" y="833.0">Bb</text>
+<text class="code" x="450.0" y="673.0" style="font-size:30px">6A</text><text class="key" x="450.0" y="699.0" style="font-size:20px">Gm</text>
+<path d="M337.1,854.5 A420,420 0 0 1 156.1,750.1 L244.3,660.1 A294,294 0 0 0 370.9,733.2 Z" fill="hsl(50,70%,68%)"/>
+<path d="M373.1,725.5 A286,286 0 0 1 249.9,654.3 L338.1,564.3 A160,160 0 0 0 407.0,604.1 Z" fill="hsl(50,55%,52%)"/>
+<text class="code" x="271.5" y="757.2">7B</text><text class="key" x="271.5" y="785.2">F</text>
+<text class="code" x="337.5" y="642.9" style="font-size:30px">7A</text><text class="key" x="337.5" y="668.9" style="font-size:20px">Dm</text>
+<path d="M149.9,743.9 A420,420 0 0 1 45.5,562.9 L166.8,529.1 A294,294 0 0 0 239.9,655.7 Z" fill="hsl(80,70%,68%)"/>
+<path d="M245.7,650.1 A286,286 0 0 1 174.5,526.9 L295.9,493.0 A160,160 0 0 0 335.7,561.9 Z" fill="hsl(80,55%,52%)"/>
+<text class="code" x="140.8" y="626.5">8B</text><text class="key" x="140.8" y="654.5">C</text>
+<text class="code" x="255.1" y="560.5" style="font-size:30px">8A</text><text class="key" x="255.1" y="586.5" style="font-size:20px">Am</text>
+<path d="M43.2,554.4 A420,420 0 0 1 43.2,345.6 L165.2,376.9 A294,294 0 0 0 165.2,523.1 Z" fill="hsl(110,70%,68%)"/>
+<path d="M173.0,521.1 A286,286 0 0 1 173.0,378.9 L295.0,410.2 A160,160 0 0 0 295.0,489.8 Z" fill="hsl(110,55%,52%)"/>
+<text class="code" x="93.0" y="448.0">9B</text><text class="key" x="93.0" y="476.0">G</text>
+<text class="code" x="225.0" y="448.0" style="font-size:30px">9A</text><text class="key" x="225.0" y="474.0" style="font-size:20px">Em</text>
+<path d="M45.5,337.1 A420,420 0 0 1 149.9,156.1 L239.9,244.3 A294,294 0 0 0 166.8,370.9 Z" fill="hsl(140,70%,68%)"/>
+<path d="M174.5,373.1 A286,286 0 0 1 245.7,249.9 L335.7,338.1 A160,160 0 0 0 295.9,407.0 Z" fill="hsl(140,55%,52%)"/>
+<text class="code" x="140.8" y="269.5">10B</text><text class="key" x="140.8" y="297.5">D</text>
+<text class="code" x="255.1" y="335.5" style="font-size:30px">10A</text><text class="key" x="255.1" y="361.5" style="font-size:20px">Bm</text>
+<path d="M156.1,149.9 A420,420 0 0 1 337.1,45.5 L370.9,166.8 A294,294 0 0 0 244.3,239.9 Z" fill="hsl(170,70%,68%)"/>
+<path d="M249.9,245.7 A286,286 0 0 1 373.1,174.5 L407.0,295.9 A160,160 0 0 0 338.1,335.7 Z" fill="hsl(170,55%,52%)"/>
+<text class="code" x="271.5" y="138.8">11B</text><text class="key" x="271.5" y="166.8">A</text>
+<text class="code" x="337.5" y="253.1" style="font-size:30px">11A</text><text class="key" x="337.5" y="279.1" style="font-size:20px">F#m</text>
+<path d="M345.6,43.2 A420,420 0 0 1 554.4,43.2 L523.1,165.2 A294,294 0 0 0 376.9,165.2 Z" fill="hsl(200,70%,68%)"/>
+<path d="M378.9,173.0 A286,286 0 0 1 521.1,173.0 L489.8,295.0 A160,160 0 0 0 410.2,295.0 Z" fill="hsl(200,55%,52%)"/>
+<text class="code" x="450.0" y="91.0">12B</text><text class="key" x="450.0" y="119.0">E</text>
+<text class="code" x="450.0" y="223.0" style="font-size:30px">12A</text><text class="key" x="450.0" y="249.0" style="font-size:20px">C#m</text>
+<circle cx="450" cy="450" r="150" fill="#111318"/>
+<text class="ctr" x="450" y="430" style="font-size:30px;font-weight:700">Camelot</text>
+<text class="ctr" x="450" y="466" style="font-size:30px;font-weight:700">wheel</text>
+<text class="small" x="450" y="508">B = major, A = minor</text>
+</svg>

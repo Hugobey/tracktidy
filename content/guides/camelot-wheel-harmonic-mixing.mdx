@@ -1,0 +1,117 @@
+---
+title: "How to Read the Camelot Wheel and Mix in Key"
+pageTitle: "Camelot Wheel Explained: Find the Key of a Song and Mix in Key"
+description: "Read the Camelot wheel in two minutes: what 8A and 10B mean, how to find the key of a song, and which neighbours mix. Real tracks included."
+date: "2026-11-14"
+slug: "camelot-wheel-harmonic-mixing"
+author: "Julian Vance"
+authorRole: "Resident DJ & Audio Systems Engineer"
+category: "Harmonic Mixing"
+heroImage: "/images/guides/camelot-film-dj.jpg"
+heroAlt: "A DJ wearing headphones at work, shot on analog film."
+ogImage: "/images/guides/camelot-wheel.png"
+keywords:
+  - Camelot wheel
+  - harmonic mixing
+  - find the key of a song
+  - Camelot notation
+  - Camelot key chart
+  - key of a song online
+  - TKEY tag
+  - mix in key
+---
+
+<p className="guide-caption">A DJ with headphones on, shot on analog film. The key is the part of a mix you hear and cannot see. Photo by Daniel Thürler on <a href="https://unsplash.com/photos/J4Q2srcUIpE">Unsplash</a>.</p>
+
+Your software says 10B. Your head says D major. On a small screen at two in the morning, you want the first one.
+
+The Camelot wheel renames all 24 musical keys as a number from 1 to 12 and a letter, A or B. The point is that keys that blend well end up next to each other, so compatibility becomes counting. Here is the whole system, with real records.
+
+<Callout type="tool-promo">
+**Want to fix a file right now?** Open TrackTidy and clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
+</Callout>
+
+## How to read the wheel
+
+<figure>
+  <img src="/images/guides/camelot-wheel.svg" alt="The Camelot wheel: an outer ring of major keys 1B to 12B and an inner ring of minor keys 1A to 12A." width="900" height="900" loading="lazy" />
+  <figcaption>The 24 Camelot codes. B is the outer ring (major), A is the inner ring (minor). Original TrackTidy graphic.</figcaption>
+</figure>
+
+Four rules cover it.
+
+- The number is the position around the wheel, 1 to 12.
+- The letter is the mode. A is minor, B is major.
+- Same number, other letter, is the relative major or minor. 8A is A minor, 8B is C major.
+- One step up or down in number, same letter, is a neighbouring key.
+
+From any code you have four safe moves. Starting on 10B (D major):
+
+| Move | Lands on | How it feels |
+| --- | --- | --- |
+| Stay put | 10B | Same harmony, nothing to hear |
+| Swap the letter | 10A | Same notes, darker mood |
+| One step up | 11B | A small lift |
+| One step down | 9B | A small settle |
+
+Anything further away is not forbidden. It just asks more of your ear.
+
+## Real keys, real records
+
+These are the keys public track databases list for records most people know. Your copy can differ, since edits and remasters shift things.
+
+| Track | Artist | BPM | Key | Camelot |
+| --- | --- | --- | --- | --- |
+| One More Time | Daft Punk | 123 | D major | 10B |
+| Wake Me Up | Avicii | 124 | D major | 10B |
+| Get Lucky | Daft Punk, Pharrell Williams, Nile Rodgers | 116 | B minor | 10A |
+| Levels | Avicii | 126 | E major | 12B |
+
+Walk through it.
+
+- **One More Time into Wake Me Up.** Same code, one BPM apart. This is the easy one.
+- **One More Time into Get Lucky.** 10B to 10A is the relative minor, so the key works. The gap is 7 BPM, so you pitch it, or you pick your moment.
+- **Wake Me Up into Levels.** 10B to 12B is two steps around the wheel. Tempo fits (124 to 126). The key is the question, so keep the blend short or lean on the drums.
+
+The figures come from the [Mixgraph](https://www.mixgraph.io/tracks/daft-punk-one-more-time) catalog pages for [One More Time](https://www.mixgraph.io/tracks/daft-punk-one-more-time), [Levels](https://www.mixgraph.io/tracks/avicii-levels-original-version), and the [Daft Punk](https://www.mixgraph.io/artists/daft-punk) and [Avicii](https://www.mixgraph.io/artists/avicii) artist pages. If a tempo looks off on your own copy, the fix is in [how to find the BPM of a song online](/guides/find-bpm-of-a-song-online).
+
+## Key detection is an estimate
+
+Even the people who made a record will not always give you a straight answer. Disclosure's Guy Lawrence has declined to say definitively what key Latch is in. The pianist Jacob Collier argued for F minor in a text message to the duo, and a DJ promo database lists it as F minor too. Source: the [Latch](https://en.wikipedia.org/wiki/Latch_(song)) article on Wikipedia.
+
+Analyzers disagree as well. Public [AcousticBrainz](https://acousticbrainz.org/60fa767a-d85d-4991-82bc-4294e0b11ae7) analyses of different versions of One More Time return F minor, G major, and D major.
+
+So treat any key reading as a starting point. Play the two records. If the blend sounds sour, it is sour, whatever the number says. Your ear wins an argument with a key finder.
+
+## Write the key where the software reads it
+
+The key lives in the initial key frame, TKEY, one of the six fields worth fixing on a normal prep night. Pick one system, Camelot or musical key, and use it on every file. Mix `Am` and `8A` in one crate and a single harmonic group splits in two. The full field list is in [how to edit MP3 metadata online](/guides/edit-mp3-metadata-online).
+
+Then put the same code in the filename, so the label and the search box agree.
+
+```
+Before: 12_track_name_MASTER_final_320.mp3
+After:  Daft Punk - One More Time (123 BPM) [10B].mp3
+```
+
+The rename pass is in [how to batch rename MP3 files online](/guides/batch-rename-mp3-files-online). For a pile of promos with the same junk, use the checklist in [how to edit MP3 tags in bulk](/guides/edit-mp3-tags-in-bulk). Once the crate is clean, [prepare the USB drive for CDJs](/guides/prepare-usb-for-cdj).
+
+[TrackTidy](https://www.track-tidy.com/) shows an estimated key for one MP3 at a time and lets you change it before you save. It is not a library app, and it will not touch a whole folder.
+
+## Quick answers
+
+### What does 8A mean?
+
+A minor. The number is the position on the wheel, and A means minor. 8B is the relative major, C major.
+
+### Is the Camelot wheel the same as the circle of fifths?
+
+Same neighbourhood logic, different labels. Neighbouring keys on the circle of fifths are neighbouring numbers on the Camelot wheel. It is a relabelling made for DJs.
+
+### Can I mix tracks that are not on neighbouring keys?
+
+Yes. Keep the blend short, use drums or effects, or pick records with little harmony. Your ear makes the call.
+
+Want to fix a file right now? Clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
+
+[Clean a track](/#upload)

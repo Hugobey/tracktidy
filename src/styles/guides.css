@@ -261,6 +261,13 @@ body:has(.guides-page)::before {
   background: var(--g-fill);
 }
 
+.guide-caption {
+  margin: -16px 0 22px;
+  color: var(--g-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
 .guide-copy {
   max-width: 68ch;
   color: var(--g-body);
