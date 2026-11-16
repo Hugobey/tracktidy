@@ -7,6 +7,7 @@ import { PostHogAnalytics } from './components/PostHogAnalytics.tsx';
 import { ProProvider } from './components/ProProvider.tsx';
 import { VercelAnalytics } from './components/VercelAnalytics.tsx';
 import LandingPage from './pages/LandingPage.tsx';
+import LibraryPage from './pages/LibraryPage.tsx';
 import NotFoundPage from './pages/NotFoundPage.tsx';
 import ToolPage from './pages/ToolPage.tsx';
 import { TrackSessionProvider } from './session/TrackSession.tsx';
@@ -40,6 +41,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/app" element={<ToolPage />} />
+              <Route path="/pro" element={<LibraryPage />} />
               <Route path="/success" element={lazyPage(<SuccessPage />, 'Opening activation')} />
               <Route path="/legal-notice" element={lazyPage(<LegalNoticePage />, 'Opening the page')} />
               <Route path="/privacy-policy" element={lazyPage(<PrivacyPage />, 'Opening the page')} />

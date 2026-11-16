@@ -1,11 +1,18 @@
 import { useEffect, useId, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { PRO_COPY } from '../lib/pro.ts';
 import { usePro } from './pro-context.ts';
 
 export function ProAccount() {
   const pro = usePro();
+  const { pathname } = useLocation();
   const menuId = useId();
   const [open, setOpen] = useState(false);
+  const library = (
+    <Link to="/pro" className="pro-link" aria-current={pathname === '/pro' ? 'page' : undefined}>
+      {PRO_COPY.library}
+    </Link>
+  );
 
   useEffect(() => {
     if (!open) return undefined;
@@ -19,20 +26,20 @@ export function ProAccount() {
   if (!pro.pro) {
     return (
       <span className="pro-account">
+        {library}
         <button className="pro-link" type="button" onClick={pro.openUpgrade}>
           {PRO_COPY.upgrade}
         </button>
-        {pro.devDemo ? (
-          <button className="pro-link" type="button" aria-pressed={pro.demo} onClick={pro.toggleDemo}>
-            {PRO_COPY.demo}
-          </button>
-        ) : null}
+        <button className="pro-pill" type="button" aria-pressed={pro.pro} onClick={pro.toggleDemo}>
+          {PRO_COPY.demo}
+        </button>
       </span>
     );
   }
 
   return (
     <span className="pro-account">
+      {library}
       <button
         className="pro-badge"
         type="button"
@@ -46,19 +53,14 @@ export function ProAccount() {
       {open ? (
         <span className="pro-pop" id={menuId} role="menu">
           {pro.email ? <span className="pro-pop-email">{pro.email}</span> : null}
-          <a href={pro.portalUrl} target="_blank" rel="noreferrer">
-            {PRO_COPY.billing}
-          </a>
           <button type="button" onClick={pro.signOut}>
             {PRO_COPY.signOut}
           </button>
-          {pro.devDemo ? (
-            <button type="button" aria-pressed={pro.demo} onClick={pro.toggleDemo}>
-              {PRO_COPY.demo}
-            </button>
-          ) : null}
         </span>
       ) : null}
+      <button className="pro-pill" type="button" aria-pressed={pro.pro} onClick={pro.toggleDemo}>
+        {PRO_COPY.demo}
+      </button>
     </span>
   );
 }

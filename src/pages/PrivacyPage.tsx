@@ -39,16 +39,18 @@ export default function PrivacyPage() {
       <h2>TrackTidy Pro</h2>
       <p>
         Pro is optional. The free editor still handles one MP3 at a time in this browser. Checkout, when it is
-        connected, opens on Lemon Squeezy with the email you type so the receipt can be filled in. A license key you
-        paste is sent to Lemon Squeezy to check that it is active. The audio file is not part of that request.
-        Lemon Squeezy is the seller of record for the payment. TrackTidy does not store a card number.
+        connected, opens a Stripe Payment Link with the email you type so the receipt can be filled in. The audio
+        file is not part of that request. Stripe is the seller of record for the payment. TrackTidy does not store a
+        card number.
       </p>
       <p>
-        A successful check stores <code>tt_user_pro</code>, <code>tt_license_key</code>, <code>tt_user_email</code>,
-        and the activation id in local storage on this browser. <code>tt_process_count</code> counts completed opens
-        on this browser and is used only to show a note about Pro. Demo mode, when a development build shows it, stays
-        in session storage for that tab. Clearing site data removes Pro from this browser. Manage billing opens the
-        Lemon Squeezy customer portal.
+        Restore sends that email to this site, which asks Stripe whether a paid Checkout Session or Charge exists.
+        The Stripe secret stays on the server. A successful check stores <code>tt_user_pro</code> and{' '}
+        <code>tt_user_email</code> in local storage on this browser. <code>tt_process_count</code> counts completed
+        opens on this browser and is used only to show a note about Pro. Demo Pro stores the same Pro flag so the
+        library can be tried on this browser. The library reads extra MP3s in this tab so the names can be edited
+        together. Those files are not uploaded. Clearing site data removes Pro from this browser. The host can still log
+        the restore request, including the email in the address.
       </p>
 
       <h2>What is processed, and why</h2>

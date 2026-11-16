@@ -6,7 +6,7 @@ import { renderFilename } from '../lib/filename.ts';
 import { writeTrack, type ArtworkWrite } from '../lib/id3.ts';
 import { readTrack } from '../lib/metadata.ts';
 import { maxFileBytes, rejectionMessage } from '../lib/mp3.ts';
-import { PRO_COPY } from '../lib/pro.ts';
+import { CRATE_OPEN_KEY, PRO_COPY } from '../lib/pro.ts';
 import type { FallbackPayload, TrackFields } from '../lib/types.ts';
 import { usePro } from './pro-context.ts';
 
@@ -90,7 +90,13 @@ async function rowsFromFiles(files: File[], room: number, report: (message: stri
 
 export function CrateGrid({ lead, template, onLeadField, onTemplate }: Props) {
   const pro = usePro();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => {
+    try {
+      return sessionStorage.getItem(CRATE_OPEN_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
   const [rows, setRows] = useState<ExtraRow[]>([]);
   const [note, setNote] = useState<string | null>(null);
   const [bulkField, setBulkField] = useState<'genre' | 'album'>('genre');
@@ -201,6 +207,13 @@ export function CrateGrid({ lead, template, onLeadField, onTemplate }: Props) {
             if (!unlocked) {
               pro.openUpgrade();
               return;
+            }
+            if (open) {
+              try {
+                sessionStorage.removeItem(CRATE_OPEN_KEY);
+              } catch {
+                /* Hiding the grid still works for this view. */
+              }
             }
             setOpen((value) => !value);
           }}

@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs';
+import { parseBuffer } from 'music-metadata';
 import { describe, expect, it } from 'vitest';
+import { isMp3 } from '../src/lib/mp3.ts';
 import { applyRouteMeta } from '../scripts/prerender-routes.ts';
 import { applyTextCleanup, crateTemplate, fieldChanged, stripPromoText, titleCaseText, tokensFromTemplate } from '../src/lib/crate.ts';
 import { zipTracks } from '../src/lib/crate-zip.ts';
@@ -12,14 +14,18 @@ import {
   readLicensePayload,
   validateStoredLicense,
 } from '../src/lib/lemonsqueezy.ts';
+import { handleCheckPro } from '../api/check-pro.js';
+import { emailHasPaid } from '../api/stripe-paid.js';
 import {
   PRO_COPY,
+  applyProQuery,
   copyHasDash,
   dismissNudge,
   nudgeVisible,
   readProSnapshot,
   recordCompletedProcess,
 } from '../src/lib/pro.ts';
+import { stripePaymentUrl } from '../src/lib/stripe.ts';
 import { INDEXABLE_ROUTES, sitemapXml } from '../src/lib/site.ts';
 import type { TrackFields } from '../src/lib/types.ts';
 
@@ -54,10 +60,14 @@ describe('pro copy', () => {
     );
     expect(PRO_COPY.nudgeAction).toBe('Unlock Pro Preview');
     expect(PRO_COPY.modalTitle).toBe('Unlock the Crate Grid & Bulk Metadata Editor');
-    expect(PRO_COPY.modalBody).toBe('Enter your email to activate Pro via Lemon Squeezy, or enter an existing license key.');
+    expect(PRO_COPY.modalBody).toBe('Enter your email to continue to Stripe, or restore a purchase you already made.');
     expect(PRO_COPY.emailPlaceholder).toBe('dj@example.com');
     expect(PRO_COPY.checkout).toBe('Continue to Checkout');
-    expect(PRO_COPY.licenseLabel).toBe('Already have a license key? Activate here');
+    expect(PRO_COPY.restoreLabel).toBe('Already purchased Pro? Restore with your email');
+    expect(PRO_COPY.demo).toBe('Demo Pro');
+    expect(PRO_COPY.banner).toBe('Track Tidy Pro unlocked');
+    expect(PRO_COPY.library).toBe('Library');
+    expect(PRO_COPY.libraryTitle).toBe('Rename many tracks at once.');
     for (const line of Object.values(PRO_COPY)) expect(copyHasDash(line)).toBe(false);
     const sources = [
       'src/lib/pro.ts',
@@ -68,6 +78,10 @@ describe('pro copy', () => {
       'src/components/ProAccount.tsx',
       'src/components/CrateGrid.tsx',
       'src/components/ProProvider.tsx',
+      'src/components/ProBanner.tsx',
+      'src/lib/stripe.ts',
+      'src/lib/library-demo.ts',
+      'src/pages/LibraryPage.tsx',
       'src/pages/SuccessPage.tsx',
     ];
     for (const file of sources) {
@@ -116,6 +130,9 @@ describe('lemon squeezy', () => {
     expect(checkout).toBeTruthy();
     expect(new URL(checkout ?? '').searchParams.get('checkout[email]')).toBe('dj@example.com');
     expect(lemonCheckoutUrl('http://store.lemonsqueezy.com/buy/example', 'dj@example.com')).toBeNull();
+    const stripe = stripePaymentUrl('dj@example.com', 'https://buy.stripe.com/test_example');
+    expect(new URL(stripe ?? '').searchParams.get('prefilled_email')).toBe('dj@example.com');
+    expect(stripePaymentUrl('dj@example.com', 'http://buy.stripe.com/test_example')).toBeNull();
   });
 
   it('reads an active license and names expired or disabled keys', () => {
@@ -171,7 +188,7 @@ describe('lemon squeezy', () => {
 });
 
 describe('pro storage', () => {
-  it('counts completed opens and unlocks only with a real key or demo mode', () => {
+  it('counts completed opens and unlocks from the Pro flag', () => {
     const local = memory();
     const session = memory();
     expect(recordCompletedProcess(local)).toBe(1);
@@ -180,14 +197,50 @@ describe('pro storage', () => {
     expect(nudgeVisible(readProSnapshot(local, session))).toBe(true);
     dismissNudge(session);
     expect(nudgeVisible(readProSnapshot(local, session))).toBe(false);
-    local.setItem('tt_user_pro', 'true');
     expect(readProSnapshot(local, session).pro).toBe(false);
-    local.setItem('tt_license_key', 'KEY123456');
+    local.setItem('tt_user_pro', 'true');
     expect(readProSnapshot(local, session).pro).toBe(true);
-    local.removeItem('tt_license_key');
-    session.setItem('tt_demo_pro', '1');
+    applyProQuery('https://www.track-tidy.com/?demo=false', local, session);
+    expect(readProSnapshot(local, session).pro).toBe(false);
+    expect(session.getItem('tt_library_entry')).toBeNull();
+    applyProQuery('https://www.track-tidy.com/?demo=true', local, session);
+    expect(local.getItem('tt_user_pro')).toBe('true');
+    expect(session.getItem('tt_library_entry')).toBe('1');
+    applyProQuery('https://www.track-tidy.com/app?pro_success=true', local, session);
     expect(readProSnapshot(local, session).pro).toBe(true);
-    expect(readProSnapshot(local, session).demo).toBe(true);
+    expect(readProSnapshot(local, session).banner).toBe(true);
+    expect(session.getItem('tt_crate_open')).toBe('1');
+  });
+});
+
+describe('stripe restore', () => {
+  it('treats a paid charge or checkout session as Pro and ignores a missing secret', async () => {
+    const fetchImpl = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/v1/customers')) {
+        return new Response(JSON.stringify({ data: [{ id: 'cus_1' }] }), { status: 200 });
+      }
+      if (url.includes('/v1/charges/search')) return new Response(JSON.stringify({ data: [] }), { status: 200 });
+      if (url.includes('/v1/charges')) {
+        return new Response(JSON.stringify({ data: [{ paid: true, status: 'succeeded', refunded: false }] }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ data: [] }), { status: 200 });
+    }) as typeof fetch;
+    expect(await emailHasPaid('dj@example.com', 'sk_test_example', fetchImpl)).toBe(true);
+
+    const unpaid = (async () => new Response(JSON.stringify({ data: [] }), { status: 200 })) as typeof fetch;
+    expect(await emailHasPaid('dj@example.com', 'sk_test_example', unpaid)).toBe(false);
+
+    const sessionPaid = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('customer_details')) {
+        return new Response(JSON.stringify({ data: [{ payment_status: 'paid', status: 'complete' }] }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ data: [] }), { status: 200 });
+    }) as typeof fetch;
+    expect(await emailHasPaid('dj@example.com', 'sk_test_example', sessionPaid)).toBe(true);
+    expect(await handleCheckPro('dj@example.com', '')).toMatchObject({ status: 503, body: { pro: false } });
+    expect(await handleCheckPro('not-an-email', 'sk_test_example')).toMatchObject({ status: 400 });
   });
 });
 
@@ -208,5 +261,19 @@ describe('success page indexing', () => {
       rewrites: { source: string; destination: string }[];
     };
     expect(vercel.rewrites).toContainEqual({ source: '/success', destination: '/success/index.html' });
+    expect(vercel.rewrites).toContainEqual({ source: '/pro', destination: '/pro/index.html' });
+    expect(sitemapXml()).not.toContain('/pro');
+  });
+});
+
+describe('pro library', () => {
+  it('ships readable demo MP3s for the local library', async () => {
+    const bytes = readFileSync(new URL('../public/demo/night-circuit.mp3', import.meta.url));
+    expect(isMp3(new Uint8Array(bytes))).toBe(true);
+    const meta = await parseBuffer(bytes, { mimeType: 'audio/mpeg' });
+    expect(meta.common.artist).toBe('nora voss');
+    expect(meta.common.title).toBe('night circuit');
+    expect(meta.common.bpm).toBe(124);
+    expect(meta.common.key).toBe('8A');
   });
 });

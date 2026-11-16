@@ -18,8 +18,8 @@ Copy `.env.example` to `.env` locally or set the variables in the host’s build
 - `VITE_GA_MEASUREMENT_ID` — optional override for the GA4 measurement ID. Empty uses `G-1DQDF61KJW`, the stream in the published container.
 - `VITE_POSTHOG_KEY` — PostHog project key, starting with `phc_`. Empty leaves PostHog off. Set it in the host’s build settings and rebuild. Do not commit a real key.
 - `VITE_POSTHOG_HOST` — optional. Empty uses `https://eu.i.posthog.com`.
-- `VITE_LEMON_SQUEEZY_CHECKOUT_URL`: hosted Lemon Squeezy checkout URL, https only. Empty leaves checkout disconnected. The app adds the typed email as `checkout[email]`. Set it in the host build settings and rebuild. Point the store's success redirect at `https://www.track-tidy.com/success`. A `license_key` query on that page activates this browser. Pasting the key from the receipt works when the query is absent.
-- `VITE_LEMON_SQUEEZY_PORTAL_URL`: optional customer portal. Empty uses `https://app.lemonsqueezy.com/my-orders`.
+- `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`: hosted Stripe Payment Link, https only. Empty leaves checkout disconnected. The app adds the typed email as `prefilled_email`. Set it in the host build settings and rebuild. Point the link's confirmation page at `https://www.track-tidy.com/?pro_success=true`.
+- `STRIPE_SECRET_KEY`: server only. Used by `/api/check-pro` to look up a paid Checkout Session or Charge. Never expose it as a `VITE_` variable. Do not commit a real key.
 
 ## Google Analytics 4
 

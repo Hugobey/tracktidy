@@ -51,7 +51,7 @@ export default function SuccessPage() {
   const [note, setNote] = useState(() =>
     activationQueued()
       ? 'Checking the license key…'
-      : 'Paste the license key from your Lemon Squeezy receipt to activate this browser.',
+      : 'Paste a license key from a receipt, or restore the purchase with your email from Upgrade to Pro.',
   );
   const [license, setLicense] = useState('');
   const [busy, setBusy] = useState(activationQueued);

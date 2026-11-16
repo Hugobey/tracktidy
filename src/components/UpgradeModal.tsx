@@ -11,7 +11,7 @@ export function UpgradeModal() {
   const titleId = useId();
   const emailRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState(pro.email);
-  const [license, setLicense] = useState('');
+  const [restoreEmail, setRestoreEmail] = useState(pro.email);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -21,8 +21,8 @@ export function UpgradeModal() {
   if (pro.modalOpen && !seenOpen) {
     setSeenOpen(true);
     setEmail(savedEmail);
+    setRestoreEmail(savedEmail);
     setNote(null);
-    setLicense('');
     setBusy(false);
   } else if (!pro.modalOpen && seenOpen) {
     setSeenOpen(false);
@@ -91,7 +91,13 @@ export function UpgradeModal() {
             if (busy) return;
             setBusy(true);
             setNote(null);
-            void pro.activate(license).then((error) => {
+            const next = restoreEmail.trim();
+            if (!validEmail(next)) {
+              setNote('Enter a valid email address.');
+              setBusy(false);
+              return;
+            }
+            void pro.restore(next).then((error) => {
               setBusy(false);
               setNote(error);
               if (!error) pro.closeUpgrade();
@@ -99,31 +105,27 @@ export function UpgradeModal() {
           }}
         >
           <label className="pro-field">
-            <span>{PRO_COPY.licenseLabel}</span>
+            <span>{PRO_COPY.restoreLabel}</span>
             <input
-              type="text"
-              name="license"
-              autoComplete="off"
-              spellCheck={false}
-              placeholder="License key"
-              value={license}
-              onChange={(event) => setLicense(event.target.value)}
+              type="email"
+              name="restore-email"
+              autoComplete="email"
+              placeholder={PRO_COPY.emailPlaceholder}
+              value={restoreEmail}
+              onChange={(event) => setRestoreEmail(event.target.value)}
             />
           </label>
-          <button className="btn btn-secondary" type="submit" disabled={busy || license.trim().length < 8}>
-            {busy ? 'Checking…' : PRO_COPY.licenseAction}
+          <button className="btn btn-secondary" type="submit" disabled={busy || !validEmail(restoreEmail)}>
+            {busy ? 'Checking…' : PRO_COPY.restoreAction}
           </button>
         </form>
         {note ? <p className="pro-note">{note}</p> : null}
         {!pro.checkoutReady ? (
-          <p className="pro-note">Checkout is not connected on this build yet. A license key still activates Pro.</p>
+          <p className="pro-note">Checkout is not connected on this build yet.</p>
         ) : null}
-        {pro.devDemo ? (
-          <label className="pro-demo">
-            <input type="checkbox" checked={pro.demo} onChange={pro.toggleDemo} />
-            <span>{PRO_COPY.demo}</span>
-          </label>
-        ) : null}
+        <button className="pro-pill" type="button" aria-pressed={pro.pro} onClick={pro.toggleDemo}>
+          {PRO_COPY.demo}
+        </button>
         <button className="btn btn-quiet pro-close" type="button" onClick={pro.closeUpgrade}>
           Close
         </button>

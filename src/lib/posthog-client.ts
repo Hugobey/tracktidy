@@ -1,19 +1,41 @@
 import { posthogKey } from './posthog-config.ts';
 
+type LogAttributes = Record<string, string | number | boolean>;
+
 type CaptureClient = {
   capture: (event: string, properties?: Record<string, unknown>) => void;
+  identify: (distinctId: string, properties?: Record<string, unknown>) => void;
+  reset: () => void;
   opt_out_capturing: () => void;
   opt_in_capturing: () => void;
+  logger: {
+    info: (message: string, attributes?: LogAttributes) => void;
+  };
 };
 
+type Identity = { distinctId: string; properties: Record<string, unknown> };
+
 const queue: { name: string; properties: Record<string, string> }[] = [];
+let pendingIdentity: Identity | null = null;
 let client: CaptureClient | null = null;
 
 export function bindPostHogClient(next: CaptureClient | null): void {
   client = next;
   if (!client) return;
+  if (pendingIdentity) client.identify(pendingIdentity.distinctId, pendingIdentity.properties);
   const pending = queue.splice(0, queue.length);
   for (const item of pending) client.capture(item.name, item.properties);
+}
+
+export function identifyPostHogUser(distinctId: string, properties: Record<string, unknown>): void {
+  if (!posthogKey()) return;
+  pendingIdentity = { distinctId, properties };
+  client?.identify(distinctId, properties);
+}
+
+export function resetPostHogIdentity(): void {
+  pendingIdentity = null;
+  client?.reset();
 }
 
 export function captureProductEvent(name: string, properties: Record<string, string>): void {
@@ -25,6 +47,14 @@ export function captureProductEvent(name: string, properties: Record<string, str
   }
   client.capture(name, properties);
 }
+
+/** Sends only purpose-written application diagnostics through PostHog Logs. */
+export const posthogLogger = {
+  info(message: string, attributes?: LogAttributes): void {
+    if (!posthogKey()) return;
+    client?.logger.info(message, attributes);
+  },
+};
 
 function clearPostHogStorage(): void {
   if (typeof document !== 'undefined') {
@@ -49,6 +79,7 @@ function clearPostHogStorage(): void {
 
 export function stopPostHog(): void {
   queue.length = 0;
+  pendingIdentity = null;
   client?.opt_out_capturing();
   clearPostHogStorage();
 }
@@ -56,5 +87,6 @@ export function stopPostHog(): void {
 /** Test hook. Drops a client and any events waiting for it. */
 export function resetPostHogForTests(): void {
   queue.length = 0;
+  pendingIdentity = null;
   client = null;
 }

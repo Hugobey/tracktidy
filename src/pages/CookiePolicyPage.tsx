@@ -39,16 +39,15 @@ export default function CookiePolicyPage() {
           advertising cookie.
         </li>
         <li>
-          <code>tt_process_count</code>, <code>tt_user_pro</code>, <code>tt_license_key</code>, <code>tt_user_email</code>,{' '}
-          <code>tt_license_instance</code>, and <code>tt_license_instance_name</code> in local storage. Purpose: remember
-          how many tracks were opened, and whether Pro is active on this browser. Duration: until you sign out of this
-          browser or clear site data. These are not cookies. The license check is described in the{' '}
-          <Link to="/privacy-policy">privacy policy</Link>.
+          <code>tt_process_count</code>, <code>tt_user_pro</code>, and <code>tt_user_email</code> in local storage.
+          Purpose: remember how many tracks were opened, the email used for checkout or restore, and whether Pro is
+          active on this browser. Duration: until you sign out of this browser or clear site data. These are not
+          cookies. The Stripe check is described in the <Link to="/privacy-policy">privacy policy</Link>.
         </li>
         <li>
-          <code>tt_nudge_later</code> and, in a development build, <code>tt_demo_pro</code> in session storage. Purpose:
-          hide the Pro note for this visit, or unlock the crate while testing. Duration: until the tab closes. These
-          are not cookies.
+          <code>tt_nudge_later</code>, <code>tt_crate_open</code>, and <code>tt_pro_banner</code> in session storage.
+          Purpose: hide the Pro note for this visit, open the crate after checkout, and show the unlock note. Duration:
+          until the tab closes. These are not cookies.
         </li>
       </ul>
       <p>

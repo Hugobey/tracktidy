@@ -9,6 +9,12 @@ interface ImportMetaEnv {
   readonly VITE_LEMON_SQUEEZY_PORTAL_URL?: string;
 }
 
+declare const process: {
+  readonly env: {
+    readonly NEXT_PUBLIC_STRIPE_PAYMENT_LINK?: string;
+  };
+};
+
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }

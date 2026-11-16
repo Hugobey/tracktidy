@@ -1828,9 +1828,11 @@ input:focus {
 }
 
 .pro-link:hover,
-.pro-link[aria-pressed='true'] { color: var(--text); }
+.pro-link[aria-pressed='true'],
+.pro-link[aria-current='page'] { color: var(--text); }
 
-.pro-badge {
+.pro-badge,
+.pro-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1842,6 +1844,34 @@ input:focus {
   font: inherit;
   font-size: 13px;
   cursor: pointer;
+}
+
+.pro-pill[aria-pressed='true'] {
+  color: var(--text);
+  border-color: rgba(57, 120, 246, 0.7);
+  background: rgba(57, 120, 246, 0.16);
+}
+
+.pro-modal .pro-pill { margin-top: 16px; }
+
+.pro-banner {
+  position: fixed;
+  z-index: 75;
+  top: 88px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(480px, calc(100% - 32px));
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: rgba(22, 26, 34, 0.96);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow);
+  color: var(--text);
 }
 
 .pro-demo-mark {
@@ -1978,6 +2008,47 @@ input:focus {
 
 .pro-close { margin-top: 12px; }
 
+.library {
+  width: min(1180px, calc(100% - 48px));
+  margin: 28px auto 64px;
+}
+
+.library-intro { margin-bottom: 22px; }
+
+.library-intro h1 {
+  font-size: clamp(40px, 5vw, 64px);
+  margin-bottom: 8px;
+}
+
+.library-intro .lede {
+  max-width: 40rem;
+  color: var(--muted);
+}
+
+.library-lead {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: clamp(18px, 2.2vw, 26px);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  word-break: break-word;
+}
+
+.library .drop-well { margin-top: 18px; }
+
+.library-panel {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 22px;
+  background: rgba(22, 26, 34, 0.62);
+  border: 1px solid var(--line);
+}
+
+.library-panel .hint { margin: 12px 0 0; color: var(--muted); }
+
+.library-panel .presets { display: flex; flex-wrap: wrap; gap: 6px; }
+
 .crate-band { grid-column: 1 / -1; }
 
 .crate-bar,
@@ -2089,7 +2160,9 @@ input:focus {
   .pro-nudge,
   .pro-modal,
   .pro-pop,
-  .crate-panel {
+  .pro-banner,
+  .crate-panel,
+  .library-panel {
     color: var(--text);
     border-color: var(--line-strong);
   }

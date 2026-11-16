@@ -612,11 +612,19 @@ html[data-guide-theme='dark'] body:has(.guides-page) {
 .guides-page .pro-link { color: var(--g-muted); }
 
 .guides-page .pro-link:hover,
-.guides-page .pro-link[aria-pressed='true'] { color: var(--g-ink); }
+.guides-page .pro-link[aria-pressed='true'],
+.guides-page .pro-link[aria-current='page'] { color: var(--g-ink); }
 
-.guides-page .pro-badge {
+.guides-page .pro-badge,
+.guides-page .pro-pill {
   color: var(--g-ink);
   border-color: var(--g-line);
+  background: var(--g-fill);
+}
+
+.guides-page .pro-pill[aria-pressed='true'] {
+  color: var(--g-ink);
+  border-color: var(--g-ink);
   background: var(--g-fill);
 }
 
@@ -624,6 +632,7 @@ html[data-guide-theme='dark'] body:has(.guides-page) {
 .guides-page .pro-pop-email { color: var(--g-muted); }
 
 body:has(.guides-page) .pro-pop,
+body:has(.guides-page) .pro-banner,
 body:has(.guides-page) .pro-modal {
   background: var(--g-sheet);
   color: var(--g-ink);

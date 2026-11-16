@@ -14,6 +14,7 @@ import {
   robotsTxt,
   sitemapXml,
 } from '../src/lib/site.ts';
+import { LIBRARY_DESCRIPTION, LIBRARY_PATH, LIBRARY_TITLE } from '../src/lib/library-demo.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -83,6 +84,20 @@ export function prerenderDist(dist = join(process.cwd(), 'dist'), origin?: strin
   for (const route of INDEXABLE_ROUTES) {
     writeRoute(dist, route.path, applyRouteMeta(shell, route, host));
   }
+  writeRoute(
+    dist,
+    LIBRARY_PATH,
+    applyRouteMeta(
+      shell,
+      {
+        path: LIBRARY_PATH,
+        title: LIBRARY_TITLE,
+        description: LIBRARY_DESCRIPTION,
+        index: false,
+      },
+      host,
+    ),
+  );
   writeRoute(
     dist,
     '/success',

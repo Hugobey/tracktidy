@@ -10,6 +10,7 @@
   ],
   "rewrites": [
     { "source": "/app", "destination": "/app/index.html" },
+    { "source": "/pro", "destination": "/pro/index.html" },
     { "source": "/privacy-policy", "destination": "/privacy-policy/index.html" },
     { "source": "/terms-of-use", "destination": "/terms-of-use/index.html" },
     { "source": "/cookie-policy", "destination": "/cookie-policy/index.html" },

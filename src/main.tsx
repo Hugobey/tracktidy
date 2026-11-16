@@ -12,9 +12,11 @@ import './styles/guides.css';
 import App from './App.tsx';
 import { disableAnalytics } from './lib/analytics.ts';
 import { applyDeviceQuery, isOwnerDevice } from './lib/device.ts';
+import { applyProQuery } from './lib/pro.ts';
 import { stopPostHog } from './lib/posthog-client.ts';
 
 applyDeviceQuery();
+applyProQuery();
 if (isOwnerDevice()) {
   disableAnalytics();
   stopPostHog();

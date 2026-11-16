@@ -12,6 +12,11 @@ export const ANALYTICS_EVENTS = [
   'filename_generated',
   'file_downloaded',
   'processing_failed',
+  'upgrade_modal_opened',
+  'pro_checkout_started',
+  'pro_license_activated',
+  'pro_restored',
+  'pro_signed_out',
 ] as const;
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];

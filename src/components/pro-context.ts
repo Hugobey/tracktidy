@@ -10,10 +10,13 @@ export type ProContextValue = {
   modalOpen: boolean;
   portalUrl: string;
   checkoutReady: boolean;
+  banner: boolean;
   openUpgrade: () => void;
   closeUpgrade: () => void;
   dismissNudge: () => void;
+  dismissBanner: () => void;
   activate: (licenseKey: string) => Promise<string | null>;
+  restore: (email: string) => Promise<string | null>;
   startCheckout: (email: string) => string | null;
   signOut: () => void;
   toggleDemo: () => void;
@@ -34,10 +37,13 @@ export function usePro(): ProContextValue {
     modalOpen: false,
     portalUrl: 'https://app.lemonsqueezy.com/my-orders',
     checkoutReady: false,
+    banner: false,
     openUpgrade: () => undefined,
     closeUpgrade: () => undefined,
     dismissNudge: () => undefined,
+    dismissBanner: () => undefined,
     activate: async () => 'Pro is not available on this screen.',
+    restore: async () => 'Pro restore is not connected on this build yet.',
     startCheckout: () => 'Checkout is not connected on this build yet.',
     signOut: () => undefined,
     toggleDemo: () => undefined,

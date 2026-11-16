@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AnalysisScreen, type Stage } from '../components/AnalysisScreen.tsx';
 import { Atmosphere } from '../components/Atmosphere.tsx';
 import { trackEvent } from '../lib/analytics.ts';
+import { posthogLogger } from '../lib/posthog-client.ts';
 import { offerCrateFiles } from '../lib/crate-files.ts';
 import { isProUser, recordCompletedProcess } from '../lib/pro.ts';
 import type { ImageMime } from '../lib/artwork.ts';
@@ -346,6 +347,10 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     trackEvent('metadata_analysis_completed', {
       bpm_tag: parsed.fields.bpm.trim() ? 'yes' : 'no',
       key_tag: parsed.fields.key.trim() ? 'yes' : 'no',
+    });
+    posthogLogger.info('track_import_completed', {
+      has_embedded_artwork: Boolean(parsed.coverUrl),
+      additional_files_selected: extra,
     });
     const next: TrackState = {
       name: file.name,
@@ -740,6 +745,9 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
         const extra = result.notice ? ` ${result.notice}` : '';
         setExportNote(`Downloaded ${name}.${extra}`.trim());
         trackEvent('file_downloaded');
+        posthogLogger.info('track_download_completed', {
+          artwork_updated: current.coverChanged,
+        });
       })
       .catch(() => {
         setExportError(true);
