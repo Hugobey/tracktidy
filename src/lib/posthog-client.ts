@@ -1,7 +1,13 @@
 import { posthogKey } from './posthog-config.ts';
 
+type LogAttributes = Record<string, string | boolean>;
+
 type CaptureClient = {
   capture: (event: string, properties?: Record<string, unknown>) => void;
+  logger: {
+    info: (message: string, attributes?: LogAttributes) => void;
+    warn: (message: string, attributes?: LogAttributes) => void;
+  };
   opt_out_capturing: () => void;
   opt_in_capturing: () => void;
 };
@@ -24,6 +30,10 @@ export function captureProductEvent(name: string, properties: Record<string, str
     return;
   }
   client.capture(name, properties);
+}
+
+export function capturePostHogLog(level: 'info' | 'warn', message: string, attributes: LogAttributes): void {
+  client?.logger[level](message, attributes);
 }
 
 function clearPostHogStorage(): void {
@@ -50,6 +60,7 @@ function clearPostHogStorage(): void {
 export function stopPostHog(): void {
   queue.length = 0;
   client?.opt_out_capturing();
+  client = null;
   clearPostHogStorage();
 }
 

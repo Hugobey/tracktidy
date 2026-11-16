@@ -1,22 +1,31 @@
-export const DEFAULT_POSTHOG_HOST = 'https://eu.i.posthog.com';
+const reportedMissingVariables = new Set<string>();
 
-/** A project key is public in the browser. An empty or invalid value leaves PostHog off. */
+function reportMissingPostHogVariable(name: string): void {
+  if (!import.meta.env.DEV || reportedMissingVariables.has(name)) return;
+  reportedMissingVariables.add(name);
+  console.error(
+    new Error(
+      `${name} variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once ${name} is configured`,
+    ),
+  );
+}
+
 export function posthogKey(raw: string | undefined = import.meta.env.VITE_POSTHOG_KEY): string | null {
-  if (typeof raw !== 'string') return null;
-  const key = raw.trim();
-  if (!/^phc_[A-Za-z0-9]{10,}$/.test(key)) return null;
+  const key = raw?.trim();
+  if (!key) {
+    reportMissingPostHogVariable('VITE_POSTHOG_KEY');
+    return null;
+  }
   return key;
 }
 
-export function posthogHost(raw: string | undefined = import.meta.env.VITE_POSTHOG_HOST): string {
-  if (typeof raw !== 'string' || raw.trim() === '') return DEFAULT_POSTHOG_HOST;
-  try {
-    const url = new URL(raw.trim());
-    if (url.protocol !== 'https:') return DEFAULT_POSTHOG_HOST;
-    return url.origin;
-  } catch {
-    return DEFAULT_POSTHOG_HOST;
+export function posthogHost(raw: string | undefined = import.meta.env.VITE_POSTHOG_HOST): string | null {
+  const host = raw?.trim();
+  if (!host) {
+    reportMissingPostHogVariable('VITE_POSTHOG_HOST');
+    return null;
   }
+  return host;
 }
 
 /** Drops a query string and hash so a page view is only the path. */
