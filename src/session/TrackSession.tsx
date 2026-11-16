@@ -4,6 +4,7 @@ import { AnalysisScreen, type Stage } from '../components/AnalysisScreen.tsx';
 import { Atmosphere } from '../components/Atmosphere.tsx';
 import { trackEvent } from '../lib/analytics.ts';
 import type { ImageMime } from '../lib/artwork.ts';
+import { posthogProcessingLogger } from '../lib/posthog-logs.ts';
 import { DEFAULT_TEMPLATE, renderFilename } from '../lib/filename.ts';
 import { formatBitrate, formatBytes, formatChannels, formatDuration, formatSampleRate } from '../lib/format.ts';
 import type { TrackFields } from '../lib/types.ts';
@@ -266,6 +267,7 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     setTrack(null);
     trackRef.current = null;
     trackEvent('file_upload_started');
+    posthogProcessingLogger.info('mp3_processing_started', { has_extra_files: extra });
 
     let lib: Tools;
     try {
@@ -331,6 +333,7 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
 
     rememberCover(parsed.coverUrl);
     trackEvent('file_upload_completed');
+    posthogProcessingLogger.info('mp3_metadata_read', { has_embedded_artwork: Boolean(parsed.coverUrl) });
     trackEvent('metadata_analysis_completed', {
       bpm_tag: parsed.fields.bpm.trim() ? 'yes' : 'no',
       key_tag: parsed.fields.key.trim() ? 'yes' : 'no',
@@ -722,11 +725,13 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
         const extra = result.notice ? ` ${result.notice}` : '';
         setExportNote(`Downloaded ${name}.${extra}`.trim());
         trackEvent('file_downloaded');
+        posthogProcessingLogger.info('mp3_export_completed', { artwork_changed: current.coverChanged });
       })
       .catch(() => {
         setExportError(true);
         setExportNote('The file could not be prepared. Your original file was not changed.');
         trackEvent('processing_failed', { stage: 'export' });
+        posthogProcessingLogger.warn('mp3_export_failed', { stage: 'export' });
       })
       .finally(() => setExporting(false));
   }
