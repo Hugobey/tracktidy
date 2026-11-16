@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from './Button.tsx';
 import { GuideThemeToggle } from './GuideThemeToggle.tsx';
 import { Logo } from './Logo.tsx';
+import { ProAccount } from './ProAccount.tsx';
 import { SiteFooter } from './SiteFooter.tsx';
 import { SiteHead } from './SiteHead.tsx';
 import { SiteNav } from './SiteNav.tsx';
@@ -32,6 +33,7 @@ export function GuideShell({ title, description, path, ogType = 'website', image
           <SiteNav current="guides" />
           <GuideThemeToggle />
           <Button to="/#upload">Clean your first track</Button>
+          <ProAccount />
         </div>
       </header>
       <main id="content" className="guides-main">

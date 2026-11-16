@@ -13,19 +13,21 @@ export default function TermsPage() {
       kicker="Terms"
       heading="Terms of use"
     >
-      <p>Last updated: 8 November 2026.</p>
+      <p>Last updated: 16 November 2026.</p>
       <p>
-        TrackTidy is a free browser tool published under the {PUBLISHER.brand} brand. It reads one MP3 at a time,
-        shows and edits supported tags, can measure tempo, estimates musical key, builds a filename, and downloads
-        the file. Processing happens in your browser. There is no account. These terms are not a certificate of legal
-        compliance.
+        TrackTidy is a browser tool published under the {PUBLISHER.brand} brand. The free editor reads one MP3 at a
+        time, shows and edits supported tags, can measure tempo, estimates musical key, builds a filename, and
+        downloads the file. Processing happens in your browser. There is no password account. Pro is an optional
+        license checked with Lemon Squeezy. It unlocks tag editing across extra MP3s in the same tab. These terms are
+        not a certificate of legal compliance.
       </p>
 
       <h2>Using the tool</h2>
       <p>
         You may use TrackTidy for files you have the right to edit. You are responsible for the copyright and other
         rights in those files, and for checking the tags and the filename before you play, share, or sell the result.
-        The service handles one file at a time. It is not a music library, and it does not edit a batch of files.
+        The free editor handles one file at a time. Pro can clean extra MP3s in the open tab and download them as one
+        ZIP. It is not a music library. The audio is not uploaded.
       </p>
       <p>
         Do not use the site to attack it, to probe it for someone else’s files, or to distribute malware. Do not send

@@ -23,6 +23,7 @@ export type PrerenderRoute = {
   description: string;
   ogType?: 'website' | 'article';
   image?: string;
+  index?: boolean;
 };
 
 function escapeAttr(value: string): string {
@@ -43,7 +44,7 @@ export function applyRouteMeta(html: string, route: PrerenderRoute, origin: stri
   const image = route.image ? new URL(route.image, `${origin}/`).href : `${origin}/og.png`;
   let next = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`);
   next = setMeta(next, 'name', 'description', description);
-  next = setMeta(next, 'name', 'robots', 'index,follow');
+  next = setMeta(next, 'name', 'robots', route.index === false ? 'noindex,nofollow' : 'index,follow');
   next = next.replace(/<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${canonical}" />`);
   next = setMeta(next, 'property', 'og:title', title);
   next = setMeta(next, 'property', 'og:description', description);
@@ -82,6 +83,20 @@ export function prerenderDist(dist = join(process.cwd(), 'dist'), origin?: strin
   for (const route of INDEXABLE_ROUTES) {
     writeRoute(dist, route.path, applyRouteMeta(shell, route, host));
   }
+  writeRoute(
+    dist,
+    '/success',
+    applyRouteMeta(
+      shell,
+      {
+        path: '/success',
+        title: 'TrackTidy Pro activation',
+        description: 'Activate a TrackTidy Pro license on this browser.',
+        index: false,
+      },
+      host,
+    ),
+  );
 
   const guides = readGuideFiles(ROOT);
   writeRoute(

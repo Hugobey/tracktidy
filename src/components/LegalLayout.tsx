@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Atmosphere } from './Atmosphere.tsx';
 import { Button } from './Button.tsx';
 import { Logo } from './Logo.tsx';
+import { ProAccount } from './ProAccount.tsx';
 import { SiteFooter } from './SiteFooter.tsx';
 import { SiteHead } from './SiteHead.tsx';
 import { SiteNav } from './SiteNav.tsx';
@@ -32,6 +33,7 @@ export function LegalLayout({ title, description, path, index = true, kicker, he
           </Link>
           <SiteNav />
           <Button to="/#upload">Clean your first track</Button>
+          <ProAccount />
         </div>
       </header>
       <main id="content" className="legal-main">

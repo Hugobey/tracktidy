@@ -14,7 +14,7 @@ export default function PrivacyPage() {
       kicker="Privacy"
       heading="Privacy policy"
     >
-      <p>Last updated: 15 November 2026.</p>
+      <p>Last updated: 16 November 2026.</p>
       <p>
         This policy describes the TrackTidy website as it works today. It is not a certificate of legal compliance.
         The controller is the {PUBLISHER.status} who publishes the {PUBLISHER.brand} brand. Privacy requests:{' '}
@@ -32,8 +32,23 @@ export default function PrivacyPage() {
       </p>
       <p>
         WAV, AIFF, FLAC, M4A, and other unsupported files are refused in the browser and are not sent anywhere. There
-        is no account and no contact form. A message you send to {PUBLISHER.hello}, {PUBLISHER.support}, or{' '}
+        is no password account and no contact form. A message you send to {PUBLISHER.hello}, {PUBLISHER.support}, or{' '}
         {PUBLISHER.privacy} is handled by your email provider. Those three addresses are aliases to one inbox.
+      </p>
+
+      <h2>TrackTidy Pro</h2>
+      <p>
+        Pro is optional. The free editor still handles one MP3 at a time in this browser. Checkout, when it is
+        connected, opens on Lemon Squeezy with the email you type so the receipt can be filled in. A license key you
+        paste is sent to Lemon Squeezy to check that it is active. The audio file is not part of that request.
+        Lemon Squeezy is the seller of record for the payment. TrackTidy does not store a card number.
+      </p>
+      <p>
+        A successful check stores <code>tt_user_pro</code>, <code>tt_license_key</code>, <code>tt_user_email</code>,
+        and the activation id in local storage on this browser. <code>tt_process_count</code> counts completed opens
+        on this browser and is used only to show a note about Pro. Demo mode, when a development build shows it, stays
+        in session storage for that tab. Clearing site data removes Pro from this browser. Manage billing opens the
+        Lemon Squeezy customer portal.
       </p>
 
       <h2>What is processed, and why</h2>
@@ -140,8 +155,8 @@ export default function PrivacyPage() {
 
       <h2>How long data is kept</h2>
       <p>
-        Audio and tags are not stored by TrackTidy. The template, the consent choice, and the device marker remain in
-        your browser until you change or delete them. Analytics retention is the period set in the Google Analytics
+        Audio and tags are not stored by TrackTidy. The template, the consent choice, the device marker, and any Pro
+        license saved in this browser remain until you change or delete them. Analytics retention is the period set in the Google Analytics
         property. This website does not set that period. It should be configured in Google Analytics before launch.
         PostHog commonly keeps its cookie for up to one year. Vercel discards the Web Analytics visitor hash after 24
         hours. Any longer retention of those page views is set by Vercel or PostHog, not by this website.

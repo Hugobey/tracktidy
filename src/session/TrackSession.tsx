@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AnalysisScreen, type Stage } from '../components/AnalysisScreen.tsx';
 import { Atmosphere } from '../components/Atmosphere.tsx';
 import { trackEvent } from '../lib/analytics.ts';
+import { offerCrateFiles } from '../lib/crate-files.ts';
+import { isProUser, recordCompletedProcess } from '../lib/pro.ts';
 import type { ImageMime } from '../lib/artwork.ts';
 import { DEFAULT_TEMPLATE, renderFilename } from '../lib/filename.ts';
 import { formatBitrate, formatBytes, formatChannels, formatDuration, formatSampleRate } from '../lib/format.ts';
@@ -167,6 +169,7 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
   const filenameKey = useRef('');
   const phaseRef = useRef<Phase>('idle');
   const ingestRef = useRef<(file: File, extra: boolean) => void>(() => {});
+  const pendingExtras = useRef<File[]>([]);
 
   useEffect(() => {
     trackRef.current = track;
@@ -244,12 +247,21 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
   }
 
   function acceptFiles(list: FileList | File[]) {
-    const file = list[0];
+    const files = Array.from(list);
+    const file = files[0];
     if (!file) return;
-    openFile(file, list.length > 1);
+    pendingExtras.current = files.slice(1);
+    openFile(file, files.length > 1);
+  }
+
+  function dismissPrompt() {
+    pendingExtras.current = [];
+    setPrompt(null);
   }
 
   async function ingest(file: File, extra: boolean) {
+    const extras = pendingExtras.current;
+    pendingExtras.current = [];
     const id = ++loadId.current;
     editedFields.current = new Set();
     filenameKey.current = '';
@@ -359,6 +371,11 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     };
     trackRef.current = next;
     setTrack(next);
+    recordCompletedProcess();
+    if (extra && extras.length > 0 && isProUser()) {
+      offerCrateFiles(extras);
+      setExtraNote('The first file opens here. The other MP3s wait in the crate view.');
+    }
     void analyse(id, buffer);
     if (!parsed.coverUrl && parsed.fields.artist.trim() && parsed.fields.title.trim()) {
       void lookupCover(id, parsed.fields);
@@ -598,6 +615,7 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
   }
 
   function closeTrack() {
+    pendingExtras.current = [];
     loadId.current += 1;
     audioRef.current = null;
     rememberCover(null);
@@ -789,7 +807,7 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     analysisProblem,
     acceptFiles,
     openFile,
-    dismissPrompt: () => setPrompt(null),
+    dismissPrompt,
     confirmPrompt: () => {
       const current = prompt;
       if (!current) return;

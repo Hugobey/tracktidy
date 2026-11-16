@@ -14,7 +14,7 @@ export default function CookiePolicyPage() {
       kicker="Cookies"
       heading="Cookie policy"
     >
-      <p>Last updated: 15 November 2026.</p>
+      <p>Last updated: 16 November 2026.</p>
       <p>
         This page lists only the storage the site uses. Analytics cookies are optional. The banner offers Accept and
         Reject at the same time. Cookie settings in the footer opens that choice again.
@@ -37,6 +37,18 @@ export default function CookiePolicyPage() {
           Purpose: leave that browser out of analytics even if its network address changes. It is not set on an
           ordinary visit. Duration: until site data is cleared. The cookie is refreshed on later visits. It is not an
           advertising cookie.
+        </li>
+        <li>
+          <code>tt_process_count</code>, <code>tt_user_pro</code>, <code>tt_license_key</code>, <code>tt_user_email</code>,{' '}
+          <code>tt_license_instance</code>, and <code>tt_license_instance_name</code> in local storage. Purpose: remember
+          how many tracks were opened, and whether Pro is active on this browser. Duration: until you sign out of this
+          browser or clear site data. These are not cookies. The license check is described in the{' '}
+          <Link to="/privacy-policy">privacy policy</Link>.
+        </li>
+        <li>
+          <code>tt_nudge_later</code> and, in a development build, <code>tt_demo_pro</code> in session storage. Purpose:
+          hide the Pro note for this visit, or unlock the crate while testing. Duration: until the tab closes. These
+          are not cookies.
         </li>
       </ul>
       <p>

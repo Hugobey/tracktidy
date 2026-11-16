@@ -609,6 +609,43 @@ html[data-guide-theme='dark'] body:has(.guides-page) {
   color-scheme: dark;
 }
 
+.guides-page .pro-link { color: var(--g-muted); }
+
+.guides-page .pro-link:hover,
+.guides-page .pro-link[aria-pressed='true'] { color: var(--g-ink); }
+
+.guides-page .pro-badge {
+  color: var(--g-ink);
+  border-color: var(--g-line);
+  background: var(--g-fill);
+}
+
+.guides-page .pro-demo-mark,
+.guides-page .pro-pop-email { color: var(--g-muted); }
+
+body:has(.guides-page) .pro-pop,
+body:has(.guides-page) .pro-modal {
+  background: var(--g-sheet);
+  color: var(--g-ink);
+  border-color: var(--g-line);
+  box-shadow: var(--g-shadow);
+}
+
+body:has(.guides-page) .pro-pop a,
+body:has(.guides-page) .pro-pop button,
+body:has(.guides-page) .pro-modal h2 { color: var(--g-ink); }
+
+body:has(.guides-page) .pro-modal p,
+body:has(.guides-page) .pro-note,
+body:has(.guides-page) .pro-demo { color: var(--g-body); }
+
+body:has(.guides-page) .pro-field input,
+body:has(.guides-page) .pro-modal input {
+  background: var(--g-fill);
+  color: var(--g-ink);
+  border-color: var(--g-line);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .guide-grid a,
   .guides-page .btn {

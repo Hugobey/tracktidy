@@ -5,6 +5,8 @@ import { Atmosphere } from '../components/Atmosphere.tsx';
 import { Button } from '../components/Button.tsx';
 import { FileDrop } from '../components/FileDrop.tsx';
 import { Logo } from '../components/Logo.tsx';
+import { ProAccount } from '../components/ProAccount.tsx';
+import { ProNudge } from '../components/ProNudge.tsx';
 import { SiteFooter } from '../components/SiteFooter.tsx';
 import { SiteHead } from '../components/SiteHead.tsx';
 import { SiteNav } from '../components/SiteNav.tsx';
@@ -117,6 +119,7 @@ export default function LandingPage() {
             <Logo />
           </Link>
           <SiteNav home />
+          <ProAccount />
         </div>
       </header>
 
@@ -127,7 +130,7 @@ export default function LandingPage() {
             <h1 className="enter d2">
               Your tracks.
               <br />
-              <span className="accent">Perfectly organized.</span>
+              <span className="accent">Finally clean.</span>
             </h1>
             <p className="lede enter d3">
               Clean metadata. Detect BPM. Rename your tracks. Get your music ready to play.
@@ -139,6 +142,7 @@ export default function LandingPage() {
             </p>
           ) : null}
           <FileDrop hot={hot} error={session.phase === 'idle' ? session.importError : null} onFile={session.openFile} />
+          <ProNudge />
           <p className="reassure">One track at a time. In the browser. No account.</p>
         </section>
 

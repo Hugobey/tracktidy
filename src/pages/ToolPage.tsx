@@ -5,8 +5,11 @@ import { Atmosphere } from '../components/Atmosphere.tsx';
 import { Button } from '../components/Button.tsx';
 import { ErrorBanner } from '../components/ErrorBanner.tsx';
 import { FileDrop } from '../components/FileDrop.tsx';
+import { CrateGrid } from '../components/CrateGrid.tsx';
 import { Logo } from '../components/Logo.tsx';
 import { MetadataEditor } from '../components/MetadataEditor.tsx';
+import { ProAccount } from '../components/ProAccount.tsx';
+import { ProNudge } from '../components/ProNudge.tsx';
 import { SiteFooter } from '../components/SiteFooter.tsx';
 import { SiteHead } from '../components/SiteHead.tsx';
 import { Waveform } from '../components/Waveform.tsx';
@@ -78,22 +81,25 @@ export default function ToolPage() {
       <a className="skip" href="#content">
         Skip to content
       </a>
-      {editing ? (
-        <header className="appbar">
-          <Link to="/" className="logo-link" aria-label="TrackTidy, home">
-            <Logo />
-          </Link>
-          <p className="appbar-kicker">Edited result</p>
-          <div className="appbar-actions">
-            <Button variant="secondary" onClick={session.requestClose}>
-              New track
-            </Button>
-            <Button variant="primary" disabled={!preview.file || session.exporting} onClick={session.onDownload}>
-              {session.exporting ? 'Preparing…' : 'Download'}
-            </Button>
-          </div>
-        </header>
-      ) : null}
+      <header className="appbar">
+        <Link to="/" className="logo-link" aria-label="TrackTidy, home">
+          <Logo />
+        </Link>
+        {editing ? <p className="appbar-kicker">Edited result</p> : null}
+        <div className="appbar-actions">
+          <ProAccount />
+          {editing ? (
+            <>
+              <Button variant="secondary" onClick={session.requestClose}>
+                New track
+              </Button>
+              <Button variant="primary" disabled={!preview.file || session.exporting} onClick={session.onDownload}>
+                {session.exporting ? 'Preparing…' : 'Download'}
+              </Button>
+            </>
+          ) : null}
+        </div>
+      </header>
 
       {session.exportNote ? (
         session.exportError ? (
@@ -116,7 +122,27 @@ export default function ToolPage() {
       <main id="content" className="workspace">
         {editing ? (
           <section className="studio stage-in">
+            <ProNudge />
             <ResultCompare name={track.name} fileFields={track.fileFields} fields={track.fields} preview={preview} />
+            <CrateGrid
+              lead={{
+                name: track.name,
+                buffer: track.buffer,
+                original: track.fileFields,
+                fields: track.fields,
+                remixFrame: track.remixFrame,
+                fallback: track.fallback,
+                artwork:
+                  track.coverChanged && track.coverBytes && track.coverMime
+                    ? { data: track.coverBytes, mime: track.coverMime }
+                    : track.coverChanged
+                      ? 'remove'
+                      : 'keep',
+              }}
+              template={session.template}
+              onLeadField={session.updateField}
+              onTemplate={session.updateTemplate}
+            />
             <div className="file-col">
               <div className="file-heading">
                 <div>
@@ -174,6 +200,7 @@ export default function ToolPage() {
               Refreshing this page clears the file. TrackTidy reads it in the browser and does not keep a copy.
             </p>
             <FileDrop hot={dragOver} error={session.importError} onFile={session.openFile} />
+            <ProNudge />
             <p className="editor-home">
               <Link to="/">Back to the homepage</Link>
             </p>
