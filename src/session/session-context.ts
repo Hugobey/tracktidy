@@ -70,6 +70,7 @@ export type TrackSessionValue = {
   stages: Stage[];
   analysisProblem: string;
   fromLibrary: boolean;
+  editorTrackId: string | null;
   acceptFiles: (list: FileList | File[]) => void;
   openFile: (file: File, extra: boolean) => void;
   openLibraryTrack: (track: LibraryEditorTrack) => void;

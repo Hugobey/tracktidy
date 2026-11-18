@@ -4,6 +4,8 @@ import { AnalysisScreen, type Stage } from '../components/AnalysisScreen.tsx';
 import { Atmosphere } from '../components/Atmosphere.tsx';
 import { trackEvent } from '../lib/analytics.ts';
 import { posthogLogger } from '../lib/posthog-client.ts';
+import { useWorkspace } from '../context/WorkspaceContext.tsx';
+import { fieldsFromMetadata } from '../types/track.ts';
 import { offerCrateFiles } from '../lib/crate-files.ts';
 import { stashEditorFields, upsertAnalyzedTrack, writeCrateFields, writeCrateFieldsBySource, type LibraryEditorTrack } from '../lib/library-link.ts';
 import { CRATE_MULTI_FLAG, isProUser, recordCompletedProcess } from '../lib/pro.ts';
@@ -175,6 +177,13 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
   const ingestRef = useRef<(file: File, extra: boolean) => void>(() => {});
   const pendingExtras = useRef<File[]>([]);
   const libraryIdRef = useRef<string | null>(null);
+  const sourceFileRef = useRef<File | null>(null);
+  const [editorTrackId, setEditorTrackId] = useState<string | null>(null);
+  const workspace = useWorkspace();
+  const workspaceRef = useRef(workspace);
+  useEffect(() => {
+    workspaceRef.current = workspace;
+  });
   const libraryGen = useRef(0);
   const syncTimer = useRef<number | null>(null);
   const saveGate = useRef<Promise<void>>(Promise.resolve());
@@ -234,8 +243,22 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   function rememberCover(url: string | null) {
-    if (coverRef.current) URL.revokeObjectURL(coverRef.current);
+    const previous = coverRef.current;
     coverRef.current = url;
+    if (!previous || previous === url) return;
+    if (!workspaceRef.current.coverInUse(previous)) URL.revokeObjectURL(previous);
+  }
+
+  async function bytesFromCover(url: string): Promise<{ bytes: Uint8Array; mime: ImageMime } | null> {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      const mime: ImageMime = blob.type === 'image/png' ? 'image/png' : 'image/jpeg';
+      return { bytes: new Uint8Array(await blob.arrayBuffer()), mime };
+    } catch {
+      return null;
+    }
   }
 
   function openFile(file: File, extra: boolean) {
@@ -292,6 +315,19 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     const generation = libraryGen.current;
     const requestedId = libraryIdRef.current ?? crypto.randomUUID();
     if (!libraryIdRef.current) libraryIdRef.current = requestedId;
+    setEditorTrackId(requestedId);
+    workspaceRef.current.adoptEditorTrack({
+      id: requestedId,
+      file: sourceFileRef.current,
+      buffer: current.buffer,
+      sourceName: current.name,
+      fields: { ...current.fields },
+      original: { ...current.fileFields },
+      coverUrl: current.coverUrl,
+      waveformPeaks: current.peaks,
+      remixFrame: current.remixFrame,
+      fallback: current.fallback,
+    });
     const snapshot: LibraryEditorTrack = {
       id: requestedId,
       sourceName: current.name,
@@ -336,6 +372,7 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
   }
 
   function openCrate() {
+    workspaceRef.current.setViewMode('crate');
     void flushLibrary().finally(() => navigate('/pro'));
   }
 
@@ -344,7 +381,19 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     const current = trackRef.current;
     if (!current) return;
     syncCrate(current.name, current.fields);
+    const id = libraryIdRef.current;
+    if (!id) return;
+    workspaceRef.current.mirrorMetadata(id, current.fields);
   }, [fieldKey]);
+
+  const peakMark = track?.peaks?.length ?? -1;
+  const coverMark = track?.coverUrl ?? '';
+  useEffect(() => {
+    const current = trackRef.current;
+    const id = libraryIdRef.current;
+    if (!current || !id) return;
+    workspaceRef.current.mirrorMedia(id, { coverUrl: current.coverUrl, waveformPeaks: current.peaks });
+  }, [peakMark, coverMark]);
 
   async function openLibraryTrack(input: LibraryEditorTrack) {
     const id = ++loadId.current;
@@ -352,6 +401,35 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     if (id !== loadId.current) return;
     libraryGen.current += 1;
     libraryIdRef.current = input.id;
+    setEditorTrackId(input.id);
+    const held = workspaceRef.current.trackById(input.id);
+    sourceFileRef.current = held?.file && held.file.size > 0 ? held.file : new File([input.buffer], input.sourceName, { type: 'audio/mpeg' });
+    workspaceRef.current.openTrack(input.id);
+    const preliminary: TrackState = {
+      name: input.sourceName,
+      size: input.buffer.byteLength,
+      buffer: input.buffer,
+      fileFields: { ...input.original },
+      fields: { ...(held ? fieldsFromMetadata(held.currentMetadata) : input.fields) },
+      remixFrame: input.remixFrame,
+      technical: { duration: null, bitrate: null, sampleRate: null, channels: null },
+      kept: [],
+      coverUrl: held?.coverUrl ?? null,
+      coverBytes: null,
+      coverMime: null,
+      embeddedCover: null,
+      hadCover: Boolean(held?.coverUrl),
+      coverFrom: held?.coverUrl ? 'file' : null,
+      coverChanged: false,
+      plan: { canPatch: true, hasV1: false, notice: null },
+      fallback: input.fallback,
+      peaks: held?.waveformPeaks ?? null,
+      waveformError: null,
+      analysis: emptyAnalysis(),
+    };
+    trackRef.current = preliminary;
+    setTrack(preliminary);
+    setPhase('edit');
     setFromLibrary(true);
     editedFields.current = new Set();
     setExtraNote(null);
@@ -387,26 +465,63 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
       if (coverUrl) URL.revokeObjectURL(coverUrl);
       return;
     }
-    rememberCover(coverUrl);
+    const opened = workspaceRef.current.trackById(input.id);
+    const openedCover = opened?.coverUrl && !opened.coverRemoved ? await bytesFromCover(opened.coverUrl) : null;
+    if (id !== loadId.current) {
+      if (coverUrl) URL.revokeObjectURL(coverUrl);
+      return;
+    }
+    const latest = workspaceRef.current.trackById(input.id);
+    const live = trackRef.current;
+    let sessionCoverUrl = coverUrl;
+    let sessionBytes = coverBytes;
+    let sessionMime = coverMime;
+    let sessionFrom: TrackState['coverFrom'] = coverUrl ? 'file' : null;
+    let sessionChanged = false;
+    if (latest?.coverRemoved) {
+      if (coverUrl) URL.revokeObjectURL(coverUrl);
+      sessionCoverUrl = null;
+      sessionBytes = null;
+      sessionMime = null;
+      sessionFrom = null;
+      sessionChanged = Boolean(coverBytes);
+    } else if (latest?.coverUrl) {
+      if (coverUrl && coverUrl !== latest.coverUrl) URL.revokeObjectURL(coverUrl);
+      sessionCoverUrl = latest.coverUrl;
+      const fromLive = live?.coverUrl === latest.coverUrl && live.coverBytes ? { bytes: live.coverBytes, mime: live.coverMime } : null;
+      const fromOpened = opened?.coverUrl === latest.coverUrl ? openedCover : null;
+      const chosen = fromLive ?? (fromOpened ? { bytes: fromOpened.bytes, mime: fromOpened.mime } : null);
+      if (chosen?.bytes && chosen.mime) {
+        sessionBytes = chosen.bytes;
+        sessionMime = chosen.mime;
+        const same = Boolean(coverBytes && lib.bytesEqual(coverBytes, chosen.bytes));
+        sessionFrom = same ? 'file' : 'upload';
+        sessionChanged = !same;
+      } else {
+        sessionBytes = null;
+        sessionMime = null;
+      }
+    }
+    rememberCover(sessionCoverUrl);
     const next: TrackState = {
       name: input.sourceName,
       size: input.buffer.byteLength,
       buffer: input.buffer,
       fileFields: { ...input.original },
-      fields: { ...input.fields },
+      fields: { ...(latest ? fieldsFromMetadata(latest.currentMetadata) : input.fields) },
       remixFrame,
       technical,
       kept,
-      coverUrl,
-      coverBytes,
-      coverMime,
+      coverUrl: sessionCoverUrl,
+      coverBytes: sessionBytes,
+      coverMime: sessionMime,
       embeddedCover: coverBytes,
-      hadCover: Boolean(coverUrl),
-      coverFrom: coverUrl ? 'file' : null,
-      coverChanged: false,
+      hadCover: Boolean(coverBytes),
+      coverFrom: sessionFrom,
+      coverChanged: sessionChanged,
       plan,
       fallback,
-      peaks: null,
+      peaks: latest?.waveformPeaks ?? trackRef.current?.peaks ?? null,
       waveformError: null,
       analysis: emptyAnalysis(),
     };
@@ -424,6 +539,8 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     if (id !== loadId.current) return;
     libraryGen.current += 1;
     libraryIdRef.current = null;
+    sourceFileRef.current = file;
+    setEditorTrackId(null);
     setFromLibrary(false);
     editedFields.current = new Set();
     filenameKey.current = '';
@@ -777,6 +894,13 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     setTrack(next);
     setExportNote(null);
     if (next) syncCrate(next.name, next.fields);
+    const linked = libraryIdRef.current;
+    if (next && linked) {
+      workspaceRef.current.updateTrack(linked, {
+        [key]: value,
+        filename: renderFilename(template, next.fields).file,
+      });
+    }
     if (!editedFields.current.has(key)) {
       editedFields.current.add(key);
       trackEvent('metadata_edit_completed', { field: key });
@@ -784,6 +908,7 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
   }
 
   function returnToLibrary() {
+    workspaceRef.current.backToCrate();
     void flushLibrary().finally(() => navigate('/pro'));
   }
 
@@ -794,6 +919,11 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     } catch {
       /* The template still applies for this session. */
     }
+    const current = trackRef.current;
+    const linked = libraryIdRef.current;
+    if (current && linked) {
+      workspaceRef.current.updateTrack(linked, { filename: renderFilename(value, current.fields).file });
+    }
   }
 
   function closeTrack() {
@@ -803,6 +933,8 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     rememberCover(null);
     setTrack(null);
     trackRef.current = null;
+    setEditorTrackId(null);
+    workspaceRef.current.closeEditor();
     setPhase('idle');
     setPrompt(null);
     setExportNote(null);
@@ -860,6 +992,8 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
       const bytes = new Uint8Array(copy);
       const url = URL.createObjectURL(new Blob([copy], { type: mime }));
       rememberCover(url);
+      const linked = libraryIdRef.current;
+      if (linked) workspaceRef.current.updateTrack(linked, { coverArt: url });
       setArtworkNote(null);
       setTrack((current) =>
         current
@@ -880,6 +1014,8 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
 
   function removeArtwork() {
     rememberCover(null);
+    const linked = libraryIdRef.current;
+    if (linked) workspaceRef.current.updateTrack(linked, { coverArt: null });
     setArtworkNote(null);
     setTrack((current) =>
       current
@@ -991,6 +1127,7 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     stages,
     analysisProblem,
     fromLibrary,
+    editorTrackId,
     acceptFiles,
     openFile,
     openLibraryTrack: (trackToOpen) => {

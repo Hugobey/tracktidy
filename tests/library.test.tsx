@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { ConsentProvider } from '../src/components/Consent.tsx';
+import { WorkspaceProvider } from '../src/context/WorkspaceContext.tsx';
 import LibraryPage from '../src/pages/LibraryPage.tsx';
 
 describe('pro library page', () => {
@@ -9,7 +10,9 @@ describe('pro library page', () => {
     const html = renderToStaticMarkup(
       <MemoryRouter initialEntries={['/pro']}>
         <ConsentProvider>
-          <LibraryPage />
+          <WorkspaceProvider>
+            <LibraryPage />
+          </WorkspaceProvider>
         </ConsentProvider>
       </MemoryRouter>,
     );

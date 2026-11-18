@@ -274,10 +274,13 @@
 }
 
 .lib-row {
+  height: 84px;
   min-height: 84px;
+  max-height: 84px;
   padding: 8px;
   border-bottom: 1px solid var(--lib-line);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .lib-row:hover { background: var(--lib-hover); }

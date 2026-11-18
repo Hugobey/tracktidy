@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { ConsentProvider } from '../src/components/Consent.tsx';
+import { WorkspaceProvider } from '../src/context/WorkspaceContext.tsx';
 import LandingPage from '../src/pages/LandingPage.tsx';
 import ToolPage from '../src/pages/ToolPage.tsx';
 import { TrackSessionProvider } from '../src/session/TrackSession.tsx';
@@ -11,7 +12,9 @@ function render(path: string, page: 'home' | 'editor'): string {
   return renderToStaticMarkup(
     <MemoryRouter initialEntries={[path]}>
       <ConsentProvider>
-        <TrackSessionProvider>{element}</TrackSessionProvider>
+        <WorkspaceProvider>
+          <TrackSessionProvider>{element}</TrackSessionProvider>
+        </WorkspaceProvider>
       </ConsentProvider>
     </MemoryRouter>,
   );

@@ -1,8 +1,9 @@
 import { useContext, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button.tsx';
+import { CrateLibrary } from '../components/CrateLibrary.tsx';
 import { GenreSelector } from '../components/GenreSelector.tsx';
-import { LibraryArray, TokenPills } from '../components/LibraryArray.tsx';
+import { TokenPills } from '../components/LibraryArray.tsx';
 import { Logo } from '../components/Logo.tsx';
 import { ProAccount } from '../components/ProAccount.tsx';
 import { SiteFooter } from '../components/SiteFooter.tsx';
@@ -37,6 +38,7 @@ import {
 } from '../lib/library-name.ts';
 import { takeEditorFields } from '../lib/library-link.ts';
 import { loadCrate, packCrate, saveCrate, unpackCrate } from '../lib/library-store.ts';
+import { useWorkspace } from '../context/WorkspaceContext.tsx';
 import { readTrack } from '../lib/metadata.ts';
 import { maxFileBytes, rejectionMessage } from '../lib/mp3.ts';
 import { PRO_COPY } from '../lib/pro.ts';
@@ -46,38 +48,6 @@ import { EMPTY_FIELDS, type TrackFields } from '../lib/types.ts';
 
 type CrateKind = 'demo' | 'files' | 'empty';
 
-type Snapshot = {
-  rows: LibraryTrack[];
-  tokens: LibraryToken[];
-  kind: CrateKind;
-};
-
-const HISTORY_LIMIT = 40;
-
-function seedRows(): LibraryTrack[] {
-  return DEMO_LIBRARY.map((track) => {
-    const original = { ...track.fields };
-    const fields = autoCleanFields(original);
-    return {
-      id: track.id,
-      sourceName: track.sourceName,
-      fields,
-      original,
-      cleaned: { ...fields },
-      buffer: null,
-      bands: null,
-      analysing: false,
-      coverUrl: null,
-      skeleton: false,
-      scanning: false,
-      failed: false,
-      enterDelay: 0,
-      remixFrame: 'TIT3',
-      fallback: null,
-    };
-  });
-}
-
 function cloneTrack(row: LibraryTrack): LibraryTrack {
   return {
     ...row,
@@ -86,10 +56,6 @@ function cloneTrack(row: LibraryTrack): LibraryTrack {
     original: { ...row.original },
     bands: row.bands ? row.bands.map((band) => ({ ...band })) : null,
   };
-}
-
-function cloneTokens(tokens: LibraryToken[]): LibraryToken[] {
-  return tokens.map((token) => ({ ...token }));
 }
 
 function failedTrack(sourceName: string, id: string): LibraryTrack {
@@ -171,9 +137,13 @@ async function readLibraryFile(file: File): Promise<LibraryTrack | string> {
 export default function LibraryPage() {
   const pro = usePro();
   const session = useContext(TrackSessionContext);
-  const [rows, setRows] = useState<LibraryTrack[]>(seedRows);
-  const [kind, setKind] = useState<CrateKind>('demo');
-  const [tokens, setTokens] = useState<LibraryToken[]>(DEFAULT_LIBRARY_TOKENS);
+  const navigate = useNavigate();
+  const workspace = useWorkspace();
+  const rows = workspace.libraryRows;
+  const kind = workspace.kind;
+  const tokens = workspace.tokens;
+  const undoCount = workspace.history.length;
+  const redoCount = workspace.future.length;
   const [loadId, setLoadId] = useState(0);
   const [filter, setFilter] = useState<LibraryFilter>('all');
   const [note, setNote] = useState<string | null>(null);
@@ -182,15 +152,13 @@ export default function LibraryPage() {
   const [dragOver, setDragOver] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [undoCount, setUndoCount] = useState(0);
-  const [redoCount, setRedoCount] = useState(0);
   const [genreDraft, setGenreDraft] = useState('');
   const [bpmDraft, setBpmDraft] = useState('');
   const [deleteArmed, setDeleteArmed] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const dragDepth = useRef(0);
   const run = useRef(0);
-  const rowsRef = useRef(rows);
+  const rowsRef = useRef<LibraryTrack[]>(rows);
   const tokensRef = useRef(tokens);
   const kindRef = useRef(kind);
   const proRef = useRef(pro.pro);
@@ -198,9 +166,8 @@ export default function LibraryPage() {
   const modalRef = useRef(pro.modalOpen);
   const selectedRef = useRef(selected);
   const openUpgradeRef = useRef(pro.openUpgrade);
+  const workspaceRef = useRef(workspace);
   const fileRef = useRef<HTMLInputElement>(null);
-  const past = useRef<Snapshot[]>([]);
-  const future = useRef<Snapshot[]>([]);
   const failedWaves = useRef(new Set<string>());
   const stops = useRef(new Set<string>());
   const deleteTimer = useRef<number | null>(null);
@@ -222,6 +189,7 @@ export default function LibraryPage() {
   }, [confirmClear]);
 
   useEffect(() => {
+    workspaceRef.current = workspace;
     rowsRef.current = rows;
     tokensRef.current = tokens;
     kindRef.current = kind;
@@ -289,8 +257,14 @@ export default function LibraryPage() {
   }, []);
 
   useEffect(() => {
+    const current = workspaceRef.current;
+    current.setViewMode('crate');
     let cancelled = false;
     void (async () => {
+      if (current.hasHydrated()) {
+        if (!cancelled) setHydrated(true);
+        return;
+      }
       let stored: Awaited<ReturnType<typeof loadCrate>> = null;
       try {
         stored = await loadCrate();
@@ -301,12 +275,15 @@ export default function LibraryPage() {
       if (stored && stored.rows) {
         const unpacked = unpackCrate(stored);
         const nextTokens = unpacked.tokens.length > 0 ? unpacked.tokens : DEFAULT_LIBRARY_TOKENS;
-        rowsRef.current = unpacked.rows;
-        tokensRef.current = nextTokens;
-        kindRef.current = unpacked.kind;
-        setRows(unpacked.rows);
-        setTokens(nextTokens);
-        setKind(unpacked.kind);
+        const view = current.finishHydrate({ kind: unpacked.kind, tokens: nextTokens, rows: unpacked.rows });
+        rowsRef.current = view.rows;
+        tokensRef.current = view.tokens;
+        kindRef.current = view.kind;
+      } else {
+        const view = current.finishHydrate(null);
+        rowsRef.current = view.rows;
+        tokensRef.current = view.tokens;
+        kindRef.current = view.kind;
       }
       if (!cancelled) setHydrated(true);
     })();
@@ -315,55 +292,40 @@ export default function LibraryPage() {
     };
   }, []);
 
-  function snapshot(): Snapshot {
-    return {
-      rows: rowsRef.current.map(cloneTrack),
-      tokens: cloneTokens(tokensRef.current),
-      kind: kindRef.current,
-    };
+  function setRows(action: LibraryTrack[] | ((current: LibraryTrack[]) => LibraryTrack[])) {
+    const current = rowsRef.current;
+    const next = typeof action === 'function' ? action(current) : action;
+    rowsRef.current = workspace.replaceRows(next);
   }
 
-  function publishHistory() {
-    setUndoCount(past.current.length);
-    setRedoCount(future.current.length);
+  function setKind(next: CrateKind) {
+    kindRef.current = next;
+    workspace.setKind(next);
   }
 
   function remember() {
-    past.current.push(snapshot());
-    if (past.current.length > HISTORY_LIMIT) past.current.shift();
-    future.current = [];
-    publishHistory();
-  }
-
-  function applySnapshot(next: Snapshot) {
-    const rowsNext = next.rows.map(cloneTrack);
-    const tokensNext = cloneTokens(next.tokens);
-    rowsRef.current = rowsNext;
-    tokensRef.current = tokensNext;
-    kindRef.current = next.kind;
-    setRows(rowsNext);
-    setTokens(tokensNext);
-    setKind(next.kind);
-    setSelected(new Set());
+    workspace.pushHistory();
   }
 
   function undo() {
-    const previous = past.current.pop();
-    if (!previous) return;
-    future.current.push(snapshot());
-    applySnapshot(previous);
-    publishHistory();
-    const missing = previous.rows.filter((row) => row.buffer && !row.bands && !row.failed);
+    const restored = workspace.undo();
+    if (!restored) return;
+    rowsRef.current = restored.rows;
+    tokensRef.current = restored.tokens;
+    kindRef.current = restored.kind;
+    setSelected(new Set());
+    const missing = restored.rows.filter((row) => row.buffer && !row.bands && !row.failed);
     if (missing.length > 0) void paintBands(missing);
   }
 
   function redo() {
-    const next = future.current.pop();
-    if (!next) return;
-    past.current.push(snapshot());
-    applySnapshot(next);
-    publishHistory();
-    const missing = next.rows.filter((row) => row.buffer && !row.bands && !row.failed);
+    const restored = workspace.redo();
+    if (!restored) return;
+    rowsRef.current = restored.rows;
+    tokensRef.current = restored.tokens;
+    kindRef.current = restored.kind;
+    setSelected(new Set());
+    const missing = restored.rows.filter((row) => row.buffer && !row.bands && !row.failed);
     if (missing.length > 0) void paintBands(missing);
   }
 
@@ -394,7 +356,8 @@ export default function LibraryPage() {
     for (const track of tracks) {
       if (!alive() || !track.buffer || failedWaves.current.has(track.id) || stops.current.has(track.id)) continue;
       const holder = rowsRef.current.find((row) => row.id === track.id);
-      if (holder && !holder.coverUrl) {
+      const coverKeptOff = workspace.trackById(track.id)?.coverRemoved ?? false;
+      if (holder && !holder.coverUrl && !coverKeptOff) {
         try {
           const parsed = await readTrack(track.buffer, { filename: track.sourceName });
           if (parsed.coverUrl) {
@@ -516,6 +479,7 @@ export default function LibraryPage() {
     const ensureRemembered = () => {
       if (remembered) return;
       remember();
+      workspace.markDirty();
       remembered = true;
       if (replacing) {
         shown = [];
@@ -724,16 +688,13 @@ export default function LibraryPage() {
   function patch(id: string, key: keyof TrackFields, value: string) {
     const row = rowsRef.current.find((item) => item.id === id);
     if (!row || row.fields[key] === value) return;
-    remember();
-    const next = rowsRef.current.map((item) => (item.id === id ? { ...item, fields: { ...item.fields, [key]: value } } : item));
-    rowsRef.current = next;
-    setRows(next);
+    const view = workspace.updateTrack(id, { [key]: value });
+    if (view) rowsRef.current = view;
   }
 
   function commitTokens(next: LibraryToken[]) {
-    remember();
+    workspace.setTokens(next, true);
     tokensRef.current = next;
-    setTokens(next);
   }
 
   function removeRow(id: string) {
@@ -777,43 +738,32 @@ export default function LibraryPage() {
   function mapSelected(update: (row: LibraryTrack) => LibraryTrack) {
     const ids = selectedRef.current;
     if (ids.size === 0) return;
-    let changed = false;
-    const next = rowsRef.current.map((row) => {
-      if (!ids.has(row.id)) return row;
+    const edits: { id: string; patch: Partial<TrackFields> }[] = [];
+    for (const row of rowsRef.current) {
+      if (!ids.has(row.id)) continue;
       const updated = update(row);
-      if (JSON.stringify(updated.fields) !== JSON.stringify(row.fields)) changed = true;
-      return updated;
-    });
-    if (!changed) return;
-    remember();
-    rowsRef.current = next;
-    setRows(next);
+      if (JSON.stringify(updated.fields) === JSON.stringify(row.fields)) continue;
+      edits.push({ id: row.id, patch: updated.fields });
+    }
+    const view = workspace.updateTracks(edits);
+    if (view) rowsRef.current = view;
   }
 
   function applyGenre(value: string) {
     const ids = selectedRef.current;
     const useAll = ids.size === 0;
-    let changed = false;
-    const next = rowsRef.current.map((row) => {
-      if (row.skeleton) return row;
-      if (!useAll && !ids.has(row.id)) return row;
-      if (row.fields.genre === value) return row;
-      changed = true;
-      return { ...row, fields: { ...row.fields, genre: value } };
-    });
-    if (!changed) return;
-    remember();
-    rowsRef.current = next;
-    setRows(next);
+    const edits = rowsRef.current
+      .filter((row) => !row.skeleton && (useAll || ids.has(row.id)) && row.fields.genre !== value)
+      .map((row) => ({ id: row.id, patch: { genre: value } }));
+    const view = workspace.updateTracks(edits);
+    if (view) rowsRef.current = view;
   }
 
   function resetRow(id: string) {
     const row = rowsRef.current.find((item) => item.id === id);
     if (!row || row.skeleton || !libraryFieldsDiffer(row.fields, row.cleaned)) return;
-    remember();
-    const next = rowsRef.current.map((item) => (item.id === id ? { ...item, fields: { ...item.cleaned } } : item));
-    rowsRef.current = next;
-    setRows(next);
+    const view = workspace.updateTrack(id, { ...row.cleaned });
+    if (view) rowsRef.current = view;
   }
 
   async function editRow(id: string) {
@@ -828,6 +778,7 @@ export default function LibraryPage() {
     } catch {
       /* The editor still opens with the copy held in this tab. */
     }
+    workspace.openTrack(row.id);
     session?.openLibraryTrack({
       id: row.id,
       sourceName: row.sourceName,
@@ -837,6 +788,7 @@ export default function LibraryPage() {
       remixFrame: row.remixFrame,
       fallback: row.fallback,
     });
+    navigate('/app');
   }
 
   function applyBpm() {
@@ -866,12 +818,9 @@ export default function LibraryPage() {
   }
 
   function loadDemo() {
-    remember();
-    const next = seedRows();
+    const next = workspace.loadDemo();
     kindRef.current = 'demo';
     rowsRef.current = next;
-    setKind('demo');
-    setRows(next);
     setFilter('all');
     setSelected(new Set());
     setNote(null);
@@ -1064,9 +1013,8 @@ export default function LibraryPage() {
           {kind === 'demo' && rows.length > 0 ? <p className="pro-note">{PRO_COPY.libraryDemoNote}</p> : null}
           {reading ? <p className="pro-note">Cleaning tracks.</p> : null}
           {rows.length > 0 ? (
-            <LibraryArray
+            <CrateLibrary
               rows={visible}
-              tokens={tokens}
               selected={selected}
               onToggleRow={toggleRow}
               onToggleAll={toggleAll}
@@ -1075,51 +1023,20 @@ export default function LibraryPage() {
               onReset={resetRow}
               onEdit={(id) => void editRow(id)}
               onStop={stopRow}
+              selectedCount={selectedCount}
+              genreDraft={genreDraft}
+              bpmDraft={bpmDraft}
+              deleteArmed={deleteArmed}
+              onGenre={(value) => {
+                setGenreDraft(value);
+                applyGenre(value);
+              }}
+              onBpmDraft={setBpmDraft}
+              onApplyBpm={applyBpm}
+              onClean={() => mapSelected((row) => ({ ...row, fields: applyTextCleanup(row.fields, 'strip') }))}
+              onCase={() => mapSelected((row) => ({ ...row, fields: applyTextCleanup(row.fields, 'case') }))}
+              onDelete={armDelete}
             />
-          ) : null}
-          {selectedCount > 0 ? (
-            <div className="lib-selectbar" role="toolbar" aria-label="Selected tracks">
-              <span className="lib-select-count">{selectedCount}</span>
-              <button className="crate-pill" type="button" onClick={() => mapSelected((row) => ({ ...row, fields: applyTextCleanup(row.fields, 'strip') }))}>
-                {PRO_COPY.libraryClean}
-              </button>
-              <button className="crate-pill" type="button" onClick={() => mapSelected((row) => ({ ...row, fields: applyTextCleanup(row.fields, 'case') }))}>
-                {PRO_COPY.libraryCase}
-              </button>
-              <GenreSelector
-                value={genreDraft}
-                variant="bulk"
-                label={PRO_COPY.librarySetGenre}
-                onChange={(value) => {
-                  setGenreDraft(value);
-                  applyGenre(value);
-                }}
-              />
-              <label className="lib-bar-field">
-                <span className="sr-only">{PRO_COPY.librarySetBpm}</span>
-                <input
-                  className="lib-edit lib-bar-input"
-                  aria-label={PRO_COPY.librarySetBpm}
-                  placeholder={PRO_COPY.librarySetBpm}
-                  value={bpmDraft}
-                  onChange={(event) => setBpmDraft(event.target.value)}
-                  onBlur={() => {
-                    if (bpmDraft.trim()) applyBpm();
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      applyBpm();
-                    }
-                  }}
-                />
-              </label>
-              <button className={deleteArmed ? 'crate-pill lib-danger' : 'crate-pill'} type="button" onClick={armDelete}>
-                {deleteArmed
-                  ? `Delete ${selectedCount} selected ${selectedCount === 1 ? 'track' : 'tracks'}?`
-                  : PRO_COPY.libraryDelete}
-              </button>
-            </div>
           ) : null}
           <div className="lib-foot">
             <label className="btn btn-secondary crate-add">

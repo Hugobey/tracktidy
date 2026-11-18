@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useWorkspace } from '../context/WorkspaceContext.tsx';
 import { ArtworkPanel } from '../components/ArtworkPanel.tsx';
 import { Atmosphere } from '../components/Atmosphere.tsx';
 import { Button } from '../components/Button.tsx';
@@ -17,14 +18,16 @@ import { useConsent } from '../components/consent-context.ts';
 import { trackEvent } from '../lib/analytics.ts';
 import { CRATE_MULTI_FLAG, PRO_COPY } from '../lib/pro.ts';
 import { routeMeta } from '../lib/site.ts';
-import type { FilenamePreview } from '../lib/filename.ts';
+import { renderFilename, type FilenamePreview } from '../lib/filename.ts';
 import type { TrackFields } from '../lib/types.ts';
+import { fieldsFromMetadata } from '../types/track.ts';
 import { originalMeta, updatedMeta, useTrackSession } from '../session/session-context.ts';
 
 const tool = routeMeta('/app');
 
 export default function ToolPage() {
   const session = useTrackSession();
+  const workspace = useWorkspace();
   const { status } = useConsent();
   const [dragOver, setDragOver] = useState(false);
   const dragDepth = useRef(0);
@@ -74,6 +77,31 @@ export default function ToolPage() {
 
   const { track, preview } = session;
   const editing = session.phase === 'edit' && track && preview;
+  const active = workspace.tracks.find((item) => item.id === workspace.activeTrackId) ?? null;
+  const crateDetail = workspace.viewMode === 'single' && workspace.tracks.length > 1 && Boolean(active);
+  const sessionReady = Boolean(crateDetail && active && session.editorTrackId === active.id && track);
+  const fields = crateDetail && active ? fieldsFromMetadata(active.currentMetadata) : track?.fields;
+  const fileFields = crateDetail && active ? fieldsFromMetadata(active.originalMetadata) : track?.fileFields;
+  const coverUrl = crateDetail && active ? active.coverUrl : track?.coverUrl ?? null;
+  const peaks = crateDetail && active ? active.waveformPeaks ?? (sessionReady ? track?.peaks ?? null : null) : track?.peaks ?? null;
+  const displayName = crateDetail && active ? active.sourceName : track?.name ?? '';
+  const playable = workspace.tracks.filter((item) => item.buffer);
+  const playIndex = active ? playable.findIndex((item) => item.id === active.id) : -1;
+
+  function showTrack(id: string) {
+    const target = workspace.tracks.find((item) => item.id === id);
+    if (!target?.buffer) return;
+    workspace.openTrack(id);
+    session.openLibraryTrack({
+      id: target.id,
+      sourceName: target.sourceName,
+      buffer: target.buffer,
+      fields: fieldsFromMetadata(target.currentMetadata),
+      original: fieldsFromMetadata(target.originalMetadata),
+      remixFrame: target.remixFrame,
+      fallback: target.fallback,
+    });
+  }
 
   return (
     <div className={dragOver ? 'tool drag-active' : 'tool'}>
@@ -91,7 +119,7 @@ export default function ToolPage() {
           <ProAccount />
           {editing ? (
             <>
-              {session.fromLibrary ? (
+              {crateDetail ? null : session.fromLibrary ? (
                 <Button variant="secondary" onClick={session.returnToLibrary}>
                   Back to Crate Library
                 </Button>
@@ -105,7 +133,7 @@ export default function ToolPage() {
                   </Button>
                 </>
               )}
-              <Button variant="primary" disabled={!preview.file || session.exporting} onClick={session.onDownload}>
+              <Button variant="primary" disabled={!preview.file || session.exporting || (crateDetail && !sessionReady)} onClick={session.onDownload}>
                 {session.exporting ? 'Preparing…' : 'Download'}
               </Button>
             </>
@@ -125,38 +153,59 @@ export default function ToolPage() {
         )
       ) : null}
 
-      {session.phase === 'edit' && session.analysisProblem ? (
+      {session.phase === 'edit' && session.analysisProblem && (!crateDetail || sessionReady) ? (
         <ErrorBanner title="Could not finish analysis" testId="analysis-error" className="page-error">
           {session.analysisProblem}
         </ErrorBanner>
       ) : null}
 
+      {crateDetail && active && editing ? (
+        <div className="crate-return">
+          <Button variant="secondary" onClick={session.returnToLibrary}>
+            Back to Crate Library
+          </Button>
+          <p className="crate-return-title">{active.currentMetadata.title.trim() || active.sourceName}</p>
+          <div className="crate-return-actions">
+            <Button variant="secondary" disabled={playIndex <= 0} onClick={() => showTrack(playable[playIndex - 1].id)}>
+              Prev
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={playIndex < 0 || playIndex >= playable.length - 1}
+              onClick={() => showTrack(playable[playIndex + 1].id)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       <main id="content" className="workspace">
-        {editing ? (
-          <section className="studio stage-in">
-            <ResultCompare name={track.name} fileFields={track.fileFields} fields={track.fields} preview={preview} />
+        {editing && fields && fileFields ? (
+          <section className="studio stage-in" key={crateDetail && active ? active.id : 'editor'}>
+            <ResultCompare name={displayName} fileFields={fileFields} fields={fields} preview={crateDetail && active ? renderFilename(session.template, fields) : preview} />
             <div className="file-col">
               <div className="file-heading">
                 <div>
                   <p className="kicker">File</p>
-                  <p className="tech-line">{session.tech}</p>
+                  <p className="tech-line">{crateDetail && !sessionReady ? displayName : session.tech}</p>
                 </div>
               </div>
               <ArtworkPanel
-                previewUrl={track.coverUrl}
-                source={track.coverFrom}
-                artist={track.fields.artist}
-                title={track.fields.title}
-                album={track.fields.album}
-                remix={track.fields.remix}
+                previewUrl={coverUrl}
+                source={crateDetail && !sessionReady ? (coverUrl ? 'file' : null) : track.coverFrom}
+                artist={fields.artist}
+                title={fields.title}
+                album={fields.album}
+                remix={fields.remix}
                 busy={session.artworkBusy}
                 note={session.artworkNote}
                 onApply={session.applyArtwork}
                 onRemove={session.removeArtwork}
                 onInteract={session.lockArtwork}
               />
-              {track.peaks ? (
-                <Waveform peaks={track.peaks} scanning={session.scanning} label={`Waveform of ${track.name}`} />
+              {peaks ? (
+                <Waveform peaks={peaks} scanning={session.scanning} label={`Waveform of ${displayName}`} />
               ) : track.waveformError ? (
                 <p className="hint hint-danger">{track.waveformError}</p>
               ) : null}
@@ -171,17 +220,30 @@ export default function ToolPage() {
             </div>
             <div className="edit-col">
               <MetadataEditor
-                fields={track.fields}
-                fileFields={track.fileFields}
-                bpm={track.analysis.bpm}
-                keyEstimate={track.analysis.key}
-                bpmError={track.analysis.bpmError}
-                keyError={track.analysis.keyError}
-                bpmPending={track.analysis.bpmPending}
-                keyPending={track.analysis.keyPending}
+                fields={fields}
+                fileFields={fileFields}
+                bpm={crateDetail && !sessionReady ? null : track.analysis.bpm}
+                keyEstimate={crateDetail && !sessionReady ? null : track.analysis.key}
+                bpmError={crateDetail && !sessionReady ? null : track.analysis.bpmError}
+                keyError={crateDetail && !sessionReady ? null : track.analysis.keyError}
+                bpmPending={crateDetail && !sessionReady ? false : track.analysis.bpmPending}
+                keyPending={crateDetail && !sessionReady ? false : track.analysis.keyPending}
                 template={session.template}
-                preview={preview}
-                onField={session.updateField}
+                preview={crateDetail && active ? renderFilename(session.template, fields) : preview}
+                onField={(key, value) => {
+                  if (crateDetail && active) {
+                    if (sessionReady) session.updateField(key, value);
+                    else {
+                      const nextFields = { ...fields, [key]: value };
+                      workspace.updateTrack(active.id, {
+                        [key]: value,
+                        filename: renderFilename(session.template, nextFields).file,
+                      });
+                    }
+                    return;
+                  }
+                  session.updateField(key, value);
+                }}
                 onTemplate={session.updateTemplate}
                 onDetectBpm={session.rerunBpm}
                 onEstimateKey={session.rerunKey}

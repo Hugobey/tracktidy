@@ -10,6 +10,7 @@ import LandingPage from './pages/LandingPage.tsx';
 import LibraryPage from './pages/LibraryPage.tsx';
 import NotFoundPage from './pages/NotFoundPage.tsx';
 import ToolPage from './pages/ToolPage.tsx';
+import { WorkspaceProvider } from './context/WorkspaceContext.tsx';
 import { TrackSessionProvider } from './session/TrackSession.tsx';
 const LegalNoticePage = lazy(() => import('./pages/LegalNoticePage.tsx'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage.tsx'));
@@ -37,6 +38,7 @@ export default function App() {
     <BrowserRouter>
       <ConsentProvider>
         <ProProvider>
+          <WorkspaceProvider>
           <TrackSessionProvider>
             <Routes>
               <Route path="/" element={<LandingPage />} />
@@ -56,6 +58,7 @@ export default function App() {
             <PostHogAnalytics />
             <ConsentBanner />
           </TrackSessionProvider>
+          </WorkspaceProvider>
         </ProProvider>
       </ConsentProvider>
     </BrowserRouter>
