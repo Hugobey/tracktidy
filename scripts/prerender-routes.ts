@@ -106,7 +106,7 @@ export function prerenderDist(dist = join(process.cwd(), 'dist'), origin?: strin
       {
         path: '/success',
         title: 'TrackTidy Pro',
-        description: 'Restore Track Tidy Pro on this browser with your Stripe email.',
+        description: 'Restore Track Tidy Pro Lifetime on this browser with your Stripe email.',
         index: false,
       },
       host,

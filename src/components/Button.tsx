@@ -9,6 +9,7 @@ type Props = {
   href?: string;
   type?: 'button' | 'submit';
   disabled?: boolean;
+  title?: string;
   onClick?: () => void;
 };
 
@@ -20,25 +21,26 @@ export function Button({
   href,
   type = 'button',
   disabled,
+  title,
   onClick,
 }: Props) {
   const cls = ['btn', `btn-${variant}`, className].filter(Boolean).join(' ');
   if (to) {
     return (
-      <Link className={cls} to={to} onClick={onClick}>
+      <Link className={cls} to={to} title={title} onClick={onClick}>
         {children}
       </Link>
     );
   }
   if (href) {
     return (
-      <a className={cls} href={href} onClick={onClick}>
+      <a className={cls} href={href} title={title} onClick={onClick}>
         {children}
       </a>
     );
   }
   return (
-    <button className={cls} type={type} disabled={disabled} onClick={onClick}>
+    <button className={cls} type={type} disabled={disabled} title={title} onClick={onClick}>
       {children}
     </button>
   );

@@ -927,7 +927,12 @@ export default function LibraryPage() {
         <p className="appbar-kicker">Crate</p>
         <div className="appbar-actions">
           <ProAccount />
-          <Button variant="primary" disabled={rows.length === 0 || reading || zipping} onClick={() => void downloadZip()}>
+          <Button
+            variant="primary"
+            title={pro.pro ? PRO_COPY.active : PRO_COPY.freePreviewTip}
+            disabled={rows.length === 0 || reading || zipping}
+            onClick={() => void downloadZip()}
+          >
             {zipping ? 'Preparing…' : PRO_COPY.libraryDownload}
           </Button>
         </div>
@@ -935,7 +940,9 @@ export default function LibraryPage() {
       <main id="content" className="workspace">
         <section className="lib" aria-label="Crate">
           <div className="lib-intro">
-            <p className="kicker kicker-blue">TrackTidy Pro</p>
+            <p className="kicker kicker-blue" title={pro.pro ? PRO_COPY.active : PRO_COPY.freePreviewTip}>
+              {pro.pro ? PRO_COPY.active : PRO_COPY.freePreview}
+            </p>
             <h1>{PRO_COPY.libraryTitle}</h1>
             <p className="lede">{PRO_COPY.libraryBody}</p>
           </div>

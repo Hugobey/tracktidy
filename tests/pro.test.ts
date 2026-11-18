@@ -12,8 +12,12 @@ import { emailHasPaid } from '../api/stripe-paid.js';
 import {
   PRO_COPY,
   applyProQuery,
+  checkoutReturnPath,
+  claimCheckoutReturn,
   copyHasDash,
+  dismissCheckoutToast,
   dismissNudge,
+  isCheckoutSessionId,
   nudgeVisible,
   readProSnapshot,
   recordCompletedProcess,
@@ -53,8 +57,11 @@ describe('pro copy', () => {
     );
     expect(PRO_COPY.nudgeAction).toBe('Try Crate Library');
     expect(PRO_COPY.modalTitle).toBe('Upgrade to Track Tidy Pro');
-    expect(PRO_COPY.modalBody).toBe('Full Pro access for 1 year. Cancel anytime.');
-    expect(PRO_COPY.price).toBe('$19 / year');
+    expect(PRO_COPY.modalBody).toBe('One payment unlocks Track Tidy Pro on this browser.');
+    expect(PRO_COPY.price).toBe('$19');
+    expect(PRO_COPY.active).toBe('Track Tidy Pro');
+    expect(PRO_COPY.freePreview).toBe('Free Preview');
+    expect(PRO_COPY.checkoutToast).toBe('Payment confirmed. Track Tidy Pro Lifetime is unlocked.');
     expect(PRO_COPY.perkBatch).toBe('Unlimited batch playlist cleaning and crate size');
     expect(PRO_COPY.perkGrid).toBe('Full Crate Library spreadsheet with inline editing and multi-genre tags');
     expect(PRO_COPY.perkNames).toBe('Custom filename templates with live full-filename previews');
@@ -66,8 +73,11 @@ describe('pro copy', () => {
     expect(PRO_COPY.banner).toBe('Track Tidy Pro unlocked');
     expect(PRO_COPY.library).toBe('Library');
     expect(PRO_COPY.libraryTitle).toBe('Your crate.');
-    expect(PRO_COPY.libraryLimit).toBe('Unlock unlimited crate size to prep your full set');
-    expect(PRO_COPY.libraryExport).toBe('Your crate is prepped and ready. Unlock Pro to export your cleaned playlist as a ZIP');
+    expect(PRO_COPY.libraryLimit).toBe('Free Preview holds 5 tracks. Track Tidy Pro unlocks the full crate.');
+    expect(PRO_COPY.libraryExport).toBe(
+      'Your crate is prepped and ready. Unlock Track Tidy Pro to export your cleaned playlist as a ZIP',
+    );
+    expect(PRO_COPY.libraryBrowse).toBe('Or press to browse. Free Preview holds 5 tracks in this browser.');
     expect(PRO_COPY.crateNudge).toBe('Prepping a whole set? Drop your entire folder to auto-clean tags at once.');
     expect(PRO_COPY.libraryDownload).toBe('Download Crate ZIP');
     expect(PRO_COPY.libraryConfirm).toBe('Confirm?');
@@ -206,6 +216,38 @@ describe('pro storage', () => {
     expect(readProSnapshot(local, session).banner).toBe(true);
     expect(session.getItem('tt_crate_open')).toBe('1');
   });
+
+  it('unlocks a checkout return once and keeps the toast armed for a strict remount', () => {
+    dismissCheckoutToast();
+    const local = memory();
+    const session = memory();
+    const sessionId = 'cs_test_a1B2c3D4e5';
+    expect(isCheckoutSessionId(sessionId)).toBe(true);
+    expect(isCheckoutSessionId('not-a-session')).toBe(false);
+    expect(checkoutReturnPath(sessionId)).toBe(`/pro?upgrade=success&session_id=${sessionId}`);
+    const first = claimCheckoutReturn(
+      `https://www.track-tidy.com/pro?upgrade=success&session_id=${sessionId}`,
+      local,
+      session,
+    );
+    expect(first.unlocked).toBe(true);
+    expect(first.toast).toBe(true);
+    expect(first.href).toBe('/pro');
+    expect(local.getItem('tt_user_pro')).toBe('true');
+    expect(session.getItem('tt_checkout_toast')).toBe(sessionId);
+    const remount = claimCheckoutReturn('https://www.track-tidy.com/pro', local, session);
+    expect(remount.unlocked).toBe(false);
+    expect(remount.toast).toBe(true);
+    dismissCheckoutToast();
+    const again = claimCheckoutReturn(
+      `https://www.track-tidy.com/pro?upgrade=success&session_id=${sessionId}&keep=1`,
+      local,
+      session,
+    );
+    expect(again.toast).toBe(false);
+    expect(again.href).toBe('/pro?keep=1');
+    expect(readProSnapshot(local, session).pro).toBe(true);
+  });
 });
 
 describe('stripe restore', () => {
@@ -244,7 +286,7 @@ describe('success page indexing', () => {
     const shell = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
     const page = applyRouteMeta(
       shell,
-      { path: '/success', title: 'TrackTidy Pro', description: 'Restore Track Tidy Pro on this browser with your Stripe email.', index: false },
+      { path: '/success', title: 'TrackTidy Pro', description: 'Restore Track Tidy Pro Lifetime on this browser with your Stripe email.', index: false },
       'https://www.track-tidy.com',
     );
     expect(page).toContain('name="robots" content="noindex,nofollow"');

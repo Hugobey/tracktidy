@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Atmosphere } from '../components/Atmosphere.tsx';
 import { Logo } from '../components/Logo.tsx';
 import { ProAccount } from '../components/ProAccount.tsx';
@@ -7,6 +7,7 @@ import { SiteFooter } from '../components/SiteFooter.tsx';
 import { SiteHead } from '../components/SiteHead.tsx';
 import { SiteNav } from '../components/SiteNav.tsx';
 import { usePro } from '../components/pro-context.ts';
+import { checkoutReturnPath, isCheckoutSessionId } from '../lib/pro.ts';
 
 function validEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -14,15 +15,26 @@ function validEmail(value: string): boolean {
 
 export default function SuccessPage() {
   const pro = usePro();
+  const navigate = useNavigate();
+  const { search } = useLocation();
+  const sessionId = (() => {
+    const value = new URLSearchParams(search).get('session_id')?.trim() ?? '';
+    return isCheckoutSessionId(value) ? value : null;
+  })();
   const [email, setEmail] = useState(pro.email);
-  const [note, setNote] = useState('Restore Track Tidy Pro with the email from your Stripe receipt.');
+  const [note, setNote] = useState('Restore Track Tidy Pro Lifetime with the email from your Stripe receipt.');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    navigate(checkoutReturnPath(sessionId), { replace: true });
+  }, [navigate, sessionId]);
 
   return (
     <div className="page">
       <SiteHead
         title="TrackTidy Pro"
-        description="Restore Track Tidy Pro on this browser with your Stripe email."
+        description="Restore Track Tidy Pro Lifetime on this browser with your Stripe email."
         path="/success"
         index={false}
       />
@@ -39,9 +51,13 @@ export default function SuccessPage() {
       <main id="content" className="legal-main">
         <article className="wrap legal-card pro-success">
           <p className="kicker kicker-blue">Track Tidy Pro</p>
-          <h1>Restore Pro</h1>
-          <p>{note}</p>
-          {pro.pro ? (
+          <h1>{sessionId ? 'Track Tidy Pro' : 'Restore Track Tidy Pro'}</h1>
+          {sessionId ? (
+            <p>Payment received. Opening your crate.</p>
+          ) : (
+            <p>{note}</p>
+          )}
+          {sessionId ? null : pro.pro ? (
             <p>
               <Link to="/pro">Open Crate Library</Link>
             </p>
@@ -59,7 +75,7 @@ export default function SuccessPage() {
                 setBusy(true);
                 void pro.restore(next).then((error) => {
                   setBusy(false);
-                  setNote(error ?? 'Pro is active on this browser.');
+                  setNote(error ?? 'Track Tidy Pro Lifetime is active on this browser.');
                 });
               }}
             >
@@ -73,7 +89,7 @@ export default function SuccessPage() {
                 />
               </label>
               <button className="btn btn-primary" type="submit" disabled={busy || !validEmail(email)}>
-                {busy ? 'Checking…' : 'Restore Pro'}
+                {busy ? 'Checking…' : 'Restore Track Tidy Pro'}
               </button>
             </form>
           )}

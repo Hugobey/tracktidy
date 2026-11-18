@@ -11,11 +11,13 @@ export type ProContextValue = {
   modalOpen: boolean;
   checkoutReady: boolean;
   banner: boolean;
+  checkoutToast: boolean;
   upgradeNote: string | null;
   openUpgrade: (message?: string) => void;
   closeUpgrade: () => void;
   dismissNudge: () => void;
   dismissBanner: () => void;
+  dismissCheckoutToast: () => void;
   restore: (email: string) => Promise<string | null>;
   startCheckout: (email: string) => string | null;
   signOut: () => void;
@@ -38,11 +40,13 @@ export function usePro(): ProContextValue {
     modalOpen: false,
     checkoutReady: false,
     banner: false,
+    checkoutToast: false,
     upgradeNote: null,
     openUpgrade: () => undefined,
     closeUpgrade: () => undefined,
     dismissNudge: () => undefined,
     dismissBanner: () => undefined,
+    dismissCheckoutToast: () => undefined,
     restore: async () => 'Pro restore is not connected on this build yet.',
     startCheckout: () => 'Checkout is not connected on this build yet.',
     signOut: () => undefined,

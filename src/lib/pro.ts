@@ -9,6 +9,7 @@ export const DEMO_KEY = 'tt_demo_pro';
 export const CRATE_OPEN_KEY = 'tt_crate_open';
 export const BANNER_KEY = 'tt_pro_banner';
 export const LIBRARY_ENTRY_KEY = 'tt_library_entry';
+export const CHECKOUT_TOAST_KEY = 'tt_checkout_toast';
 
 /** Session flag for the free multi-track nudge. Never show this string. */
 export const CRATE_MULTI_FLAG = 'crate';
@@ -26,8 +27,8 @@ export const PRO_COPY = {
   nudgeAction: 'Try Crate Library',
   nudgeLater: 'Maybe later',
   modalTitle: 'Upgrade to Track Tidy Pro',
-  modalBody: 'Full Pro access for 1 year. Cancel anytime.',
-  price: '$19 / year',
+  modalBody: 'One payment unlocks Track Tidy Pro on this browser.',
+  price: '$19',
   perkBatch: 'Unlimited batch playlist cleaning and crate size',
   perkGrid: 'Full Crate Library spreadsheet with inline editing and multi-genre tags',
   perkNames: 'Custom filename templates with live full-filename previews',
@@ -37,7 +38,10 @@ export const PRO_COPY = {
   restoreLabel: 'Already upgraded? Restore with your email',
   restoreAction: 'Restore Pro',
   upgrade: 'Upgrade to Pro',
-  active: 'Pro Active',
+  active: 'Track Tidy Pro',
+  freePreview: 'Free Preview',
+  freePreviewTip: 'Free Preview holds 5 tracks in this browser.',
+  checkoutToast: 'Payment confirmed. Track Tidy Pro Lifetime is unlocked.',
   billing: 'Manage billing',
   signOut: 'Sign out of this browser',
   demo: 'Demo Pro',
@@ -48,9 +52,9 @@ export const PRO_COPY = {
   libraryDemoNote: 'Demo tracks are already cleaned so you can scan the crate. Drop your own MP3s to add them.',
   libraryEmpty: 'No tracks in this crate yet.',
   libraryDrop: 'Drop a folder or MP3s',
-  libraryBrowse: 'Or press to browse. The free crate holds 5 tracks in this browser.',
-  libraryLimit: 'Unlock unlimited crate size to prep your full set',
-  libraryExport: 'Your crate is prepped and ready. Unlock Pro to export your cleaned playlist as a ZIP',
+  libraryBrowse: 'Or press to browse. Free Preview holds 5 tracks in this browser.',
+  libraryLimit: 'Free Preview holds 5 tracks. Track Tidy Pro unlocks the full crate.',
+  libraryExport: 'Your crate is prepped and ready. Unlock Track Tidy Pro to export your cleaned playlist as a ZIP',
   crateNudge: 'Prepping a whole set? Drop your entire folder to auto-clean tags at once.',
   crateNudgeAction: 'Open Crate Library',
   libraryUndo: 'Undo',
@@ -187,6 +191,74 @@ export function dismissProBanner(session: Store | null = browserStore('session')
     /* The banner can still close for this render. */
   }
   notifyProChange();
+}
+
+/** A Stripe Checkout Session id from the paid return URL. */
+export function isCheckoutSessionId(value: string): boolean {
+  return /^cs_[A-Za-z0-9_]{8,}$/.test(value);
+}
+
+export function checkoutReturnPath(sessionId: string): string {
+  return `/pro?upgrade=success&session_id=${encodeURIComponent(sessionId)}`;
+}
+
+export function readCheckoutSessionId(href: string): string | null {
+  try {
+    const sessionId = new URL(href).searchParams.get('session_id')?.trim() ?? '';
+    return isCheckoutSessionId(sessionId) ? sessionId : null;
+  } catch {
+    return null;
+  }
+}
+
+/** In-memory arm so a strict-mode remount can still show the toast after the query is gone. */
+let armedCheckoutToast: string | null = null;
+
+export function dismissCheckoutToast(): void {
+  armedCheckoutToast = null;
+}
+
+export type CheckoutClaim = {
+  unlocked: boolean;
+  toast: boolean;
+  href: string;
+};
+
+/** Enables Pro for a checkout return on /pro, strips that query, and arms the toast once. */
+export function claimCheckoutReturn(
+  href = typeof window === 'undefined' ? '' : window.location.href,
+  local: Store | null = browserStore('local'),
+  session: Store | null = browserStore('session'),
+): CheckoutClaim {
+  const skip = { unlocked: false, toast: armedCheckoutToast !== null, href };
+  if (!href) return skip;
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    return skip;
+  }
+  if (url.pathname !== '/pro') return { ...skip, href };
+  const upgrade = url.searchParams.get('upgrade');
+  const sessionId = url.searchParams.get('session_id')?.trim() ?? '';
+  if (upgrade !== 'success' || !isCheckoutSessionId(sessionId)) return { ...skip, href };
+  setProEnabled(true, local);
+  const seen = session?.getItem(CHECKOUT_TOAST_KEY) ?? '';
+  if (seen !== sessionId) {
+    armedCheckoutToast = sessionId;
+    try {
+      session?.setItem(CHECKOUT_TOAST_KEY, sessionId);
+    } catch {
+      /* The toast can still show for this return. */
+    }
+  }
+  url.searchParams.delete('upgrade');
+  url.searchParams.delete('session_id');
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  if (typeof window !== 'undefined' && href === window.location.href) {
+    window.history.replaceState(window.history.state, '', next);
+  }
+  return { unlocked: true, toast: armedCheckoutToast === sessionId, href: next };
 }
 
 /** Applies `demo` and `pro_success` once, then removes them from the address bar. */

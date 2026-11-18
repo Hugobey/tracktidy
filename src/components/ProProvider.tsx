@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
+  claimCheckoutReturn,
   clearProLicense,
+  dismissCheckoutToast,
   dismissNudge as storeDismiss,
   dismissProBanner,
   LIBRARY_ENTRY_KEY,
@@ -20,11 +22,26 @@ import { UpgradeModal } from './UpgradeModal.tsx';
 
 export function ProProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [revision, setRevision] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [upgradeNote, setUpgradeNote] = useState<string | null>(null);
+  const [checkoutToast, setCheckoutToast] = useState(false);
 
   useEffect(() => onProChange(() => setRevision((value) => value + 1)), []);
+
+  useLayoutEffect(() => {
+    if (window.location.pathname !== '/pro') return;
+    const claim = claimCheckoutReturn();
+    if (claim.unlocked) {
+      setRevision((value) => value + 1);
+      const next = new URL(claim.href, window.location.origin);
+      const current = `${location.pathname}${location.search}${location.hash}`;
+      const cleaned = `${next.pathname}${next.search}${next.hash}`;
+      if (current !== cleaned) navigate(cleaned, { replace: true });
+    }
+    if (claim.toast) setCheckoutToast(true);
+  }, [location.hash, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     let openLibrary = false;
@@ -61,6 +78,7 @@ export function ProProvider({ children }: { children: ReactNode }) {
       modalOpen: open,
       checkoutReady: stripeCheckoutConfigured(),
       banner: current.banner,
+      checkoutToast,
       upgradeNote,
       openUpgrade: (message?: string) => {
         trackEvent('upgrade_modal_opened');
@@ -73,6 +91,10 @@ export function ProProvider({ children }: { children: ReactNode }) {
       },
       dismissNudge: () => storeDismiss(),
       dismissBanner: () => dismissProBanner(),
+      dismissCheckoutToast: () => {
+        dismissCheckoutToast();
+        setCheckoutToast(false);
+      },
       restore: async (email: string) => {
         saveEmail(email);
         try {
@@ -111,7 +133,7 @@ export function ProProvider({ children }: { children: ReactNode }) {
         if (next) navigate('/pro');
       },
     };
-  }, [modalOpen, navigate, revision, upgradeNote]);
+  }, [checkoutToast, modalOpen, navigate, revision, upgradeNote]);
 
   return (
     <ProContext.Provider value={value}>

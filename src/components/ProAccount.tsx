@@ -34,7 +34,7 @@ export function ProAccount() {
     return (
       <span className="pro-account">
         {library}
-        <button className="pro-link" type="button" onClick={() => pro.openUpgrade()}>
+        <button className="pro-link" type="button" title={PRO_COPY.active} onClick={() => pro.openUpgrade()}>
           {PRO_COPY.upgrade}
         </button>
         <button className="pro-pill" type="button" aria-pressed={pro.pro} onClick={pro.toggleDemo}>
@@ -50,6 +50,7 @@ export function ProAccount() {
       <button
         className="pro-badge"
         type="button"
+        title={PRO_COPY.active}
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((value) => !value)}

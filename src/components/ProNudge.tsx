@@ -5,7 +5,7 @@ export function ProNudge({ onTry }: { onTry: () => void }) {
   const pro = usePro();
   if (pro.pro || pro.nudgeLater) return null;
   return (
-    <aside className="pro-nudge" aria-label="Pro preview">
+    <aside className="pro-nudge" aria-label={PRO_COPY.freePreview} title={PRO_COPY.freePreview}>
       <div>
         <h2>{PRO_COPY.nudgeTitle}</h2>
         <p>{PRO_COPY.nudgeBody}</p>
