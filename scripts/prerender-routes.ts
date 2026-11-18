@@ -105,8 +105,8 @@ export function prerenderDist(dist = join(process.cwd(), 'dist'), origin?: strin
       shell,
       {
         path: '/success',
-        title: 'TrackTidy Pro activation',
-        description: 'Activate a TrackTidy Pro license on this browser.',
+        title: 'TrackTidy Pro',
+        description: 'Restore Track Tidy Pro on this browser with your Stripe email.',
         index: false,
       },
       host,

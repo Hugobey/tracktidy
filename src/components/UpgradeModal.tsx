@@ -6,6 +6,16 @@ function validEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+const PERKS = [PRO_COPY.perkBatch, PRO_COPY.perkGrid, PRO_COPY.perkNames, PRO_COPY.perkZip] as const;
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M3.5 8.4 6.4 11.3 12.5 4.7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function UpgradeModal() {
   const pro = usePro();
   const titleId = useId();
@@ -45,15 +55,27 @@ export function UpgradeModal() {
   return (
     <div className="pro-layer" role="presentation" onMouseDown={pro.closeUpgrade}>
       <div
-        className="pro-modal"
+        className="pro-modal pro-upgrade"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <p className="kicker kicker-blue">TrackTidy Pro</p>
+        <p className="kicker">Track Tidy Pro</p>
         <h2 id={titleId}>{PRO_COPY.modalTitle}</h2>
+        <p className="pro-price" aria-label={PRO_COPY.price}>
+          <strong>$19</strong>
+          <span className="pro-price-term">per year</span>
+        </p>
         <p>{PRO_COPY.modalBody}</p>
+        <ul className="pro-perks">
+          {PERKS.map((perk) => (
+            <li key={perk}>
+              <CheckIcon />
+              <span>{perk}</span>
+            </li>
+          ))}
+        </ul>
         <form
           className="pro-form"
           onSubmit={(event) => {
@@ -85,7 +107,7 @@ export function UpgradeModal() {
           </button>
         </form>
         <form
-          className="pro-form pro-license"
+          className="pro-form pro-restore"
           onSubmit={(event) => {
             event.preventDefault();
             if (busy) return;
@@ -120,9 +142,7 @@ export function UpgradeModal() {
           </button>
         </form>
         {note ? <p className="pro-note">{note}</p> : null}
-        {!pro.checkoutReady ? (
-          <p className="pro-note">Checkout is not connected on this build yet.</p>
-        ) : null}
+        {!pro.checkoutReady ? <p className="pro-note">Checkout is not connected on this build yet.</p> : null}
         <button className="pro-pill" type="button" aria-pressed={pro.pro} onClick={pro.toggleDemo}>
           {PRO_COPY.demo}
         </button>

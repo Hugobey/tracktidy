@@ -4,16 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { isMp3 } from '../src/lib/mp3.ts';
 import { applyRouteMeta } from '../scripts/prerender-routes.ts';
 import { applyTextCleanup, crateTemplate, fieldChanged, stripPromoText, titleCaseText, tokensFromTemplate } from '../src/lib/crate.ts';
+import { autoCleanFields, FREE_LIBRARY_LIMIT, genreFamily, libraryRoom, libraryStatus, trackMatchesFilter, visibleLibraryStatus } from '../src/lib/library-clean.ts';
+import { DEFAULT_LIBRARY_TOKENS, renderLibraryFilename } from '../src/lib/library-name.ts';
 import { zipTracks } from '../src/lib/crate-zip.ts';
-import {
-  LEMON_ACTIVATE_URL,
-  LEMON_VALIDATE_URL,
-  confirmLicense,
-  lemonCheckoutUrl,
-  licenseShouldLock,
-  readLicensePayload,
-  validateStoredLicense,
-} from '../src/lib/lemonsqueezy.ts';
 import { handleCheckPro } from '../api/check-pro.js';
 import { emailHasPaid } from '../api/stripe-paid.js';
 import {
@@ -58,31 +51,50 @@ describe('pro copy', () => {
     expect(PRO_COPY.nudgeBody).toBe(
       'Edit ID3 tags inline across all tracks, strip promo junk in one click, and build custom filename templates.',
     );
-    expect(PRO_COPY.nudgeAction).toBe('Unlock Pro Preview');
-    expect(PRO_COPY.modalTitle).toBe('Unlock the Crate Grid & Bulk Metadata Editor');
-    expect(PRO_COPY.modalBody).toBe('Enter your email to continue to Stripe, or restore a purchase you already made.');
+    expect(PRO_COPY.nudgeAction).toBe('Try Crate Library');
+    expect(PRO_COPY.modalTitle).toBe('Upgrade to Track Tidy Pro');
+    expect(PRO_COPY.modalBody).toBe('Full Pro access for 1 year. Cancel anytime.');
+    expect(PRO_COPY.price).toBe('$19 / year');
+    expect(PRO_COPY.perkBatch).toBe('Unlimited batch playlist cleaning and crate size');
+    expect(PRO_COPY.perkGrid).toBe('Full Crate Library spreadsheet with inline editing and multi-genre tags');
+    expect(PRO_COPY.perkNames).toBe('Custom filename templates with live full-filename previews');
+    expect(PRO_COPY.perkZip).toBe('One-click bulk ZIP export with embedded cover art and cleaned ID3 tags');
     expect(PRO_COPY.emailPlaceholder).toBe('dj@example.com');
     expect(PRO_COPY.checkout).toBe('Continue to Checkout');
-    expect(PRO_COPY.restoreLabel).toBe('Already purchased Pro? Restore with your email');
+    expect(PRO_COPY.restoreLabel).toBe('Already upgraded? Restore with your email');
     expect(PRO_COPY.demo).toBe('Demo Pro');
     expect(PRO_COPY.banner).toBe('Track Tidy Pro unlocked');
     expect(PRO_COPY.library).toBe('Library');
-    expect(PRO_COPY.libraryTitle).toBe('Rename many tracks at once.');
+    expect(PRO_COPY.libraryTitle).toBe('Your crate.');
+    expect(PRO_COPY.libraryLimit).toBe('Unlock unlimited crate size to prep your full set');
+    expect(PRO_COPY.libraryExport).toBe('Your crate is prepped and ready. Unlock Pro to export your cleaned playlist as a ZIP');
+    expect(PRO_COPY.crateNudge).toBe('Prepping a whole set? Drop your entire folder to auto-clean tags at once.');
+    expect(PRO_COPY.libraryDownload).toBe('Download Crate ZIP');
+    expect(PRO_COPY.libraryConfirm).toBe('Confirm?');
     for (const line of Object.values(PRO_COPY)) expect(copyHasDash(line)).toBe(false);
     const sources = [
       'src/lib/pro.ts',
-      'src/lib/lemonsqueezy.ts',
       'src/lib/crate.ts',
+      'src/constants/genres.ts',
+      'src/lib/library-link.ts',
       'src/components/UpgradeModal.tsx',
+      'src/components/GenreSelector.tsx',
       'src/components/ProNudge.tsx',
       'src/components/ProAccount.tsx',
       'src/components/CrateGrid.tsx',
       'src/components/ProProvider.tsx',
       'src/components/ProBanner.tsx',
+      'src/components/LibraryArray.tsx',
       'src/lib/stripe.ts',
       'src/lib/library-demo.ts',
+      'src/lib/library-clean.ts',
+      'src/lib/library-files.ts',
+      'src/lib/library-name.ts',
+      'src/lib/library-store.ts',
+      'src/components/CrateNudge.tsx',
       'src/pages/LibraryPage.tsx',
       'src/pages/SuccessPage.tsx',
+      'src/styles/library.css',
     ];
     for (const file of sources) {
       const text = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
@@ -93,6 +105,44 @@ describe('pro copy', () => {
 });
 
 describe('crate editing', () => {
+  it('auto cleans playlist tags and marks incomplete rows for review', () => {
+    const cleaned = autoCleanFields({
+      ...fields,
+      artist: 'nora voss',
+      title: 'night circuit [320kbps] (Master)',
+      genre: 'house',
+    });
+    expect(cleaned.artist).toBe('Nora Voss');
+    expect(cleaned.title).toBe('Night Circuit');
+    expect(cleaned.bpm).toBe('124');
+    expect(cleaned.key).toBe('8A');
+    expect(libraryStatus(cleaned, cleaned)).toBe('cleaned');
+    const missing = { ...cleaned, key: '' };
+    expect(libraryStatus(missing, { ...cleaned, key: '' })).toBe('review');
+    expect(visibleLibraryStatus({ fields: missing, cleaned: missing, analysing: true })).toBe('pending');
+    expect(libraryStatus({ ...cleaned, genre: 'Techno' }, cleaned)).toBe('edited');
+    expect(autoCleanFields({ ...fields, title: 'harbour line (free download)' }).title).toBe('Harbour Line');
+    expect(trackMatchesFilter('edited', 'all')).toBe(true);
+    expect(trackMatchesFilter('edited', 'cleaned')).toBe(false);
+    expect(trackMatchesFilter('pending', 'review')).toBe(true);
+    expect(genreFamily('Deep House')).toBe('house');
+    expect(genreFamily('Drum & Bass')).toBe('dnb');
+    expect(genreFamily('Hip-Hop')).toBe('hiphop');
+    expect(genreFamily('Techno')).toBe('techno');
+    expect(genreFamily('')).toBe('empty');
+    expect(FREE_LIBRARY_LIMIT).toBe(5);
+    expect(libraryRoom(4, false)).toBe(1);
+    expect(libraryRoom(5, false)).toBe(0);
+    expect(libraryRoom(5, true)).toBe(45);
+    expect(renderLibraryFilename(DEFAULT_LIBRARY_TOKENS, cleaned)).toBe('Nora Voss - Night Circuit [124 BPM] [8A].mp3');
+    expect(
+      renderLibraryFilename(
+        DEFAULT_LIBRARY_TOKENS.map((token) => ({ ...token, on: token.id === 'artist' || token.id === 'title' || token.id === 'bpm' })),
+        { ...cleaned, artist: 'Artist', title: 'Title', bpm: '126' },
+      ),
+    ).toBe('Artist - Title [126 BPM].mp3');
+  });
+
   it('strips promo text and title-cases without changing a key token', () => {
     expect(stripPromoText('Night Circuit [320kbps] (Master) https://dj.example/free')).toBe('Night Circuit');
     expect(stripPromoText('Nora Voss www.promo.test (promo)')).toBe('Nora Voss');
@@ -124,66 +174,11 @@ describe('crate editing', () => {
   });
 });
 
-describe('lemon squeezy', () => {
+describe('stripe checkout', () => {
   it('prefills the checkout email and ignores a non-https url', () => {
-    const checkout = lemonCheckoutUrl('https://store.lemonsqueezy.com/checkout/buy/example', 'dj@example.com');
-    expect(checkout).toBeTruthy();
-    expect(new URL(checkout ?? '').searchParams.get('checkout[email]')).toBe('dj@example.com');
-    expect(lemonCheckoutUrl('http://store.lemonsqueezy.com/buy/example', 'dj@example.com')).toBeNull();
     const stripe = stripePaymentUrl('dj@example.com', 'https://buy.stripe.com/test_example');
     expect(new URL(stripe ?? '').searchParams.get('prefilled_email')).toBe('dj@example.com');
     expect(stripePaymentUrl('dj@example.com', 'http://buy.stripe.com/test_example')).toBeNull();
-  });
-
-  it('reads an active license and names expired or disabled keys', () => {
-    const active = readLicensePayload(
-      {
-        activated: true,
-        license_key: { status: 'active', key: 'KEY123456' },
-        instance: { id: 'inst_1' },
-        meta: { customer_email: 'dj@example.com' },
-      },
-      'activate',
-    );
-    expect(active).toMatchObject({ ok: true, key: 'KEY123456', instanceId: 'inst_1', email: 'dj@example.com' });
-    const validated = readLicensePayload({ valid: true, license_key: { status: 'active', key: 'KEY123456' } }, 'validate');
-    expect(validated.ok).toBe(true);
-    expect(readLicensePayload({ valid: false, license_key: { status: 'expired', key: 'KEY123456' } }, 'validate')).toMatchObject({
-      ok: false,
-      message: 'This license key is expired.',
-    });
-    expect(licenseShouldLock('This license key is disabled.')).toBe(true);
-    expect(licenseShouldLock('The license check could not reach Lemon Squeezy.')).toBe(false);
-  });
-
-  it('validates a saved seat and activates only when the visitor asks', async () => {
-    const calls: string[] = [];
-    const fetchImpl = (async (input: RequestInfo | URL) => {
-      const url = String(input);
-      calls.push(url);
-      const body =
-        url === LEMON_VALIDATE_URL
-          ? { valid: false, license_key: { status: 'inactive', key: 'KEY123456' } }
-          : { activated: true, license_key: { status: 'active', key: 'KEY123456' }, instance: { id: 'inst_new' } };
-      return new Response(JSON.stringify(body), { status: 200 });
-    }) as typeof fetch;
-    const turnedOn = await confirmLicense('KEY123456', 'tt-browser-instance', 'inst_old', fetchImpl);
-    expect(turnedOn).toMatchObject({ ok: true, instanceId: 'inst_new' });
-    expect(calls).toEqual([LEMON_VALIDATE_URL, LEMON_ACTIVATE_URL]);
-
-    calls.length = 0;
-    const expiredFetch = (async (input: RequestInfo | URL) => {
-      calls.push(String(input));
-      return new Response(JSON.stringify({ valid: false, license_key: { status: 'expired', key: 'KEY123456' } }), { status: 200 });
-    }) as typeof fetch;
-    const expired = await confirmLicense('KEY123456', 'tt-browser-instance', 'inst_old', expiredFetch);
-    expect(expired).toMatchObject({ ok: false });
-    expect(calls).toEqual([LEMON_VALIDATE_URL]);
-
-    calls.length = 0;
-    const stored = await validateStoredLicense('KEY123456', 'inst_old', expiredFetch);
-    expect(stored.ok).toBe(false);
-    expect(calls).toEqual([LEMON_VALIDATE_URL]);
   });
 });
 
@@ -249,7 +244,7 @@ describe('success page indexing', () => {
     const shell = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
     const page = applyRouteMeta(
       shell,
-      { path: '/success', title: 'TrackTidy Pro activation', description: 'Activate a TrackTidy Pro license on this browser.', index: false },
+      { path: '/success', title: 'TrackTidy Pro', description: 'Restore Track Tidy Pro on this browser with your Stripe email.', index: false },
       'https://www.track-tidy.com',
     );
     expect(page).toContain('name="robots" content="noindex,nofollow"');

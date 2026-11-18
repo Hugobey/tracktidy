@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 import type { Stage } from '../components/AnalysisScreen.tsx';
 import type { ImageMime } from '../lib/artwork.ts';
 import { bpmToken, type FilenamePreview } from '../lib/filename.ts';
+import type { LibraryEditorTrack } from '../lib/library-link.ts';
 import type { FallbackPayload, TagPlan, TechnicalInfo, TrackFields } from '../lib/types.ts';
 
 const FIELD_LABELS: Record<keyof TrackFields, string> = {
@@ -68,8 +69,12 @@ export type TrackSessionValue = {
   keptOnExport: string[];
   stages: Stage[];
   analysisProblem: string;
+  fromLibrary: boolean;
   acceptFiles: (list: FileList | File[]) => void;
   openFile: (file: File, extra: boolean) => void;
+  openLibraryTrack: (track: LibraryEditorTrack) => void;
+  returnToLibrary: () => void;
+  openCrate: () => void;
   dismissPrompt: () => void;
   confirmPrompt: () => void;
   requestClose: () => void;

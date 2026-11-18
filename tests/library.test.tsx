@@ -13,13 +13,25 @@ describe('pro library page', () => {
         </ConsentProvider>
       </MemoryRouter>,
     );
-    expect(html).toContain('Rename many tracks at once.');
+    expect(html).toContain('Your crate.');
     expect(html).toContain('Library');
     expect(html).toContain('Demo Pro');
+    expect(html).toContain('All Tracks');
+    expect(html).toContain('Cleaned');
+    expect(html).toContain('Needs Review');
     expect(html).toContain('01_nora_voss_night_circuit_MASTER.mp3');
-    expect(html).toContain('nora voss - night circuit (124 BPM) [8A].mp3');
+    expect(html).toContain('Nora Voss - Night Circuit [124 BPM] [8A].mp3');
+    expect(html).not.toContain('Nora Voss - Night Circuit (124 BPM) [8A].mp3');
     expect(html).toContain('kian blake - harbour line (free download).mp3');
+    expect(html).toContain('Harbour Line');
     expect(html).toContain('Load demo tracks');
-    expect(html).toContain('disabled');
+    expect(html).toContain('Download Crate ZIP');
+    expect(html).toContain('Undo');
+    expect(html).toContain('Redo');
+    expect(html).toContain('Select all tracks');
+    expect(html).toContain('<svg');
+    expect(html).toContain('type="checkbox"');
+    expect(html).not.toContain('class="lib-edit"');
+    expect(html).not.toContain('>Remove<');
   });
 });

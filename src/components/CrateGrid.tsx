@@ -70,7 +70,7 @@ async function rowsFromFiles(files: File[], room: number, report: (message: stri
         report(rejected);
         continue;
       }
-      const parsed = await readTrack(buffer);
+      const parsed = await readTrack(buffer, { filename: file.name });
       if (parsed.coverUrl) URL.revokeObjectURL(parsed.coverUrl);
       next.push({
         id: crypto.randomUUID(),
@@ -116,9 +116,10 @@ export function CrateGrid({ lead, template, onLeadField, onTemplate }: Props) {
   const unlocked = pro.pro;
 
   useEffect(() => {
+    if (!unlocked) return undefined;
     let cancelled = false;
     async function addFiles(files: File[]) {
-      if (!unlocked || cancelled || files.length === 0) return;
+      if (cancelled || files.length === 0) return;
       const next = await rowsFromFiles(files, CRATE_LIMIT - countRef.current, setNote);
       if (cancelled || next.length === 0) return;
       commitRows((current) => [...current, ...next]);

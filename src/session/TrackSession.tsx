@@ -5,12 +5,14 @@ import { Atmosphere } from '../components/Atmosphere.tsx';
 import { trackEvent } from '../lib/analytics.ts';
 import { posthogLogger } from '../lib/posthog-client.ts';
 import { offerCrateFiles } from '../lib/crate-files.ts';
-import { isProUser, recordCompletedProcess } from '../lib/pro.ts';
+import { stashEditorFields, upsertAnalyzedTrack, writeCrateFields, writeCrateFieldsBySource, type LibraryEditorTrack } from '../lib/library-link.ts';
+import { CRATE_MULTI_FLAG, isProUser, recordCompletedProcess } from '../lib/pro.ts';
 import type { ImageMime } from '../lib/artwork.ts';
 import { DEFAULT_TEMPLATE, renderFilename } from '../lib/filename.ts';
 import { formatBitrate, formatBytes, formatChannels, formatDuration, formatSampleRate } from '../lib/format.ts';
 import type { TrackFields } from '../lib/types.ts';
 import { TrackSessionContext, useTrackSession, type Phase, type Prompt, type TrackSessionValue, type TrackState } from './session-context.ts';
+import type { TagPlan } from '../lib/types.ts';
 
 /** Matches `ANALYSIS_STEP_MS` in audio.ts without pulling that module into the landing bundle. */
 const STEP_MS = 30_000;
@@ -156,6 +158,7 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
   const [artworkBusy, setArtworkBusy] = useState(false);
   const [artworkNote, setArtworkNote] = useState<string | null>(null);
   const [extraNote, setExtraNote] = useState<string | null>(null);
+  const [fromLibrary, setFromLibrary] = useState(false);
   const [template, setTemplate] = useState(storedTemplate);
   const [prompt, setPrompt] = useState<Prompt>(null);
   const [exporting, setExporting] = useState(false);
@@ -171,18 +174,14 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
   const phaseRef = useRef<Phase>('idle');
   const ingestRef = useRef<(file: File, extra: boolean) => void>(() => {});
   const pendingExtras = useRef<File[]>([]);
+  const libraryIdRef = useRef<string | null>(null);
+  const libraryGen = useRef(0);
+  const syncTimer = useRef<number | null>(null);
+  const saveGate = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     trackRef.current = track;
   }, [track]);
-
-  useEffect(() => {
-    const previous = phaseRef.current;
-    phaseRef.current = phase;
-    if (previous !== 'edit' && phase === 'edit' && location.pathname !== '/app') {
-      navigate('/app');
-    }
-  }, [phase, location.pathname, navigate]);
 
   useEffect(() => {
     if (phase !== 'processing') return undefined;
@@ -260,10 +259,172 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     setPrompt(null);
   }
 
+  function syncCrate(name: string, fields: TrackFields, immediate = false) {
+    stashEditorFields(name, fields);
+    const generation = libraryGen.current;
+    const copy = { ...fields };
+    const write = () => {
+      const run = () => {
+        if (libraryGen.current !== generation) return Promise.resolve();
+        const linked = libraryIdRef.current;
+        if (linked) return writeCrateFields(linked, copy);
+        return writeCrateFieldsBySource(name, copy);
+      };
+      saveGate.current = saveGate.current.then(run, run).then(
+        () => undefined,
+        () => undefined,
+      );
+    };
+    if (immediate) {
+      if (syncTimer.current !== null) window.clearTimeout(syncTimer.current);
+      syncTimer.current = null;
+      write();
+      return;
+    }
+    if (syncTimer.current !== null) window.clearTimeout(syncTimer.current);
+    syncTimer.current = window.setTimeout(() => {
+      syncTimer.current = null;
+      write();
+    }, 60);
+  }
+
+  function rememberInLibrary(current: TrackState): Promise<void> {
+    const generation = libraryGen.current;
+    const requestedId = libraryIdRef.current ?? crypto.randomUUID();
+    if (!libraryIdRef.current) libraryIdRef.current = requestedId;
+    const snapshot: LibraryEditorTrack = {
+      id: requestedId,
+      sourceName: current.name,
+      buffer: current.buffer,
+      fields: { ...current.fields },
+      original: { ...current.fileFields },
+      remixFrame: current.remixFrame,
+      fallback: current.fallback,
+    };
+    const job = saveGate.current.catch(() => undefined).then(async () => {
+      const kept = await upsertAnalyzedTrack(snapshot);
+      if (libraryGen.current === generation && libraryIdRef.current === requestedId) libraryIdRef.current = kept;
+    });
+    const settled = job.then(
+      () => undefined,
+      () => undefined,
+    );
+    saveGate.current = settled;
+    return settled;
+  }
+
+  useEffect(() => {
+    const previous = phaseRef.current;
+    phaseRef.current = phase;
+    if (previous !== 'edit' && phase === 'edit') {
+      const current = trackRef.current;
+      if (current) void rememberInLibrary(current);
+      if (location.pathname !== '/app') navigate('/app');
+    }
+  }, [phase, location.pathname, navigate]);
+
+  async function flushLibrary(): Promise<void> {
+    const current = trackRef.current;
+    if (!current) return;
+    if (syncTimer.current !== null) {
+      window.clearTimeout(syncTimer.current);
+      syncTimer.current = null;
+    }
+    await rememberInLibrary(current);
+    syncCrate(current.name, current.fields, true);
+    await saveGate.current;
+  }
+
+  function openCrate() {
+    void flushLibrary().finally(() => navigate('/pro'));
+  }
+
+  const fieldKey = track ? `${track.name}\n${JSON.stringify(track.fields)}` : '';
+  useEffect(() => {
+    const current = trackRef.current;
+    if (!current) return;
+    syncCrate(current.name, current.fields);
+  }, [fieldKey]);
+
+  async function openLibraryTrack(input: LibraryEditorTrack) {
+    const id = ++loadId.current;
+    if (trackRef.current) await flushLibrary();
+    if (id !== loadId.current) return;
+    libraryGen.current += 1;
+    libraryIdRef.current = input.id;
+    setFromLibrary(true);
+    editedFields.current = new Set();
+    setExtraNote(null);
+    setImportError(null);
+    setExportNote(null);
+    setPrompt(null);
+    setArtworkNote(null);
+    const lib = await tools();
+    let coverUrl: string | null = null;
+    let coverBytes: Uint8Array | null = null;
+    let coverMime: ImageMime | null = null;
+    let technical: TrackState['technical'] = { duration: null, bitrate: null, sampleRate: null, channels: null };
+    let plan: TagPlan = input.fallback
+      ? { canPatch: false, hasV1: false, notice: null }
+      : { canPatch: true, hasV1: false, notice: null };
+    let kept: string[] = [];
+    let remixFrame = input.remixFrame;
+    let fallback = input.fallback;
+    try {
+      const parsed = await lib.readTrack(input.buffer.slice(0), { filename: input.sourceName });
+      coverUrl = parsed.coverUrl;
+      coverBytes = parsed.cover?.data ?? null;
+      coverMime = parsed.cover?.mime ?? null;
+      technical = parsed.technical;
+      plan = parsed.plan;
+      kept = parsed.kept;
+      remixFrame = parsed.remixFrame;
+      fallback = parsed.fallback;
+    } catch {
+      coverUrl = null;
+    }
+    if (id !== loadId.current) {
+      if (coverUrl) URL.revokeObjectURL(coverUrl);
+      return;
+    }
+    rememberCover(coverUrl);
+    const next: TrackState = {
+      name: input.sourceName,
+      size: input.buffer.byteLength,
+      buffer: input.buffer,
+      fileFields: { ...input.original },
+      fields: { ...input.fields },
+      remixFrame,
+      technical,
+      kept,
+      coverUrl,
+      coverBytes,
+      coverMime,
+      embeddedCover: coverBytes,
+      hadCover: Boolean(coverUrl),
+      coverFrom: coverUrl ? 'file' : null,
+      coverChanged: false,
+      plan,
+      fallback,
+      peaks: null,
+      waveformError: null,
+      analysis: emptyAnalysis(),
+    };
+    trackRef.current = next;
+    setTrack(next);
+    setPhase('edit');
+    void analyse(id, input.buffer);
+  }
+
   async function ingest(file: File, extra: boolean) {
     const extras = pendingExtras.current;
     pendingExtras.current = [];
     const id = ++loadId.current;
+    if (trackRef.current) await flushLibrary();
+    if (id !== loadId.current) return;
+    libraryGen.current += 1;
+    libraryIdRef.current = null;
+    setFromLibrary(false);
     editedFields.current = new Set();
     filenameKey.current = '';
     audioRef.current = null;
@@ -274,7 +435,13 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     artworkLock.current = false;
     setExportNote(null);
     setExportError(false);
-    setExtraNote(extra ? 'Only the first file was used. TrackTidy handles one track at a time.' : null);
+    setExtraNote(
+      extra && !isProUser()
+        ? CRATE_MULTI_FLAG
+        : extra
+          ? 'Only the first file was used. TrackTidy handles one track at a time.'
+          : null,
+    );
     setPhase('processing');
     setTrack(null);
     trackRef.current = null;
@@ -322,7 +489,7 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     let parsed;
     try {
       parsed = await lib.withTimeout(
-        lib.readTrack(buffer),
+        lib.readTrack(buffer, { filename: file.name }),
         STEP_MS,
         'Reading the tags took too long and was stopped. The file may be damaged or too unusual to parse.',
       );
@@ -377,9 +544,11 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     trackRef.current = next;
     setTrack(next);
     recordCompletedProcess();
-    if (extra && extras.length > 0 && isProUser()) {
+    if (extra && extras.length > 0) {
       offerCrateFiles(extras);
-      setExtraNote('The first file opens here. The other MP3s wait in the crate view.');
+      setExtraNote(
+        isProUser() ? 'The first file opens here. The other MP3s wait in the crate view.' : CRATE_MULTI_FLAG,
+      );
     }
     void analyse(id, buffer);
     if (!parsed.coverUrl && parsed.fields.artist.trim() && parsed.fields.title.trim()) {
@@ -602,12 +771,20 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
   }
 
   function updateField(key: keyof TrackFields, value: string) {
-    setTrack((current) => (current ? { ...current, fields: { ...current.fields, [key]: value } } : current));
+    const current = trackRef.current;
+    const next = current ? { ...current, fields: { ...current.fields, [key]: value } } : null;
+    if (next) trackRef.current = next;
+    setTrack(next);
     setExportNote(null);
+    if (next) syncCrate(next.name, next.fields);
     if (!editedFields.current.has(key)) {
       editedFields.current.add(key);
       trackEvent('metadata_edit_completed', { field: key });
     }
+  }
+
+  function returnToLibrary() {
+    void flushLibrary().finally(() => navigate('/pro'));
   }
 
   function updateTemplate(value: string) {
@@ -813,8 +990,14 @@ export function TrackSessionProvider({ children }: { children: ReactNode }) {
     keptOnExport,
     stages,
     analysisProblem,
+    fromLibrary,
     acceptFiles,
     openFile,
+    openLibraryTrack: (trackToOpen) => {
+      void openLibraryTrack(trackToOpen);
+    },
+    returnToLibrary,
+    openCrate,
     dismissPrompt,
     confirmPrompt: () => {
       const current = prompt;

@@ -58,8 +58,8 @@ export default function PrivacyPage() {
       <p>
         The MP3, its embedded tags, artwork, and audio samples are used only to show the editor, estimate tempo and
         key, and build your download. The legal basis is that you asked for this processing by choosing the file
-        (GDPR Article 6(1)(b), the service you requested). It happens in your browser. TrackTidy does not keep a copy
-        after you leave the page. Closing the track drops it from memory.
+        (GDPR Article 6(1)(b), the service you requested). It happens in your browser. An analyzed MP3 is saved in this
+        browser's crate library so you can open it again. It is not uploaded. Clearing site data removes that copy.
       </p>
       <h3>Artwork search</h3>
       <p>
@@ -157,8 +157,8 @@ export default function PrivacyPage() {
 
       <h2>How long data is kept</h2>
       <p>
-        Audio and tags are not stored by TrackTidy. The template, the consent choice, the device marker, and any Pro
-        license saved in this browser remain until you change or delete them. Analytics retention is the period set in the Google Analytics
+        Audio and tags are not stored by TrackTidy. The template, the consent choice, the device marker, and the Pro
+        flag saved in this browser remain until you change or delete them. Analytics retention is the period set in the Google Analytics
         property. This website does not set that period. It should be configured in Google Analytics before launch.
         PostHog commonly keeps its cookie for up to one year. Vercel discards the Web Analytics visitor hash after 24
         hours. Any longer retention of those page views is set by Vercel or PostHog, not by this website.

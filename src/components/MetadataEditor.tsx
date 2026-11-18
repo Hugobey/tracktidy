@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GenreSelector } from './GenreSelector.tsx';
 import { FILENAME_PRESETS, bpmToken, type FilenamePreview } from '../lib/filename.ts';
 import { parseKey, sameKey } from '../lib/key.ts';
 import type { TrackFields } from '../lib/types.ts';
@@ -135,13 +136,18 @@ export function MetadataEditor({
           badge={badgeFor('album', fields.album, fileFields.album, bpm, keyEstimate)}
           onChange={(value) => onField('album', value)}
         />
-        <TextField
-          id="genre"
-          label="Genre"
-          value={fields.genre}
-          badge={badgeFor('genre', fields.genre, fileFields.genre, bpm, keyEstimate)}
-          onChange={(value) => onField('genre', value)}
-        />
+        <div className="meta-row">
+          <span className="meta-label" id="genre-label">
+            Genre
+          </span>
+          <GenreSelector
+            value={fields.genre}
+            label="Genre"
+            variant="field"
+            onChange={(value) => onField('genre', value)}
+          />
+          <BadgeView badge={badgeFor('genre', fields.genre, fileFields.genre, bpm, keyEstimate)} />
+        </div>
         <div className="meta-row">
           <label className="meta-label" htmlFor="bpm">
             BPM

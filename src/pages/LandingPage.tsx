@@ -6,7 +6,6 @@ import { Button } from '../components/Button.tsx';
 import { FileDrop } from '../components/FileDrop.tsx';
 import { Logo } from '../components/Logo.tsx';
 import { ProAccount } from '../components/ProAccount.tsx';
-import { ProNudge } from '../components/ProNudge.tsx';
 import { SiteFooter } from '../components/SiteFooter.tsx';
 import { SiteHead } from '../components/SiteHead.tsx';
 import { SiteNav } from '../components/SiteNav.tsx';
@@ -142,7 +141,6 @@ export default function LandingPage() {
             </p>
           ) : null}
           <FileDrop hot={hot} error={session.phase === 'idle' ? session.importError : null} onFile={session.openFile} />
-          <ProNudge />
           <p className="reassure">One track at a time. In the browser. No account.</p>
         </section>
 

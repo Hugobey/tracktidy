@@ -5,7 +5,7 @@ import { Atmosphere } from '../components/Atmosphere.tsx';
 import { Button } from '../components/Button.tsx';
 import { ErrorBanner } from '../components/ErrorBanner.tsx';
 import { FileDrop } from '../components/FileDrop.tsx';
-import { CrateGrid } from '../components/CrateGrid.tsx';
+import { CrateNudge } from '../components/CrateNudge.tsx';
 import { Logo } from '../components/Logo.tsx';
 import { MetadataEditor } from '../components/MetadataEditor.tsx';
 import { ProAccount } from '../components/ProAccount.tsx';
@@ -15,6 +15,7 @@ import { SiteHead } from '../components/SiteHead.tsx';
 import { Waveform } from '../components/Waveform.tsx';
 import { useConsent } from '../components/consent-context.ts';
 import { trackEvent } from '../lib/analytics.ts';
+import { CRATE_MULTI_FLAG, PRO_COPY } from '../lib/pro.ts';
 import { routeMeta } from '../lib/site.ts';
 import type { FilenamePreview } from '../lib/filename.ts';
 import type { TrackFields } from '../lib/types.ts';
@@ -90,9 +91,20 @@ export default function ToolPage() {
           <ProAccount />
           {editing ? (
             <>
-              <Button variant="secondary" onClick={session.requestClose}>
-                New track
-              </Button>
+              {session.fromLibrary ? (
+                <Button variant="secondary" onClick={session.returnToLibrary}>
+                  Back to Crate Library
+                </Button>
+              ) : (
+                <>
+                  <Button variant="secondary" onClick={session.openCrate}>
+                    {PRO_COPY.crate}
+                  </Button>
+                  <Button variant="secondary" onClick={session.requestClose}>
+                    New track
+                  </Button>
+                </>
+              )}
               <Button variant="primary" disabled={!preview.file || session.exporting} onClick={session.onDownload}>
                 {session.exporting ? 'Preparing…' : 'Download'}
               </Button>
@@ -122,27 +134,7 @@ export default function ToolPage() {
       <main id="content" className="workspace">
         {editing ? (
           <section className="studio stage-in">
-            <ProNudge />
             <ResultCompare name={track.name} fileFields={track.fileFields} fields={track.fields} preview={preview} />
-            <CrateGrid
-              lead={{
-                name: track.name,
-                buffer: track.buffer,
-                original: track.fileFields,
-                fields: track.fields,
-                remixFrame: track.remixFrame,
-                fallback: track.fallback,
-                artwork:
-                  track.coverChanged && track.coverBytes && track.coverMime
-                    ? { data: track.coverBytes, mime: track.coverMime }
-                    : track.coverChanged
-                      ? 'remove'
-                      : 'keep',
-              }}
-              template={session.template}
-              onLeadField={session.updateField}
-              onTemplate={session.updateTemplate}
-            />
             <div className="file-col">
               <div className="file-heading">
                 <div>
@@ -168,7 +160,11 @@ export default function ToolPage() {
               ) : track.waveformError ? (
                 <p className="hint hint-danger">{track.waveformError}</p>
               ) : null}
-              {session.extraNote ? <p className="hint">{session.extraNote}</p> : null}
+              {session.extraNote === CRATE_MULTI_FLAG ? (
+                <CrateNudge onOpen={session.openCrate} />
+              ) : session.extraNote ? (
+                <p className="hint">{session.extraNote}</p>
+              ) : null}
               {session.exportNotice ? <p className="hint">{session.exportNotice}</p> : null}
               {session.keptOnExport.length > 0 ? <p className="hint">Also kept on export: {session.keptOnExport.join(', ')}.</p> : null}
               <p className="hint">The audio stays in this browser and is not uploaded.</p>
@@ -191,21 +187,24 @@ export default function ToolPage() {
                 onEstimateKey={session.rerunKey}
               />
             </div>
+            <ProNudge onTry={session.openCrate} />
           </section>
-        ) : (
-          <section className="sheet-body editor-empty">
-            <p className="kicker kicker-blue">No track in this tab</p>
-            <h1>Upload an MP3 to edit it.</h1>
-            <p className="lede">
-              Refreshing this page clears the file. TrackTidy reads it in the browser and does not keep a copy.
-            </p>
-            <FileDrop hot={dragOver} error={session.importError} onFile={session.openFile} />
-            <ProNudge />
-            <p className="editor-home">
-              <Link to="/">Back to the homepage</Link>
-            </p>
-          </section>
-        )}
+        ) : !track ? (
+          <div className="upload-center">
+            <section className="sheet-body editor-empty">
+              <p className="kicker kicker-blue">No track in this tab</p>
+              <h1>Upload an MP3 to edit it.</h1>
+              <p className="lede">
+                Refreshing this page clears the editor. Analyzed tracks stay in your crate library.
+              </p>
+              <FileDrop hot={dragOver} error={session.importError} onFile={session.openFile} />
+              {session.extraNote === CRATE_MULTI_FLAG ? <CrateNudge onOpen={session.openCrate} /> : null}
+              <p className="editor-home">
+                <Link to="/">Back to the homepage</Link>
+              </p>
+            </section>
+          </div>
+        ) : null}
       </main>
       <SiteFooter />
     </div>

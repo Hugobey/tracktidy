@@ -1,21 +1,14 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  confirmLicense,
-  deactivateLicense,
-  lemonPortalUrl,
-} from '../lib/lemonsqueezy.ts';
-import {
   clearProLicense,
   dismissNudge as storeDismiss,
   dismissProBanner,
-  instanceName,
   LIBRARY_ENTRY_KEY,
   nudgeVisible,
   onProChange,
   readProSnapshot,
   saveEmail,
-  saveProLicense,
   setProEnabled,
 } from '../lib/pro.ts';
 import { stripeCheckoutConfigured, stripePaymentUrl } from '../lib/stripe.ts';
@@ -29,6 +22,7 @@ export function ProProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [revision, setRevision] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
+  const [upgradeNote, setUpgradeNote] = useState<string | null>(null);
 
   useEffect(() => onProChange(() => setRevision((value) => value + 1)), []);
 
@@ -63,36 +57,22 @@ export function ProProvider({ children }: { children: ReactNode }) {
       email: current.email,
       processCount: current.processCount,
       nudgeVisible: nudgeVisible(current),
+      nudgeLater: current.nudgeLater,
       modalOpen: open,
-      portalUrl: lemonPortalUrl(),
       checkoutReady: stripeCheckoutConfigured(),
       banner: current.banner,
-      openUpgrade: () => {
+      upgradeNote,
+      openUpgrade: (message?: string) => {
         trackEvent('upgrade_modal_opened');
+        setUpgradeNote(message?.trim() ? message : null);
         setModalOpen(true);
       },
-      closeUpgrade: () => setModalOpen(false),
+      closeUpgrade: () => {
+        setModalOpen(false);
+        setUpgradeNote(null);
+      },
       dismissNudge: () => storeDismiss(),
       dismissBanner: () => dismissProBanner(),
-      activate: async (licenseKey: string) => {
-        const result = await confirmLicense(licenseKey, instanceName(), current.instanceId);
-        if (!result.ok) return result.message;
-        const email = result.email || current.email;
-        const instanceId = result.instanceId || current.instanceId;
-        saveProLicense({
-          key: result.key,
-          email,
-          instanceId,
-        });
-        if (instanceId) {
-          identifyPostHogUser(`license_instance:${instanceId}`, {
-            ...(email ? { email } : {}),
-            plan: 'pro',
-          });
-        }
-        trackEvent('pro_license_activated');
-        return null;
-      },
       restore: async (email: string) => {
         saveEmail(email);
         try {
@@ -119,12 +99,11 @@ export function ProProvider({ children }: { children: ReactNode }) {
         return null;
       },
       signOut: () => {
-        const leaving = readProSnapshot();
-        if (leaving.licenseKey && leaving.instanceId) void deactivateLicense(leaving.licenseKey, leaving.instanceId);
         trackEvent('pro_signed_out');
         clearProLicense();
         resetPostHogIdentity();
         setModalOpen(false);
+        setUpgradeNote(null);
       },
       toggleDemo: () => {
         const next = !readProSnapshot().pro;
@@ -132,7 +111,7 @@ export function ProProvider({ children }: { children: ReactNode }) {
         if (next) navigate('/pro');
       },
     };
-  }, [modalOpen, navigate, revision]);
+  }, [modalOpen, navigate, revision, upgradeNote]);
 
   return (
     <ProContext.Provider value={value}>

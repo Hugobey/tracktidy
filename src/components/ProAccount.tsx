@@ -1,18 +1,25 @@
-import { useEffect, useId, useState } from 'react';
+import { useContext, useEffect, useId, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { PRO_COPY } from '../lib/pro.ts';
+import { TrackSessionContext } from '../session/session-context.ts';
 import { usePro } from './pro-context.ts';
 
 export function ProAccount() {
   const pro = usePro();
+  const session = useContext(TrackSessionContext);
   const { pathname } = useLocation();
   const menuId = useId();
   const [open, setOpen] = useState(false);
-  const library = (
-    <Link to="/pro" className="pro-link" aria-current={pathname === '/pro' ? 'page' : undefined}>
-      {PRO_COPY.library}
-    </Link>
-  );
+  const library =
+    session && session.phase === 'edit' && session.track && pathname !== '/pro' ? (
+      <button className="pro-link" type="button" onClick={session.openCrate}>
+        {PRO_COPY.library}
+      </button>
+    ) : (
+      <Link to="/pro" className="pro-link" aria-current={pathname === '/pro' ? 'page' : undefined}>
+        {PRO_COPY.library}
+      </Link>
+    );
 
   useEffect(() => {
     if (!open) return undefined;
@@ -27,7 +34,7 @@ export function ProAccount() {
     return (
       <span className="pro-account">
         {library}
-        <button className="pro-link" type="button" onClick={pro.openUpgrade}>
+        <button className="pro-link" type="button" onClick={() => pro.openUpgrade()}>
           {PRO_COPY.upgrade}
         </button>
         <button className="pro-pill" type="button" aria-pressed={pro.pro} onClick={pro.toggleDemo}>

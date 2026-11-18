@@ -1,4 +1,5 @@
 import { parseBlob } from 'music-metadata';
+import { settleGenre } from '../constants/genres.ts';
 import { sniffImage, type ImageMime } from './artwork.ts';
 import { formatBpm } from './format.ts';
 import { inspectTag, pictureTypeFromLabel } from './id3.ts';
@@ -14,6 +15,7 @@ export type ReadTrack = {
   cover: { data: Uint8Array; mime: ImageMime } | null;
   plan: TagPlan;
   fallback: FallbackPayload | null;
+  comment: string;
 };
 
 function clean(value: string | undefined | null): string {
@@ -33,7 +35,7 @@ function arrayBufferOf(data: Uint8Array): ArrayBuffer {
   return copy;
 }
 
-export async function readTrack(buffer: ArrayBuffer): Promise<ReadTrack> {
+export async function readTrack(buffer: ArrayBuffer, hints: { filename?: string } = {}): Promise<ReadTrack> {
   const plan = inspectTag(buffer);
   const metadata = await parseBlob(new Blob([buffer], { type: 'audio/mpeg' }), {
     duration: true,
@@ -47,7 +49,7 @@ export async function readTrack(buffer: ArrayBuffer): Promise<ReadTrack> {
     title: clean(common.title),
     remix: subtitle || remixer,
     album: clean(common.album),
-    genre: common.genre?.map((value) => clean(value)).filter(Boolean).join(', ') ?? '',
+    genre: common.genre?.map((value) => clean(value)).filter(Boolean).join(';') ?? '',
     bpm: formatBpm(common.bpm),
     key: clean(common.key),
   };
@@ -80,6 +82,7 @@ export async function readTrack(buffer: ArrayBuffer): Promise<ReadTrack> {
   const albumArtist = clean(common.albumartist);
   const comment = clean(common.comment?.find((entry) => clean(entry.text))?.text);
   const composer = common.composer?.map((value) => clean(value)).filter(Boolean).join(', ') ?? '';
+  fields.genre = settleGenre(fields.genre, { filename: hints.filename, album: fields.album, comment });
 
   const kept: string[] = [];
   if (year) kept.push(`year ${year}`);
@@ -118,5 +121,6 @@ export async function readTrack(buffer: ArrayBuffer): Promise<ReadTrack> {
     cover,
     plan,
     fallback,
+    comment,
   };
 }

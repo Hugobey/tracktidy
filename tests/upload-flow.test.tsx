@@ -37,7 +37,9 @@ describe('editor without a file', () => {
   it('explains that a refresh clears the track and offers another upload', () => {
     const html = render('/app', 'editor');
     expect(html).toContain('No track in this tab');
-    expect(html).toContain('Refreshing this page clears the file.');
+    expect(html).toContain('Refreshing this page clears the editor.');
+    expect(html).toContain('Analyzed tracks stay in your crate library.');
+    expect(html).not.toContain('Prepping a full crate?');
     expect(html).toContain('href="/"');
     expect(html).toContain('Drop an MP3 here');
     expect(html).not.toContain('Cleaned result');
