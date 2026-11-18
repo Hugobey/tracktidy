@@ -615,20 +615,12 @@ html[data-guide-theme='dark'] body:has(.guides-page) {
 .guides-page .pro-link[aria-pressed='true'],
 .guides-page .pro-link[aria-current='page'] { color: var(--g-ink); }
 
-.guides-page .pro-badge,
-.guides-page .pro-pill {
+.guides-page .pro-badge {
   color: var(--g-ink);
   border-color: var(--g-line);
   background: var(--g-fill);
 }
 
-.guides-page .pro-pill[aria-pressed='true'] {
-  color: var(--g-ink);
-  border-color: var(--g-ink);
-  background: var(--g-fill);
-}
-
-.guides-page .pro-demo-mark,
 .guides-page .pro-pop-email { color: var(--g-muted); }
 
 body:has(.guides-page) .pro-pop,
@@ -645,8 +637,7 @@ body:has(.guides-page) .pro-pop button,
 body:has(.guides-page) .pro-modal h2 { color: var(--g-ink); }
 
 body:has(.guides-page) .pro-modal p,
-body:has(.guides-page) .pro-note,
-body:has(.guides-page) .pro-demo { color: var(--g-body); }
+body:has(.guides-page) .pro-note { color: var(--g-body); }
 
 body:has(.guides-page) .pro-field input,
 body:has(.guides-page) .pro-modal input {

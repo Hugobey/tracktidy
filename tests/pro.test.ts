@@ -69,7 +69,6 @@ describe('pro copy', () => {
     expect(PRO_COPY.emailPlaceholder).toBe('dj@example.com');
     expect(PRO_COPY.checkout).toBe('Continue to Checkout');
     expect(PRO_COPY.restoreLabel).toBe('Already upgraded? Restore with your email');
-    expect(PRO_COPY.demo).toBe('Demo Pro');
     expect(PRO_COPY.banner).toBe('Track Tidy Pro unlocked');
     expect(PRO_COPY.library).toBe('Library');
     expect(PRO_COPY.libraryTitle).toBe('Your crate.');
@@ -206,11 +205,12 @@ describe('pro storage', () => {
     local.setItem('tt_user_pro', 'true');
     expect(readProSnapshot(local, session).pro).toBe(true);
     applyProQuery('https://www.track-tidy.com/?demo=false', local, session);
-    expect(readProSnapshot(local, session).pro).toBe(false);
+    expect(readProSnapshot(local, session).pro).toBe(true);
     expect(session.getItem('tt_library_entry')).toBeNull();
+    local.removeItem('tt_user_pro');
     applyProQuery('https://www.track-tidy.com/?demo=true', local, session);
-    expect(local.getItem('tt_user_pro')).toBe('true');
-    expect(session.getItem('tt_library_entry')).toBe('1');
+    expect(local.getItem('tt_user_pro')).toBeNull();
+    expect(session.getItem('tt_library_entry')).toBeNull();
     applyProQuery('https://www.track-tidy.com/app?pro_success=true', local, session);
     expect(readProSnapshot(local, session).pro).toBe(true);
     expect(readProSnapshot(local, session).banner).toBe(true);

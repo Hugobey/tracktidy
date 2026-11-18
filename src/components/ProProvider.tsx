@@ -56,7 +56,7 @@ export function ProProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const current = readProSnapshot();
-    if (!current.pro || current.demo || !current.instanceId) return;
+    if (!current.pro || !current.instanceId) return;
     identifyPostHogUser(`license_instance:${current.instanceId}`, {
       ...(current.email ? { email: current.email } : {}),
       plan: 'pro',
@@ -69,8 +69,6 @@ export function ProProvider({ children }: { children: ReactNode }) {
     void revision;
     return {
       pro: current.pro,
-      demo: current.demo,
-      devDemo: import.meta.env.DEV,
       email: current.email,
       processCount: current.processCount,
       nudgeVisible: nudgeVisible(current),
@@ -127,13 +125,8 @@ export function ProProvider({ children }: { children: ReactNode }) {
         setModalOpen(false);
         setUpgradeNote(null);
       },
-      toggleDemo: () => {
-        const next = !readProSnapshot().pro;
-        setProEnabled(next);
-        if (next) navigate('/pro');
-      },
     };
-  }, [checkoutToast, modalOpen, navigate, revision, upgradeNote]);
+  }, [checkoutToast, modalOpen, revision, upgradeNote]);
 
   return (
     <ProContext.Provider value={value}>

@@ -37,9 +37,6 @@ export function ProAccount() {
         <button className="pro-link" type="button" title={PRO_COPY.active} onClick={() => pro.openUpgrade()}>
           {PRO_COPY.upgrade}
         </button>
-        <button className="pro-pill" type="button" aria-pressed={pro.pro} onClick={pro.toggleDemo}>
-          {PRO_COPY.demo}
-        </button>
       </span>
     );
   }
@@ -56,7 +53,6 @@ export function ProAccount() {
         onClick={() => setOpen((value) => !value)}
       >
         {PRO_COPY.active}
-        {pro.demo ? <span className="pro-demo-mark">Demo</span> : null}
       </button>
       {open ? (
         <span className="pro-pop" id={menuId} role="menu">
@@ -66,9 +62,6 @@ export function ProAccount() {
           </button>
         </span>
       ) : null}
-      <button className="pro-pill" type="button" aria-pressed={pro.pro} onClick={pro.toggleDemo}>
-        {PRO_COPY.demo}
-      </button>
     </span>
   );
 }

@@ -18,7 +18,7 @@ describe('pro library page', () => {
     );
     expect(html).toContain('Your crate.');
     expect(html).toContain('Library');
-    expect(html).toContain('Demo Pro');
+    expect(html).not.toContain('Demo Pro');
     expect(html).toContain('All Tracks');
     expect(html).toContain('Cleaned');
     expect(html).toContain('Needs Review');

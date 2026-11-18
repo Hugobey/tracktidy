@@ -5,7 +5,6 @@ export const EMAIL_KEY = 'tt_user_email';
 export const INSTANCE_ID_KEY = 'tt_license_instance';
 export const INSTANCE_NAME_KEY = 'tt_license_instance_name';
 export const NUDGE_LATER_KEY = 'tt_nudge_later';
-export const DEMO_KEY = 'tt_demo_pro';
 export const CRATE_OPEN_KEY = 'tt_crate_open';
 export const BANNER_KEY = 'tt_pro_banner';
 export const LIBRARY_ENTRY_KEY = 'tt_library_entry';
@@ -44,7 +43,6 @@ export const PRO_COPY = {
   checkoutToast: 'Payment confirmed. Track Tidy Pro Lifetime is unlocked.',
   billing: 'Manage billing',
   signOut: 'Sign out of this browser',
-  demo: 'Demo Pro',
   banner: 'Track Tidy Pro unlocked',
   library: 'Library',
   libraryTitle: 'Your crate.',
@@ -147,7 +145,6 @@ export function recordCompletedProcess(storage: Store | null = browserStore('loc
 
 export type ProSnapshot = {
   pro: boolean;
-  demo: boolean;
   email: string;
   licenseKey: string;
   instanceId: string;
@@ -164,7 +161,6 @@ export function readProSnapshot(
   const flagged = local?.getItem(PRO_FLAG_KEY) === 'true';
   return {
     pro: flagged,
-    demo: session?.getItem(DEMO_KEY) === '1',
     email: local?.getItem(EMAIL_KEY)?.trim() ?? '',
     licenseKey,
     instanceId: local?.getItem(INSTANCE_ID_KEY)?.trim() ?? '',
@@ -261,7 +257,7 @@ export function claimCheckoutReturn(
   return { unlocked: true, toast: armedCheckoutToast === sessionId, href: next };
 }
 
-/** Applies `demo` and `pro_success` once, then removes them from the address bar. */
+/** Applies `pro_success` once, then removes it from the address bar. A leftover `demo` query is ignored and removed. */
 export function applyProQuery(
   href = typeof window === 'undefined' ? '' : window.location.href,
   local: Store | null = browserStore('local'),
@@ -274,31 +270,23 @@ export function applyProQuery(
   } catch {
     return;
   }
-  const demo = url.searchParams.get('demo');
   const success = url.searchParams.get('pro_success');
-  if (demo !== 'true' && demo !== 'false' && success !== 'true') return;
-  if (demo === 'true') setProEnabled(true, local);
-  else if (demo === 'false') setProEnabled(false, local);
+  const hadDemo = url.searchParams.has('demo');
+  if (success !== 'true' && !hadDemo) return;
   if (success === 'true') {
     setProEnabled(true, local);
     try {
       session?.setItem(CRATE_OPEN_KEY, '1');
       session?.setItem(BANNER_KEY, '1');
+      session?.setItem(LIBRARY_ENTRY_KEY, '1');
     } catch {
       /* The unlock still applies when storage accepts the flag. */
     }
     notifyProChange();
   }
-  if (demo === 'true' || success === 'true') {
-    try {
-      session?.setItem(LIBRARY_ENTRY_KEY, '1');
-    } catch {
-      /* The library link still opens the list. */
-    }
-  }
   url.searchParams.delete('demo');
   url.searchParams.delete('pro_success');
-  if ((demo === 'true' || success === 'true') && typeof window !== 'undefined' && href === window.location.href) {
+  if (success === 'true' && typeof window !== 'undefined' && href === window.location.href) {
     url.pathname = '/pro';
   }
   if (typeof window !== 'undefined' && href === window.location.href) {
@@ -342,13 +330,12 @@ export function instanceName(storage: Store | null = browserStore('local')): str
   return name;
 }
 
-export function clearProLicense(storage: Store | null = browserStore('local'), session: Store | null = browserStore('session')): void {
+export function clearProLicense(storage: Store | null = browserStore('local')): void {
   try {
     storage?.removeItem(PRO_FLAG_KEY);
     storage?.removeItem(LICENSE_KEY);
     storage?.removeItem(INSTANCE_ID_KEY);
     storage?.removeItem(EMAIL_KEY);
-    session?.removeItem(DEMO_KEY);
   } catch {
     /* The in-memory screen still closes Pro for this click. */
   }
@@ -360,16 +347,6 @@ export function dismissNudge(session: Store | null = browserStore('session')): v
     session?.setItem(NUDGE_LATER_KEY, '1');
   } catch {
     /* The card can still close for this render. */
-  }
-  notifyProChange();
-}
-
-export function setDemoPro(on: boolean, session: Store | null = browserStore('session')): void {
-  try {
-    if (on) session?.setItem(DEMO_KEY, '1');
-    else session?.removeItem(DEMO_KEY);
-  } catch {
-    /* Demo mode is only a local testing switch. */
   }
   notifyProChange();
 }

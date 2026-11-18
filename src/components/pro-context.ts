@@ -2,8 +2,6 @@ import { createContext, useContext } from 'react';
 
 export type ProContextValue = {
   pro: boolean;
-  demo: boolean;
-  devDemo: boolean;
   email: string;
   processCount: number;
   nudgeVisible: boolean;
@@ -21,7 +19,6 @@ export type ProContextValue = {
   restore: (email: string) => Promise<string | null>;
   startCheckout: (email: string) => string | null;
   signOut: () => void;
-  toggleDemo: () => void;
 };
 
 export const ProContext = createContext<ProContextValue | null>(null);
@@ -31,8 +28,6 @@ export function usePro(): ProContextValue {
   if (value) return value;
   return {
     pro: false,
-    demo: false,
-    devDemo: import.meta.env.DEV,
     email: '',
     processCount: 0,
     nudgeVisible: false,
@@ -50,6 +45,5 @@ export function usePro(): ProContextValue {
     restore: async () => 'Pro restore is not connected on this build yet.',
     startCheckout: () => 'Checkout is not connected on this build yet.',
     signOut: () => undefined,
-    toggleDemo: () => undefined,
   };
 }

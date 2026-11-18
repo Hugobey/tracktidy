@@ -1891,8 +1891,7 @@ input:focus {
 .pro-link[aria-pressed='true'],
 .pro-link[aria-current='page'] { color: var(--text); }
 
-.pro-badge,
-.pro-pill {
+.pro-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1905,14 +1904,6 @@ input:focus {
   font-size: 13px;
   cursor: pointer;
 }
-
-.pro-pill[aria-pressed='true'] {
-  color: var(--text);
-  border-color: rgba(57, 120, 246, 0.7);
-  background: rgba(57, 120, 246, 0.16);
-}
-
-.pro-modal .pro-pill { margin-top: 16px; }
 
 .pro-banner {
   position: fixed;
@@ -1932,13 +1923,6 @@ input:focus {
   border: 1px solid var(--line-strong);
   box-shadow: var(--shadow);
   color: var(--text);
-}
-
-.pro-demo-mark {
-  color: var(--muted);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .pro-pop {
@@ -2405,17 +2389,6 @@ input:focus {
 .pro-field { display: flex; flex-direction: column; gap: 6px; color: var(--text); font-size: 14px; }
 
 .pro-note { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
-
-.pro-demo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 14px;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.pro-demo input { width: auto; height: auto; }
 
 .pro-close { margin-top: 12px; }
 

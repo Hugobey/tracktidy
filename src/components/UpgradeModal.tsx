@@ -167,14 +167,6 @@ export function UpgradeModal() {
         ) : null} */}
 
         <div className="pro-footer-actions">
-          {/* <button
-            className="pro-pill"
-            type="button"
-            aria-pressed={pro.pro}
-            onClick={pro.toggleDemo}
-          >
-            {PRO_COPY.demo}
-          </button> */}
           <button className="btn btn-quiet pro-close" type="button" onClick={pro.closeUpgrade}>
             Close
           </button>

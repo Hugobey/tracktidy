@@ -47,8 +47,8 @@ export default function PrivacyPage() {
         Restore sends that email to this site, which asks Stripe whether a paid Checkout Session or Charge exists.
         The Stripe secret stays on the server. A successful check stores <code>tt_user_pro</code> and{' '}
         <code>tt_user_email</code> in local storage on this browser. <code>tt_process_count</code> counts completed
-        opens on this browser and is used only to show a note about Pro. Demo Pro stores the same Pro flag so the
-        library can be tried on this browser. The library reads extra MP3s in this tab so the names can be edited
+        opens on this browser and is used only to show a note about Pro. The library reads extra MP3s in this tab so
+        the names can be edited
         together. Those files are not uploaded. Clearing site data removes Pro from this browser. The host can still log
         the restore request, including the email in the address.
       </p>
