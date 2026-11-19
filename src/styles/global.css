@@ -638,6 +638,7 @@ p { margin: 0; }
 
 .nameplate.nameplate-result {
   margin-top: 0;
+  margin-bottom: 16px;
   padding: 16px 18px;
   background: rgba(57, 120, 246, 0.16);
   border-color: rgba(57, 120, 246, 0.62);
