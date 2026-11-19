@@ -107,7 +107,7 @@ export function UpgradeModal() {
           <button
             className="btn btn-primary"
             type="button"
-            disabled={!validEmail(email)}
+            // disabled={!validEmail(email)}
             onClick={() => {
               const paymentLink = import.meta.env.PROD
                 ? 'https://buy.stripe.com/28EcN6f1m53s94cchr1RC01' // Live
