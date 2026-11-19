@@ -1,0 +1,110 @@
+---
+title: "How to Import MP3s into rekordbox Without Wrecking Your Library"
+description: "Clean the tags and rename before you import MP3s into rekordbox, so cues and grids stay attached. A short import checklist for DJs."
+date: "2026-11-17"
+slug: "rekordbox-import-mp3-clean-tags"
+author: "Hugo B"
+authorRole: "Founder of Tracktidy"
+category: "rekordbox"
+heroImage: "/images/guides/rekordbox-pro-image.jpg"
+heroAlt: "A a DJ controller on a table."
+keywords:
+  - rekordbox import MP3
+  - rekordbox tags not showing
+  - rekordbox missing files
+  - rekordbox reload tag
+  - clean MP3 before rekordbox
+  - rekordbox library workflow
+---
+
+<p className="guide-caption">A controller on a table and a laptop somewhere nearby. Photo by Panagiotis Falcos on <a href="https://unsplash.com/photos/a-dj-controller-sitting-on-top-of-a-table-uerzaLEplPs">Unsplash</a>.</p>
+
+You import forty promos into rekordbox on Thursday. On Friday you notice half of them say `Unknown Artist`, and three have a promo URL in the title. So you fix the tags, rename the files to something readable, and the next morning rekordbox is asking where the tracks went.
+
+The mistake was the order. Fixing a file after it is in the library is a different job from fixing it before. Do the cheap work first, import second.
+
+<Callout type="tool-promo">
+**Want to fix a file right now?** Open TrackTidy and clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
+</Callout>
+
+## Why the order matters
+
+When music files are imported to rekordbox, the software analyses each one. Pioneer's own list for the analysis step includes the waveform, beat grid, BPM, key, and the ID3 tag. Cue points and loops you set later are stored by rekordbox too, and the CDJ-2000 manual says the data detected and the points you store in rekordbox can be used with a Pioneer player. Source: the [CDJ-2000nexus notes](https://archive.org/download/manualsonline-id-58a24e02-6950-4031-b244-e9175faaa7ad/58a24e02-6950-4031-b244-e9175faaa7ad.pdf) and the [CDJ-2000 operating instructions](https://attrade.ru/upload/iblock/afd/PIONEER_CDJ_2000.pdf.pdf).
+
+That is a lot of work attached to one file. If the file then changes name, the library has to be told. Community notes on library software say that in rekordbox 5, a renamed file had to be relocated file by file, and if you skipped that step the file was treated as brand new and its saved data was lost. Those notes are old, so check how your version behaves with one test file. The habit is still cheap: finish the name before the file goes in. Source: the [DJ knowledge base notes](https://dj-kb.readthedocs.io/traktor/).
+
+<figure>
+  <img src="/images/guides/rekordbox-import-flow.svg" alt="Six steps in order: download, fix tags, rename, import into rekordbox, check grid and cues, export to USB." width="1200" height="330" loading="lazy" />
+  <figcaption>The order I use. Steps 2 and 3 happen before step 4. Original TrackTidy graphic.</figcaption>
+</figure>
+
+## What to fix before the file goes in
+
+Only the fields rekordbox shows you and that you actually search. The longer field list is in [how to edit MP3 metadata online](/guides/edit-mp3-metadata-online).
+
+| Fix before import | Why |
+| --- | --- |
+| Artist and title, one spelling | The search box reads them, and `ARTIST` and `Artist` will not group |
+| Promo URLs and ad comments | They end up in the track list, and you have to remember the URL to find your own edit |
+| A BPM you would actually play | A `0` or a half-time number sorts like junk. See [how to find the BPM of a song online](/guides/find-bpm-of-a-song-online) |
+| Key in one system | One crate, one notation, or the harmonic groups split. See the [Camelot wheel guide](/guides/camelot-wheel-harmonic-mixing) |
+| The file name | Rename once, before the first import |
+
+A word on the BPM. rekordbox runs its own analysis on import. Your tag and the beat grid are two separate numbers, and they can disagree. Nod along to the grid for fifteen seconds. If it feels wrong, it is wrong.
+
+## A real pair, as it should look in the track list
+
+Two records most people know, written the way I would want them on a screen.
+
+| Track | Artist | BPM | Camelot | File name |
+| --- | --- | --- | --- | --- |
+| Don't You Worry Child | Swedish House Mafia, John Martin | 129 | 10B | `Swedish House Mafia - Don't You Worry Child (129 BPM) [10B].mp3` |
+| Delilah (pull me out of this) | Fred again.., Delilah Montagu | 134 | 6A | `Fred again.. - Delilah (pull me out of this) (134 BPM) [6A].mp3` |
+
+The BPM and key figures are the ones listed on Mixgraph for [Don't You Worry Child](https://www.mixgraph.io/tracks/swedish-house-mafia-dont-you-worry-child) and [Delilah (pull me out of this)](https://www.mixgraph.io/tracks/fred-again-delilah-pull-me-out-of-this). Your copy of a record can sit a point or two away, and edits and remasters shift things.
+
+These two are not an easy blend. 10B and 6A are far apart on the wheel, and the gap is 5 BPM. That is exactly the kind of thing you want visible in the track list before you play them. The naming pass is in [how to batch rename MP3 files online](/guides/batch-rename-mp3-files-online).
+
+## The import pass
+
+1. Put the new MP3s in one folder, not in Downloads.
+2. Clean each file. Artist, title, BPM, key, and the junk out of the comment.
+3. Rename it from the cleaned tags.
+4. Move the finished file to its permanent folder. Do not move it again.
+5. Import that folder into rekordbox.
+6. Check the beat grid and the key on a few tracks by ear.
+7. Export to the USB only when the library looks right. The stick side is in [how to prepare a USB drive for CDJs](/guides/prepare-usb-for-cdj).
+
+If the tags look wrong in the library after import, the rekordbox manual has a section on reloading the tag information of a music file. Menu names move between versions, so search your own version's manual for that phrase. Source: the [rekordbox manual contents](https://media.discopiu.com/files/2016/7/18/341095-original.pdf).
+
+## If a file already moved or changed name
+
+Do not import it a second time. You will end up with two entries, and the one with your cue points is the one that looks missing.
+
+Relocate it instead. Relocating changes where the library looks for a file. It does not move the file on your computer. After relocating, check the missing files list before you trust the library. A guide from Rekord Cloud walks through the rekordbox side of that. Source: [Relocating your tracks](https://Rekord.cloud/wiki/relocate-files).
+
+Serato DJ Pro has the same problem with a different button, which is covered in [Serato DJ Pro missing files](/guides/serato-dj-pro-missing-files-relocate). If you play on Traktor Pro, [Analysis Lock](/guides/traktor-pro-analysis-lock-bpm-key) is how you keep a corrected BPM from being overwritten.
+
+## Where TrackTidy fits
+
+[TrackTidy](https://www.track-tidy.com/) is the cleaning step that comes before rekordbox. It cleans one MP3 in the browser: tags, BPM, an estimated key, and a filename. No install, no account, and the audio stays on your machine. It is not a library app. It does not touch a folder in one go, and it does not import anything.
+
+One thing to remember. TrackTidy gives you a downloaded file. Put that file into your music folder and import it, not the original you started with. For a whole pile of promos, run the checklist in [how to edit MP3 tags in bulk](/guides/edit-mp3-tags-in-bulk).
+
+## Quick answers
+
+### Should I fix tags before or after importing into rekordbox?
+
+Before. The library reads the tags and the file name at import, and changing the name afterwards can make the track look missing.
+
+### Why does rekordbox show a different BPM from my tag?
+
+rekordbox analyses the file itself, so its beat grid is a separate number from the tag. Check the grid by ear and fix whichever is wrong.
+
+### Does editing a tag change the audio?
+
+No. It edits the label stored in the file. The audio is not re-encoded.
+
+Want to fix a file right now? Clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
+
+[Clean a track](/#upload)

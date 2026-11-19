@@ -1,0 +1,113 @@
+---
+title: "Traktor Pro Analysis Lock: Keep Your Corrected BPM and Key From Being Overwritten"
+description: "Fix a half-time BPM or a wrong key in Traktor Pro, then turn on Analysis Lock so the next analysis does not undo it. Steps and a checklist."
+date: "2026-11-17"
+slug: "traktor-pro-analysis-lock-bpm-key"
+author: "Hugo B"
+authorRole: "Founder of Tracktidy"
+category: "Traktor"
+heroImage: "/images/guides/traktor-pro-image.jpg"
+heroAlt: "Two laptop computers and DJ turntables."
+keywords:
+  - Traktor Pro Analysis Lock
+  - Traktor BPM wrong
+  - Traktor key wrong
+  - Traktor half-time BPM
+  - Traktor re-analyze overwrites BPM
+  - Traktor Pro BPM key workflow
+---
+
+<p className="guide-caption">Two laptops and a pair of turntables in Brazil. Software does the counting, and you still decide what is right. Photo by Ricardo Abreu on <a href="https://unsplash.com/fr/photos/controleur-dj-cKwPLSR5XAo">Unsplash</a>.</p>
+
+You spend an evening correcting half-time BPMs in Traktor Pro. A week later you analyse a new batch, and some of the old ones are back to the wrong number. The tracks did not change. The correction was never protected.
+
+Traktor has a switch for that. It is called Analysis Lock, and it takes ten seconds per track.
+
+<Callout type="tool-promo">
+**Want to fix a file right now?** Open TrackTidy and clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
+</Callout>
+
+## What Analysis Lock does
+
+According to Native Instruments, Analysis Lock freezes all parameters set by the analysis. While it is on for a track, you cannot change the locked values by hand or through analysis. Here is what it covers.
+
+| Locked value | Where you would otherwise edit it |
+| --- | --- |
+| BPM | The GRID panel, the Edit window, or the browser list |
+| Grid markers and their position | The GRID panel |
+| Key | The Edit window, or the browser list |
+| Autogain | The Edit window, the browser list, or the GAIN knob in Autogain mode |
+
+The lock protects those values during a global analysis, so they stay as they are. Source: the Native Instruments page [How does Analysis Lock work in Traktor Pro?](https://support.native-instruments.com/support/solutions/articles/69000879524-how-does-analysis-lock-work-in-traktor-pro-).
+
+<figure>
+  <img src="/images/guides/traktor-analysis-lock.svg" alt="A track is analysed at BPM 67, you correct it to 134, you enable Analysis Lock, and the next analysis leaves 134 in place." width="1200" height="330" loading="lazy" />
+  <figcaption>Fix it, then lock it. The numbers are an example. Original TrackTidy graphic.</figcaption>
+</figure>
+
+## How to turn it on
+
+There are two routes.
+
+1. **From the browser list.** Select one or more tracks, right-click, and choose Enable Analysis Lock. The same menu has Disable Analysis Lock.
+2. **From the deck.** Use the padlock button in the GRID Advanced Panel. It lights up when the lock is active for the loaded track.
+
+If you cannot see the Advanced Panels, go to Preferences, then Decks Layout, then Deck Layout, and set the deck size to Full or Advanced. Then use the small arrow below the loop ACTIVE button to show the panel.
+
+Native Instruments recommends keeping the lock active for every track you have analysed or edited, and unlocking only while you edit. I follow that. The lock is off for the thirty seconds I am changing a number and on the rest of the time.
+
+## Fix first, then lock
+
+A lock on a wrong number keeps the wrong number. So the order is the whole trick.
+
+1. Analyse the new tracks.
+2. Read the BPM against the range you play. A house track that reads 62 is 124, and a 134 BPM record counted at half would read 67. The folding rule is in [how to find the BPM of a song online](/guides/find-bpm-of-a-song-online).
+3. Correct the BPM and check the grid by ear.
+4. Check the key against your ear. An estimate is a suggestion. The notation system is explained in the [Camelot wheel guide](/guides/camelot-wheel-harmonic-mixing).
+5. Enable Analysis Lock on the track.
+6. Do the next track.
+
+## Real records to test your ear on
+
+Use records where the answer is not in doubt. These are the figures Mixgraph lists, and your copy may sit a point or two away.
+
+| Track | Artist | BPM | Key | Camelot |
+| --- | --- | --- | --- | --- |
+| Don't You Worry Child | Swedish House Mafia, John Martin | 129 | D major | 10B |
+| Delilah (pull me out of this) | Fred again.., Delilah Montagu | 134 | G minor | 6A |
+
+Sources: [Don't You Worry Child](https://www.mixgraph.io/tracks/swedish-house-mafia-dont-you-worry-child) and [Delilah (pull me out of this)](https://www.mixgraph.io/tracks/fred-again-delilah-pull-me-out-of-this) on Mixgraph.
+
+If Traktor shows half of either number, you know which way to fold it. If it shows something else entirely, trust your head and check the grid.
+
+## What about the tags in the file?
+
+A thread on the Native Instruments forum says Traktor writes to ID3 tags by default, and that a preference can stop it. With that preference set, the thread says changes you make are saved only in the `collection.nml` file and not in the tags. That is a forum answer, not a manual. Test it on one file before you rely on it. Source: the thread [Traktor ID3 tagging (BPM, Key, energy level...) and third party softwares](https://community.native-instruments.com/discussion/comment/227924) on the Native Instruments forum.
+
+The point for you is simple. A clean tag from the start means there is less to correct inside Traktor. The six fields worth fixing are in [how to edit MP3 metadata online](/guides/edit-mp3-metadata-online), and the pile-of-promos checklist is in [how to edit MP3 tags in bulk](/guides/edit-mp3-tags-in-bulk).
+
+## Where TrackTidy fits
+
+[TrackTidy](https://www.track-tidy.com/) is a cleaning step you do before the file goes into Traktor. It cleans one MP3 in the browser: tags, BPM, an estimated key, and a filename. No install, no account, and the audio stays on your machine. It is not a library app, and it does not replace Traktor's analysis. Use it to get the file right, then let Traktor analyse it, then fix and lock.
+
+Naming matters too. A file that carries `(134 BPM) [6A]` is easy to sanity check against the number on screen. The rename pass is in [how to batch rename MP3 files online](/guides/batch-rename-mp3-files-online).
+
+On other software, the import side is covered in [how to import MP3s into rekordbox](/guides/rekordbox-import-mp3-clean-tags), and the orange tracks problem is in [Serato DJ Pro missing files](/guides/serato-dj-pro-missing-files-relocate). When the set is ready, [prepare the USB drive for CDJs](/guides/prepare-usb-for-cdj).
+
+## Quick answers
+
+### What does Analysis Lock do in Traktor Pro?
+
+It freezes the values set by the analysis: BPM, grid markers, key, and autogain. They stay put during a global analysis.
+
+### How do I enable Analysis Lock?
+
+Right-click the tracks in the browser list and choose Enable Analysis Lock, or use the padlock in the deck's GRID Advanced Panel.
+
+### Should I leave Analysis Lock on?
+
+Native Instruments recommends keeping it on for every track you have analysed or edited, and turning it off only while you edit.
+
+Want to fix a file right now? Clean one MP3 in the browser: tags, BPM, an estimated key, and a filename. No installation, no account, and the file stays on your machine.
+
+[Clean a track](/#upload)

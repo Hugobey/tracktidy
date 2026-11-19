@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 330" role="img" aria-labelledby="t d">
+<title id="t">How Analysis Lock protects a corrected value</title><desc id="d">A detector reads half the real tempo, you correct it, you enable Analysis Lock, and the next analysis leaves your corrected value alone.</desc>
+<rect width="1200" height="330" fill="#111318"/>
+<style>text{font-family:Inter,Helvetica,Arial,sans-serif;text-anchor:middle}.h{fill:#e8eaf0;font-size:30px;font-weight:700}.n{fill:#e8eaf0;font-size:24px;font-weight:700}.s{fill:#aab1c0;font-size:19px}.k{font-size:20px;font-weight:700}</style>
+<text class="h" x="600" y="52">Fix it, then lock it</text>
+<rect x="45" y="100" width="225" height="160" rx="14" fill="#1c2130" stroke="#e88a6a" stroke-width="2"/>
+<text class="s" x="157.5" y="138">Analysis reads</text>
+<text class="n" x="157.5" y="178">BPM 67</text>
+<text class="s" x="157.5" y="214">(a 134 BPM track,</text>
+<text class="s" x="157.5" y="238">counted at half)</text>
+<line x1="276" y1="180" x2="314" y2="180" stroke="#7f8aa3" stroke-width="3"/><polygon points="326,180 312,172 312,188" fill="#7f8aa3"/>
+<rect x="330" y="100" width="225" height="160" rx="14" fill="#1c2130" stroke="#e8c46a" stroke-width="2"/>
+<text class="s" x="442.5" y="138">You correct it</text>
+<text class="n" x="442.5" y="178">BPM 134</text>
+<text class="s" x="442.5" y="214">in the browser list</text>
+<text class="s" x="442.5" y="238">or the GRID panel</text>
+<line x1="561" y1="180" x2="599" y2="180" stroke="#7f8aa3" stroke-width="3"/><polygon points="611,180 597,172 597,188" fill="#7f8aa3"/>
+<rect x="615" y="100" width="225" height="160" rx="14" fill="#1c2130" stroke="#9a7be8" stroke-width="2"/>
+<text class="s" x="727.5" y="138">Enable</text>
+<text class="n" x="727.5" y="178">Analysis Lock</text>
+<text class="s" x="727.5" y="214">right-click, or the</text>
+<text class="s" x="727.5" y="238">padlock on the deck</text>
+<line x1="846" y1="180" x2="884" y2="180" stroke="#7f8aa3" stroke-width="3"/><polygon points="896,180 882,172 882,188" fill="#7f8aa3"/>
+<rect x="900" y="100" width="225" height="160" rx="14" fill="#1c2130" stroke="#6fd3b0" stroke-width="2"/>
+<text class="s" x="1012.5" y="138">Next analysis</text>
+<text class="n" x="1012.5" y="178">BPM 134</text>
+<text class="s" x="1012.5" y="214">your value stays</text>
+<text class="s" x="1012.5" y="238">locked</text>
+<text class="s" x="600" y="305">Example values. The lock also covers grid markers, key and autogain.</text>
+</svg>

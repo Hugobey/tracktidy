@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="t d">
+<title id="t">Why Serato DJ Pro shows a track as missing</title><desc id="d">The library remembers where a file was. If the file is moved, the track shows as not found in orange. Relocating tells the library the new location.</desc>
+<rect width="1200" height="420" fill="#111318"/>
+<style>text{font-family:Inter,Helvetica,Arial,sans-serif;text-anchor:middle}.h{fill:#e8eaf0;font-size:30px;font-weight:700}.n{fill:#e8eaf0;font-size:24px;font-weight:700}.s{fill:#aab1c0;font-size:19px}.k{font-size:20px;font-weight:700}</style>
+<text class="h" x="600" y="52">The library remembers a location, not the file</text>
+<rect x="60" y="100" width="430" height="120" rx="14" fill="#1c2130" stroke="#3a4256" stroke-width="2"/>
+<text class="n" x="275" y="142">Serato DJ Pro library</text>
+<text class="s" x="275" y="176">remembers a folder and a file name</text>
+<text class="s" x="275" y="202">from the day you added it</text>
+<rect x="710" y="100" width="430" height="120" rx="14" fill="#1c2130" stroke="#3a4256" stroke-width="2"/>
+<text class="n" x="925" y="142">Your drive today</text>
+<text class="s" x="925" y="176">the file now lives somewhere else</text>
+<text class="s" x="925" y="202">(moved, or under a new path)</text>
+<line x1="500" y1="160" x2="700" y2="160" stroke="#e88a3a" stroke-width="4" stroke-dasharray="10 8"/>
+<text class="k" style="fill:#e88a3a" x="600" y="140">no match</text>
+<rect x="60" y="270" width="1080" height="110" rx="14" fill="#1c2130" stroke="#6fd3b0" stroke-width="2"/>
+<text class="n" x="600" y="312">Relocate Lost Files, or Relocate from folder</text>
+<text class="s" x="600" y="346">The library learns the new location. Turn off Show iTunes Library first to avoid duplicates.</text>
+</svg>
